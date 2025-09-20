@@ -21,6 +21,7 @@ const Navbar = ({ activeSection, setActiveSection, setShowProfile, user }) => {
                 <img src="image/janAgro.png" alt="" />
               </div>
             </div>
+            {/* <span className="ml-3 text-white font-bold text-xl">Jan Agro</span> */}
           </div>
 
           {/* Desktop Navigation */}
