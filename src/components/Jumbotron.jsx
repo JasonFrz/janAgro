@@ -16,10 +16,10 @@ const Jumbotron = () => {
       <div className="relative z-10 text-center text-white max-w-5xl mx-auto px-4">
         <div className="mb-8">
           <p className="text-sm md:text-base tracking-[0.3em] uppercase text-gray-300 mb-6 font-light">
-            THE ULTIMATE DRIVING MACHINE
+            GROW THE FUTURE WITH JANAGRO
           </p>
           <h1 className="text-7xl md:text-9xl font-thin mb-8 tracking-tight">
-            <span className="font-bold">BMW</span>
+            <span className="font-bold">JAN AGRO</span>
           </h1>
           <div className="w-24 h-[1px] bg-white mx-auto mb-8"></div>
           <h2 className="text-2xl md:text-4xl font-light mb-10 text-gray-200 tracking-wide">

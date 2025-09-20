@@ -18,10 +18,9 @@ const Navbar = ({ activeSection, setActiveSection, setShowProfile, user }) => {
           <div className="flex items-center">
             <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
               <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-sm">BMW</span>
+                <img src="image/janAgro.png" alt="" />
               </div>
             </div>
-            <span className="ml-3 text-white font-bold text-xl">BMW</span>
           </div>
 
           {/* Desktop Navigation */}
