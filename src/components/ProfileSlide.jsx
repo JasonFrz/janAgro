@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { X, User, Mail, Lock, Eye, EyeOff, Settings, LogOut } from 'lucide-react';
 
 const ProfileSlide = ({ isOpen, onClose, user, setUser, setIsAdmin }) => {
-  const [currentView, setCurrentView] = useState('main'); // main, login, register, profile
+  const [currentView, setCurrentView] = useState('main');
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -21,16 +21,15 @@ const ProfileSlide = ({ isOpen, onClose, user, setUser, setIsAdmin }) => {
 
   const handleLogin = (e) => {
     e.preventDefault();
-    // Simple mock login - in real app, this would be an API call
     if (formData.email && formData.password) {
       const mockUser = {
         id: 1,
-        name: formData.email === 'admin@bmw.com' ? 'Admin' : 'John Doe',
+        name: formData.email === 'admin@janAgro.com' ? 'Admin' : 'John Doe',
         email: formData.email,
         joinDate: '2024'
       };
       setUser(mockUser);
-      if (formData.email === 'admin@bmw.com') {
+      if (formData.email === 'admin@janAgro.com') {
         setIsAdmin(true);
       }
       setCurrentView('profile');
@@ -80,7 +79,7 @@ const ProfileSlide = ({ isOpen, onClose, user, setUser, setIsAdmin }) => {
         <div className="w-20 h-20 bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center">
           <User size={40} className="text-gray-600" />
         </div>
-        <h3 className="text-lg font-semibold text-gray-900">Selamat datang di My BMW</h3>
+        <h3 className="text-lg font-semibold text-gray-900">Selamat datang di Jan Agro</h3>
         <p className="text-gray-600 mt-2">Silakan mendaftar dan manfaatkan keuntungannya:</p>
       </div>
       
@@ -91,7 +90,7 @@ const ProfileSlide = ({ isOpen, onClose, user, setUser, setIsAdmin }) => {
               <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
             </svg>
           </div>
-          <p className="text-sm text-gray-700">Optimisasi kendaraan Anda dengan layanan digital.</p>
+          <p className="text-sm text-gray-700">Optimisasi tanaman Anda dengan kami.</p>
         </div>
       </div>
       
@@ -138,7 +137,7 @@ const ProfileSlide = ({ isOpen, onClose, user, setUser, setIsAdmin }) => {
     <div className="space-y-6">
       <div className="text-center">
         <h3 className="text-2xl font-bold text-gray-900">Login</h3>
-        <p className="text-gray-600 mt-2">Masuk ke akun BMW Anda</p>
+        <p className="text-gray-600 mt-2">Masuk ke akun Anda</p>
       </div>
       
       <form onSubmit={handleLogin} className="space-y-4">
@@ -213,7 +212,7 @@ const ProfileSlide = ({ isOpen, onClose, user, setUser, setIsAdmin }) => {
     <div className="space-y-6">
       <div className="text-center">
         <h3 className="text-2xl font-bold text-gray-900">Daftar</h3>
-        <p className="text-gray-600 mt-2">Buat akun BMW baru</p>
+        <p className="text-gray-600 mt-2">Buat akun baru</p>
       </div>
       
       <form onSubmit={handleRegister} className="space-y-4">
@@ -393,17 +392,15 @@ const ProfileSlide = ({ isOpen, onClose, user, setUser, setIsAdmin }) => {
 
   return (
     <div className={`fixed inset-0 z-50 transition-all duration-300 ${isOpen ? 'visible' : 'invisible'}`}>
-      {/* Backdrop */}
       <div 
         className={`absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0'}`}
         onClick={handleClose}
       />
       
-      {/* Slide Panel */}
       <div className={`absolute right-0 top-0 h-full w-full max-w-md bg-white transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
         <div className="p-6 h-full overflow-y-auto">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">My BMW</h2>
+            <h2 className="text-2xl font-bold text-gray-900">Jan Agro Nusantara</h2>
             <button 
               onClick={handleClose}
               className="p-2 hover:bg-gray-100 rounded-full transition-colors"

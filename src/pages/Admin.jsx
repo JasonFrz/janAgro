@@ -18,7 +18,6 @@ const Admin = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Mock data
   const dashboardStats = {
     totalUsers: 12547,
     totalVehicles: 45,

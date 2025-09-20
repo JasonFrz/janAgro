@@ -24,7 +24,6 @@ const Navbar = ({ activeSection, setActiveSection, setShowProfile, user }) => {
             {/* <span className="ml-3 text-white font-bold text-xl">Jan Agro</span> */}
           </div>
 
-          {/* Desktop Navigation */}
           <div className="hidden md:block">
             <div className="ml-10 flex items-baseline space-x-8">
               {navItems.map((item) => {
@@ -47,9 +46,7 @@ const Navbar = ({ activeSection, setActiveSection, setShowProfile, user }) => {
             </div>
           </div>
 
-          {/* Right side buttons */}
           <div className="hidden md:flex items-center space-x-4">
-            {/* Admin Button (Temporary) */}
             <button
               onClick={() => setActiveSection('admin')}
               className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
@@ -75,7 +72,6 @@ const Navbar = ({ activeSection, setActiveSection, setShowProfile, user }) => {
             </button>
           </div>
 
-          {/* Mobile menu button */}
           <div className="md:hidden">
             <button
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -86,7 +82,6 @@ const Navbar = ({ activeSection, setActiveSection, setShowProfile, user }) => {
           </div>
         </div>
 
-        {/* Mobile Menu */}
         {isMobileMenuOpen && (
           <div className="md:hidden">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-black/90 backdrop-blur-md rounded-lg mt-2 border border-gray-800">
@@ -111,7 +106,6 @@ const Navbar = ({ activeSection, setActiveSection, setShowProfile, user }) => {
                 );
               })}
               
-              {/* Mobile Admin Button */}
               <button
                 onClick={() => {
                   setActiveSection('admin');

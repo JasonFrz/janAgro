@@ -45,27 +45,24 @@ const About = () => {
   return (
     <div className="min-h-screen bg-white pt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Hero Section */}
         <div className="text-center py-20">
           <h1 className="text-6xl font-light text-black mb-6">
-            About <span className="font-bold">BMW</span>
+            About <span className="font-bold">Jan Agro Nusantara</span>
           </h1>
           <div className="w-24 h-[1px] bg-black mx-auto mb-8"></div>
           <p className="text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed font-light">
-            For over 100 years, BMW has been synonymous with innovation, performance, and luxury. 
-            We continue to push the boundaries of automotive excellence, creating vehicles that deliver 
-            sheer driving pleasure while pioneering the future of sustainable mobility.
+            For over 28 years, Jan Agro Nusantara has been synonymous with innovation, performance, and safety.
+            We continue to push the boundaries of farmer excellence, 
+            creating fertilizers that provide true planting safety while pioneering a sustainable future for farmers.
           </p>
         </div>
         
-        {/* History Timeline */}
         <div className="py-20 bg-gray-50 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto">
             <h2 className="text-4xl font-light text-center text-black mb-4">Our <span className="font-bold">Journey</span></h2>
             <div className="w-24 h-[1px] bg-black mx-auto mb-12"></div>
             
             <div className="relative">
-              {/* Timeline line */}
               <div className="absolute left-1/2 transform -translate-x-1/2 w-[1px] h-full bg-gray-300"></div>
               
               <div className="space-y-12">
@@ -79,7 +76,6 @@ const About = () => {
                       </div>
                     </div>
                     
-                    {/* Timeline dot */}
                     <div className="w-4 h-4 bg-black rounded-full relative z-10"></div>
                     
                     <div className="w-1/2"></div>
@@ -90,7 +86,6 @@ const About = () => {
           </div>
         </div>
         
-        {/* Values Section */}
         <div className="py-20">
           <h2 className="text-4xl font-light text-center text-black mb-4">Our <span className="font-bold">Values</span></h2>
           <div className="w-24 h-[1px] bg-black mx-auto mb-12"></div>
@@ -108,17 +103,16 @@ const About = () => {
           </div>
         </div>
         
-        {/* Stats Section */}
         <div className="py-20 bg-black text-white -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-12">
-              <h2 className="text-4xl font-light mb-4">BMW by the <span className="font-bold">Numbers</span></h2>
+              <h2 className="text-4xl font-light mb-4">Jan Agro Nusantara by the <span className="font-bold">Numbers</span></h2>
               <div className="w-24 h-[1px] bg-white mx-auto"></div>
             </div>
             
             <div className="grid md:grid-cols-4 gap-8">
               <div className="text-center p-6">
-                <div className="text-5xl font-light mb-4">100<span className="text-3xl">+</span></div>
+                <div className="text-5xl font-light mb-4">28<span className="text-3xl">+</span></div>
                 <div className="text-gray-300 uppercase tracking-wider text-sm">Years of Excellence</div>
               </div>
               <div className="text-center p-6">
@@ -126,8 +120,8 @@ const About = () => {
                 <div className="text-gray-300 uppercase tracking-wider text-sm">Vehicles Delivered</div>
               </div>
               <div className="text-center p-6">
-                <div className="text-5xl font-light mb-4">170<span className="text-3xl">+</span></div>
-                <div className="text-gray-300 uppercase tracking-wider text-sm">Countries Worldwide</div>
+                <div className="text-5xl font-light mb-4">3<span className="text-3xl">+</span></div>
+                <div className="text-gray-300 uppercase tracking-wider text-sm">City In Indonesian</div>
               </div>
               <div className="text-center p-6">
                 <div className="text-5xl font-light mb-4">25<span className="text-3xl">+</span></div>
@@ -137,7 +131,6 @@ const About = () => {
           </div>
         </div>
         
-        {/* Mission Section */}
         <div className="py-20">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-4xl font-light text-black mb-4">Our <span className="font-bold">Mission</span></h2>
@@ -158,13 +151,13 @@ const About = () => {
               "The BMW Group stands for visionary power and innovative strength. 
               We shape the future of individual mobility through our pioneering spirit."
             </blockquote>
-            <cite className="text-black font-semibold">BMW Executive Team</cite>
+            <cite className="text-black font-semibold">Jan Agro Nusantara Executive Team</cite>
           </div>
         </div>
         
         {/* Contact CTA */}
         <div className="py-20 text-center">
-          <h2 className="text-3xl font-light text-black mb-6">Experience BMW Excellence</h2>
+          <h2 className="text-3xl font-light text-black mb-6">Experience Jan Agro Nusantara Excellence</h2>
           <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
             Discover how BMW continues to define the ultimate driving machine through innovation, 
             luxury, and uncompromising quality.

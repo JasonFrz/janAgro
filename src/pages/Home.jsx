@@ -6,13 +6,12 @@ const Home = () => {
     <div className="min-h-screen bg-white">
       <Jumbotron />
       
-      {/* Features Section */}
       <div className="py-20 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold text-black mb-4">Why Choose BMW?</h2>
+            <h2 className="text-4xl font-bold text-black mb-4">Why Choose Jan Agro?</h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Discover what makes BMW the ultimate driving machine
+              Discover what makes Jan Agro your trusted partner in agricultural solutions
             </p>
           </div>
           
@@ -49,16 +48,16 @@ const Home = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-8 text-center">
             <div className="p-6">
-              <div className="text-4xl font-bold text-black mb-2">100+</div>
+              <div className="text-4xl font-bold text-black mb-2">28+</div>
               <div className="text-gray-600">Years of Excellence</div>
             </div>
             <div className="p-6">
               <div className="text-4xl font-bold text-black mb-2">2.5M+</div>
-              <div className="text-gray-600">Vehicles Delivered</div>
+              <div className="text-gray-600">Fertillizer Used</div>
             </div>
             <div className="p-6">
-              <div className="text-4xl font-bold text-black mb-2">40+</div>
-              <div className="text-gray-600">Countries Worldwide</div>
+              <div className="text-4xl font-bold text-black mb-2">3+</div>
+              <div className="text-gray-600">City In Indonesian</div>
             </div>
             <div className="p-6">
               <div className="text-4xl font-bold text-black mb-2">25+</div>
@@ -71,7 +70,7 @@ const Home = () => {
       {/* CTA Section */}
       <div className="py-20 bg-black">
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-          <h2 className="text-4xl font-bold text-white mb-6">Ready to Experience BMW?</h2>
+          <h2 className="text-4xl font-bold text-white mb-6">Ready to Experience Jan Agro?</h2>
           <p className="text-xl text-gray-300 mb-8">Schedule your test drive today and feel the difference.</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button className="px-8 py-4 bg-white text-black rounded-md font-medium transition-all duration-300 transform hover:scale-105 hover:shadow-lg">

@@ -109,9 +109,9 @@ const Shop = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-5xl font-light text-black mb-4">BMW <span className="font-bold">Models</span></h1>
+          <h1 className="text-5xl font-light text-black mb-4">Jan Agro <span className="font-bold">Shop</span></h1>
           <div className="w-24 h-[1px] bg-black mx-auto mb-6"></div>
-          <p className="text-xl text-gray-600 font-light">Discover our complete range of luxury vehicles</p>
+          <p className="text-xl text-gray-600 font-light">Discover our complete range of luxury Fertillizer & Tools</p>
         </div>
         
         {/* Search and Filter */}
