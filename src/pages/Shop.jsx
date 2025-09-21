@@ -6,7 +6,6 @@ const Shop = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [produk, setProduk] = useState([]);
 
-  // Ambil data dari backend
   useEffect(() => {
     fetch("http://localhost:5000/api/Produk")
       .then(res => res.json())
@@ -37,9 +36,7 @@ const Shop = () => {
           </p>
         </div>
 
-        {/* Search & Filter */}
         <div className="mb-8 flex flex-col md:flex-row gap-4 items-center justify-between">
-          {/* Search box */}
           <div className="relative flex-1 max-w-md">
             <Search
               className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
@@ -54,7 +51,6 @@ const Shop = () => {
             />
           </div>
 
-          {/* Filter kategori */}
           <div className="flex gap-3">
             <button
               onClick={() => setSelectedCategory('all')}
@@ -89,7 +85,6 @@ const Shop = () => {
           </div>
         </div>
 
-        {/* Produk Cards */}
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {filteredProduk.map((item) => (
             <div
@@ -115,7 +110,6 @@ const Shop = () => {
                   </p>
                 </div>
 
-                {/* ✅ Deskripsi produk */}
                 <p className="text-gray-700 text-sm mb-4 line-clamp-3">
                   {item.description || "Tidak ada deskripsi"}
                 </p>
@@ -140,7 +134,6 @@ const Shop = () => {
           ))}
         </div>
 
-        {/* No Results */}
         {filteredProduk.length === 0 && (
           <div className="text-center py-12">
             <div className="text-6xl mb-4">🔍</div>

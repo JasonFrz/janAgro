@@ -2,30 +2,46 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 require("dotenv").config(); // Load .env
+console.log("🔍 Loaded ENV:", process.env);
+
 
 const app = express();
 
-// ===== Middleware =====
+if (!process.env.MONGO_URI) {
+  console.error("❌ MONGO_URI tidak ditemukan di file .env");
+  console.log("💡 Pastikan file .env ada dan berisi:");
+  console.log("   MONGO_URI=mongodb://localhost:27017/janAgro");
+  process.exit(1);
+}
+
 app.use(cors({
-  origin: "http://localhost:5173", // ganti sesuai port React-mu
+  origin: "http://localhost:5173",
   methods: ["GET", "POST", "PUT", "DELETE"],
   allowedHeaders: ["Content-Type"]
 }));
 app.use(express.json());
 
-// ===== MongoDB Connection =====
+console.log("🔗 Connecting to MongoDB...");
+console.log("📍 URI:", process.env.MONGO_URI.replace(/\/\/.*@/, "//<credentials>@")); 
+
 mongoose.connect(process.env.MONGO_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   dbName: "janAgro",
 })
-.then(() => console.log("✅ MongoDB connected"))
-.catch((err) => console.error("❌ MongoDB connection error:", err));
+.then(() => console.log("✅ MongoDB connected successfully"))
+.catch((err) => {
+  console.error("❌ MongoDB connection error:", err.message);
+  console.log("💡 Troubleshooting:");
+  console.log("   1. Pastikan MongoDB service berjalan");
+  console.log("   2. Periksa MONGO_URI di file .env");
+  console.log("   3. Periksa network connection (jika menggunakan Atlas)");
+  process.exit(1);
+});
 
-// ===== Schema & Model =====
 const produkSchema = new mongoose.Schema({
   nama: { type: String, required: true },
-  type: { type: String, required: true },   // string bebas
+  type: { type: String, required: true },   
   harga: { type: Number, required: true },
   stok: { type: Number, required: true },
   image: { type: String, default: "" },
@@ -34,9 +50,10 @@ const produkSchema = new mongoose.Schema({
 
 const Produk = mongoose.model("Produk", produkSchema);
 
-// ====== API CRUD ======
 
-// GET semua produk
+// ===== API Endpoints =====
+
+
 app.get("/api/Produk", async (req, res, next) => {
   try {
     const produk = await Produk.find().sort({ createdAt: -1 });
@@ -46,7 +63,6 @@ app.get("/api/Produk", async (req, res, next) => {
   }
 });
 
-// POST tambah produk
 app.post("/api/Produk", async (req, res, next) => {
   try {
     console.log("📥 POST data:", req.body);
@@ -58,7 +74,6 @@ app.post("/api/Produk", async (req, res, next) => {
   }
 });
 
-// PUT update produk
 app.put("/api/Produk/:id", async (req, res, next) => {
   try {
     console.log("✏️ UPDATE id:", req.params.id, "body:", req.body);
@@ -73,7 +88,6 @@ app.put("/api/Produk/:id", async (req, res, next) => {
   }
 });
 
-// DELETE hapus produk
 app.delete("/api/Produk/:id", async (req, res, next) => {
   try {
     console.log("🗑️ DELETE id:", req.params.id);
@@ -85,12 +99,17 @@ app.delete("/api/Produk/:id", async (req, res, next) => {
   }
 });
 
-// ===== Error Handler =====
 app.use((err, req, res, next) => {
   console.error("🔥 Error:", err.message);
   res.status(500).json({ message: err.message || "Internal Server Error" });
 });
 
-// ===== Start Server =====
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on http://localhost:${PORT}`));
+app.listen(PORT, () => {
+  console.log(`🚀 Server running on http://localhost:${PORT}`);
+  console.log("📋 Available endpoints:");
+  console.log("   GET    /api/Produk");
+  console.log("   POST   /api/Produk");
+  console.log("   PUT    /api/Produk/:id");
+  console.log("   DELETE /api/Produk/:id");
+});

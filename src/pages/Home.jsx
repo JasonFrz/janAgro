@@ -43,7 +43,6 @@ const Home = () => {
         </div>
       </div>
       
-      {/* Stats Section */}
       <div className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-8 text-center">
@@ -67,7 +66,6 @@ const Home = () => {
         </div>
       </div>
       
-      {/* CTA Section */}
       <div className="py-20 bg-black">
         <div className="max-w-4xl mx-auto text-center px-4 sm:px-6 lg:px-8">
           <h2 className="text-4xl font-bold text-white mb-6">Ready to Experience Jan Agro?</h2>

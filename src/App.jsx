@@ -6,6 +6,8 @@
   import Shop from './pages/Shop';
   import About from './pages/About';
   import Admin from './pages/Admin';
+  import Location from './pages/Location';
+
   import './index.css' 
 
   function App() {
@@ -24,6 +26,8 @@
           return <About />;
         case 'admin':
           return <Admin />;
+        case 'location':
+          return <Location />;
         default:
           return <Home />;
       }

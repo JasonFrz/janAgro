@@ -144,7 +144,6 @@ const About = () => {
           </div>
         </div>
         
-        {/* Leadership Quote */}
         <div className="py-20 bg-gray-50 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto text-center">
             <blockquote className="text-2xl italic text-gray-700 mb-6 font-light">
@@ -155,7 +154,6 @@ const About = () => {
           </div>
         </div>
         
-        {/* Contact CTA */}
         <div className="py-20 text-center">
           <h2 className="text-3xl font-light text-black mb-6">Experience Jan Agro Nusantara Excellence</h2>
           <p className="text-gray-600 mb-8 max-w-2xl mx-auto">

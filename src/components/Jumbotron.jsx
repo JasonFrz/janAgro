@@ -37,7 +37,6 @@ const Jumbotron = () => {
         </div>
       </div>
       
-      {/* Scroll indicator */}
       <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
         <div className="flex flex-col items-center">
           <div className="w-[1px] h-16 bg-white/30 mb-3"></div>
