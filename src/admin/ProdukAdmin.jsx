@@ -67,7 +67,6 @@ function ProdukAdmin() {
         <h2 className="text-xl font-semibold mb-4">
           {editingId ? "Edit Produk" : "Tambah Produk"}
         </h2>
-        // Di dalam return form
         <form onSubmit={handleSubmit} className="space-y-4">
           <input
             type="text"
@@ -92,7 +91,7 @@ function ProdukAdmin() {
             onChange={(e) =>
               setForm({
                 ...form,
-                harga: Math.max(0, Number(e.target.value)), // tidak boleh minus
+                harga: Math.max(0, Number(e.target.value)),
               })
             }
             className="w-full p-2 border rounded"
@@ -105,7 +104,7 @@ function ProdukAdmin() {
             onChange={(e) =>
               setForm({
                 ...form,
-                stok: Math.max(0, Number(e.target.value)), // tidak boleh minus
+                stok: Math.max(0, Number(e.target.value)),
               })
             }
             className="w-full p-2 border rounded"
@@ -114,7 +113,7 @@ function ProdukAdmin() {
           <div className="flex space-x-2">
             <button
               type="submit"
-              disabled={form.harga < 0 || form.stok < 0} // tombol disable jika minus
+              disabled={form.harga < 0 || form.stok < 0}
               className={`bg-green-600 text-white px-4 py-2 rounded flex items-center ${
                 form.harga < 0 || form.stok < 0
                   ? "opacity-50 cursor-not-allowed"
