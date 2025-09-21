@@ -162,7 +162,7 @@ const About = () => {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <button className="px-8 py-4 bg-black text-white rounded-sm font-medium transition-all duration-300 hover:bg-gray-800 uppercase tracking-wider text-sm">
-              Find a Dealer
+              Find a Irvin
             </button>
             <button className="px-8 py-4 border border-black text-black rounded-sm font-medium transition-all duration-300 hover:bg-black hover:text-white uppercase tracking-wider text-sm">
               Contact Us

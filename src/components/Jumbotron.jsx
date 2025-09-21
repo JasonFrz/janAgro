@@ -1,17 +1,17 @@
-import React from 'react';
+import React from "react";
 
 const Jumbotron = () => {
   return (
     <div
       className="relative h-screen flex items-center justify-center overflow-hidden bg-cover bg-center"
-      style={{ backgroundImage: "url('/image/sawah5.jpg')" }}
+      style={{ backgroundImage: "url('/image/sawah3.jpg')" }}
     >
       <div className="absolute inset-0 bg-black/60"></div>
-      
+
       <div className="relative z-10 text-center text-white max-w-5xl mx-auto px-4">
         <div className="mb-8">
           <p className="text-sm md:text-base tracking-[0.3em] uppercase text-gray-300 mb-6 font-light">
-            GROW THE FUTURE WITH JANAGRO
+            GROW THE FUTURE WITH JAN AGRO NUSANTARA
           </p>
           <h1 className="text-7xl md:text-9xl font-thin mb-8 tracking-tight">
             <span className="font-bold">JAN AGRO</span>
@@ -21,22 +21,27 @@ const Jumbotron = () => {
             Your Trusted Partner in Agricultural Solutions
           </h2>
         </div>
-        
+
         <p className="text-lg md:text-xl text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed font-light">
-          Empowering Farmers with Quality Products and Expert Support. 
-          At Jan Agro, we are dedicated to providing innovative agricultural solutions that help farmers thrive and achieve sustainable growth.
+          Empowering Farmers with Quality Products and Expert Support. At Jan
+          Agro Nusantara, we are dedicated to providing innovative agricultural
+          solutions that help farmers thrive and achieve sustainable growth.
         </p>
-        
+
         <div className="flex flex-col sm:flex-row gap-6 justify-center">
           <button className="group px-10 py-4 bg-white text-black rounded-sm font-medium transition-all duration-500 transform hover:scale-105 hover:shadow-2xl uppercase tracking-wider text-sm">
-            <span className="group-hover:tracking-widest transition-all duration-300">Explore Models</span>
+            <span className="group-hover:tracking-widest transition-all duration-300">
+              Explore Models
+            </span>
           </button>
           <button className="group px-10 py-4 border border-white text-white rounded-sm font-medium transition-all duration-500 hover:bg-white hover:text-black uppercase tracking-wider text-sm">
-            <span className="group-hover:tracking-widest transition-all duration-300">Book Test Drive</span>
+            <span className="group-hover:tracking-widest transition-all duration-300">
+              Book Test Drive
+            </span>
           </button>
         </div>
       </div>
-      
+
       <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
         <div className="flex flex-col items-center">
           <div className="w-[1px] h-16 bg-white/30 mb-3"></div>
