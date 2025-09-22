@@ -76,14 +76,21 @@ function ProdukAdmin() {
             className="w-full p-2 border rounded"
             required
           />
-          <input
-            type="text"
+          <select name="" id=""
+            type="dropdown"
             placeholder="Type"
             value={form.type}
             onChange={(e) => setForm({ ...form, type: e.target.value })}
             className="w-full p-2 border rounded"
-            required
-          />
+            required>
+            <option value="" disabled>Pilih Tipe Produk</option>
+            <option value="Pupuk">Pupuk</option>
+            <option value="Alat">Alat</option>
+          </select>
+
+
+
+
           <input
             type="number"
             placeholder="Harga"

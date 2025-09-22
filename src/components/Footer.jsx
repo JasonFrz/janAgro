@@ -1,11 +1,31 @@
-import React from 'react';
 import { MapPin, Phone, Mail, Facebook, Instagram, Twitter, Youtube } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import './Footer.css'
+import axios from "axios";
 
 const Footer = () => {
+
+  const [produk, setProduk] = useState([]);
+
+  useEffect(() => {
+    fetchProduk();
+  }, []);
+
+  const fetchProduk = async () => {
+    try {
+      const res = await axios.get("http://localhost:5000/api/Produk");
+      setProduk(res.data);
+    } catch (err) {
+      console.error("Gagal fetch produk:", err);
+    }
+  };
+
+
   return (
     <footer className="bg-black text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-12">
+        <div className="ss">
+            
           <div className="lg:col-span-1">
             <div className="flex items-center mb-6">
               <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center mr-4">
@@ -15,7 +35,8 @@ const Footer = () => {
               </div>
               <span className="text-2xl font-light">Jan Agro Nusantara</span>
             </div>
-            <p className="text-gray-400 text-sm leading-relaxed mb-6">
+
+            <p className="text-gray-400 text-sm leading-relaxed mb-6 yapping">
               Empowering Farmers with Quality Products and Expert Support. 
               At Jan Agro, we are dedicated to providing innovative agricultural solutions that help farmers thrive and achieve sustainable growth.
             </p>
@@ -34,34 +55,25 @@ const Footer = () => {
                 <Youtube size={16} />
               </a>
             </div>
+            
           </div>
           
           <div>
-            <h3 className="font-semibold mb-6 text-lg">Models</h3>
+            <h3 className="font-semibold mb-6 text-lg produk">Produk Jan Agro</h3>
             <ul className="space-y-3 text-sm text-gray-400">
-              <li><a href="#" className="hover:text-white transition-colors">Electric Vehicles</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Sedan Series</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">SUV & SAV</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Coupe & Convertible</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">M Performance</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">iX Series</a></li>
+             {produk.slice(0,6).map((p) => (
+              <li key={p._id}>
+                <a href="#" className="hover:text-white transition-colors">{p.nama}</a>   
+              </li>
+              ))}
+              <br />
+              <a href="#" className="hover:text-white transition-colors">Lihat Product Lainnya...</a>   
             </ul>
           </div>
+
           
           <div>
-            <h3 className="font-semibold mb-6 text-lg">Services</h3>
-            <ul className="space-y-3 text-sm text-gray-400">
-              <li><a href="#" className="hover:text-white transition-colors">Service & Maintenance</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">BMW Financing</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Insurance Services</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Extended Warranty</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Roadside Assistance</a></li>
-              <li><a href="#" className="hover:text-white transition-colors">Parts & Accessories</a></li>
-            </ul>
-          </div>
-          
-          <div>
-            <h3 className="font-semibold mb-6 text-lg">Contact & Support</h3>
+            <h3 className="font-semibold mb-6 text-lg contact">Contact & Support</h3>
             <div className="space-y-4 text-sm text-gray-400">
               <div className="flex items-start space-x-3">
                 <MapPin size={16} className="mt-1 flex-shrink-0" />
