@@ -1,10 +1,28 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 
 const Jumbotron = () => {
+  const images = [
+    "/image/sawah1.jpg",
+    "/image/sawah2.jpg",
+    "/image/sawah3.jpg",
+    "/image/sawah4.jpg",
+    "/image/sawah5.jpg",
+  ];
+
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % images.length);
+    }, 3000); 
+
+    return () => clearInterval(interval);
+  }, [images.length]);
+
   return (
     <div
-      className="relative h-screen flex items-center justify-center overflow-hidden bg-cover bg-center"
-      style={{ backgroundImage: "url('/image/sawah3.jpg')" }}
+      className="relative h-screen flex items-center justify-center overflow-hidden bg-cover bg-center transition-all duration-1000"
+      style={{ backgroundImage: `url(${images[currentIndex]})` }}
     >
       <div className="absolute inset-0 bg-black/60"></div>
 
