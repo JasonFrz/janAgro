@@ -10,7 +10,7 @@ import {
   Shield,
 } from "lucide-react";
 
-const Navbar = ({ activeSection, setActiveSection, setShowProfile, user }) => {
+const Navbar = ({ activeSection, setActiveSection, setShowProfile, user, isAdmin }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const navItems = [
@@ -55,17 +55,19 @@ const Navbar = ({ activeSection, setActiveSection, setShowProfile, user }) => {
           </div>
 
           <div className="hidden md:flex items-center space-x-4">
-            <button
-              onClick={() => setActiveSection("admin")}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
-                activeSection === "admin"
-                  ? "text-black bg-white"
-                  : "text-gray-300 hover:text-white hover:bg-white/10"
-              }`}
-            >
-              <Shield size={16} />
-              <span>Admin</span>
-            </button>
+            {isAdmin && (
+              <button
+                onClick={() => setActiveSection("admin")}
+                className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                  activeSection === "admin"
+                    ? "text-black bg-white"
+                    : "text-gray-300 hover:text-white hover:bg-white/10"
+                }`}
+              >
+                <Shield size={16} />
+                <span>Admin</span>
+              </button>
+            )}
 
             <button
               onClick={() => setShowProfile(true)}
@@ -121,20 +123,22 @@ const Navbar = ({ activeSection, setActiveSection, setShowProfile, user }) => {
                 );
               })}
 
-              <button
-                onClick={() => {
-                  setActiveSection("admin");
-                  setIsMobileMenuOpen(false);
-                }}
-                className={`flex items-center space-x-2 w-full px-3 py-2 rounded-md text-base font-medium transition-all duration-200 ${
-                  activeSection === "admin"
-                    ? "text-black bg-white"
-                    : "text-gray-300 hover:text-white hover:bg-white/10"
-                }`}
-              >
-                <Shield size={20} />
-                <span>Admin</span>
-              </button>
+              {isAdmin && (
+                <button
+                  onClick={() => {
+                    setActiveSection("admin");
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className={`flex items-center space-x-2 w-full px-3 py-2 rounded-md text-base font-medium transition-all duration-200 ${
+                    activeSection === "admin"
+                      ? "text-black bg-white"
+                      : "text-gray-300 hover:text-white hover:bg-white/10"
+                  }`}
+                >
+                  <Shield size={20} />
+                  <span>Admin</span>
+                </button>
+              )}
 
               <button
                 onClick={() => {

@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { X, User, Mail, Lock, Eye, EyeOff, Settings, LogOut } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, User, Mail, Lock, Eye, EyeOff, Settings, LogOut, AlertCircle } from 'lucide-react';
 
-const ProfileSlide = ({ isOpen, onClose, user, setUser, setIsAdmin }) => {
+const ProfileSlide = ({ isOpen, onClose, user, onLogin, onRegister, onLogout }) => {
   const [currentView, setCurrentView] = useState('main');
   const [formData, setFormData] = useState({
     email: '',
@@ -11,8 +11,25 @@ const ProfileSlide = ({ isOpen, onClose, user, setUser, setIsAdmin }) => {
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [errorMessage, setErrorMessage] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
+
+  const changeView = (view) => {
+    setErrorMessage(null);
+    setSuccessMessage(null);
+    setCurrentView(view);
+  };
+
+  useEffect(() => {
+    if (isOpen) {
+      setErrorMessage(null);
+      setSuccessMessage(null);
+      setCurrentView(user ? 'profile' : 'main');
+    }
+  }, [isOpen, user]);
 
   const handleInputChange = (e) => {
+    setErrorMessage(null); 
     setFormData({
       ...formData,
       [e.target.name]: e.target.value
@@ -22,45 +39,41 @@ const ProfileSlide = ({ isOpen, onClose, user, setUser, setIsAdmin }) => {
   const handleLogin = (e) => {
     e.preventDefault();
     if (formData.email && formData.password) {
-      const mockUser = {
-        id: 1,
-        name: formData.email === 'admin@janAgro.com' ? 'Admin' : 'John Doe',
-        email: formData.email,
-        joinDate: '2024'
-      };
-      setUser(mockUser);
-      if (formData.email === 'admin@janAgro.com') {
-        setIsAdmin(true);
+      const error = onLogin(formData.email, formData.password);
+      if (error) {
+        setErrorMessage(error);
+      } else {
+        setFormData({ email: '', password: '', name: '', confirmPassword: '' });
       }
-      setCurrentView('profile');
-      setFormData({ email: '', password: '', name: '', confirmPassword: '' });
     }
   };
 
   const handleRegister = (e) => {
     e.preventDefault();
     if (formData.name && formData.email && formData.password && formData.confirmPassword) {
-      if (formData.password === formData.confirmPassword) {
-        const mockUser = {
-          id: 2,
-          name: formData.name,
-          email: formData.email,
-          joinDate: '2025'
-        };
-        setUser(mockUser);
-        setCurrentView('profile');
-        setFormData({ email: '', password: '', name: '', confirmPassword: '' });
+      if (formData.password !== formData.confirmPassword) {
+        setErrorMessage('Konfirmasi password tidak cocok.');
+        return;
+      }
+      const error = onRegister(formData.name, formData.email, formData.password);
+      if (error) {
+        setErrorMessage(error);
       } else {
-        alert('Passwords do not match!');
+        setSuccessMessage('Pendaftaran berhasil! Silakan login untuk melanjutkan.');
+        changeView('login');
+        setFormData({
+          email: formData.email, 
+          password: '',
+          name: '',
+          confirmPassword: ''
+        });
       }
     }
   };
 
   const handleLogout = () => {
-    setUser(null);
-    setIsAdmin(false);
-    setCurrentView('main');
-    setFormData({ email: '', password: '', name: '', confirmPassword: '' });
+    onLogout();
+    changeView('main');
   };
 
   const resetView = () => {
@@ -71,6 +84,25 @@ const ProfileSlide = ({ isOpen, onClose, user, setUser, setIsAdmin }) => {
   const handleClose = () => {
     resetView();
     onClose();
+  };
+
+  const ErrorMessage = ({ message }) => {
+    if (!message) return null;
+    return (
+      <div className="flex items-center space-x-2 bg-red-50 text-red-700 p-3 rounded-md border border-red-200">
+        <AlertCircle size={20} />
+        <span className="text-sm">{message}</span>
+      </div>
+    );
+  };
+  
+  const SuccessMessage = ({ message }) => {
+    if (!message) return null;
+    return (
+      <div className="bg-green-50 text-green-700 p-3 rounded-md border border-green-200 text-sm">
+        {message}
+      </div>
+    );
   };
 
   const renderMainView = () => (
@@ -96,13 +128,13 @@ const ProfileSlide = ({ isOpen, onClose, user, setUser, setIsAdmin }) => {
       
       <div className="space-y-3">
         <button 
-          onClick={() => setCurrentView('login')}
+          onClick={() => changeView('login')}
           className="w-full bg-black text-white py-3 px-4 rounded-md font-medium hover:bg-gray-800 transition-colors"
         >
           Login
         </button>
         <button 
-          onClick={() => setCurrentView('register')}
+          onClick={() => changeView('register')}
           className="w-full border border-gray-300 text-gray-700 py-3 px-4 rounded-md font-medium hover:bg-gray-50 transition-colors"
         >
           Daftar
@@ -141,6 +173,8 @@ const ProfileSlide = ({ isOpen, onClose, user, setUser, setIsAdmin }) => {
       </div>
       
       <form onSubmit={handleLogin} className="space-y-4">
+        <ErrorMessage message={errorMessage} />
+        <SuccessMessage message={successMessage} />
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
           <div className="relative">
@@ -190,7 +224,7 @@ const ProfileSlide = ({ isOpen, onClose, user, setUser, setIsAdmin }) => {
       
       <div className="text-center">
         <button
-          onClick={() => setCurrentView('register')}
+          onClick={() => changeView('register')}
           className="text-sm text-gray-600 hover:text-black"
         >
           Belum punya akun? <span className="font-medium">Daftar sekarang</span>
@@ -199,7 +233,7 @@ const ProfileSlide = ({ isOpen, onClose, user, setUser, setIsAdmin }) => {
       
       <div className="text-center">
         <button
-          onClick={() => setCurrentView('main')}
+          onClick={() => changeView('main')}
           className="text-sm text-gray-500 hover:text-gray-700"
         >
           ← Kembali
@@ -216,6 +250,7 @@ const ProfileSlide = ({ isOpen, onClose, user, setUser, setIsAdmin }) => {
       </div>
       
       <form onSubmit={handleRegister} className="space-y-4">
+        <ErrorMessage message={errorMessage} />
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
           <div className="relative">
@@ -304,7 +339,7 @@ const ProfileSlide = ({ isOpen, onClose, user, setUser, setIsAdmin }) => {
       
       <div className="text-center">
         <button
-          onClick={() => setCurrentView('login')}
+          onClick={() => changeView('login')}
           className="text-sm text-gray-600 hover:text-black"
         >
           Sudah punya akun? <span className="font-medium">Login</span>
@@ -313,7 +348,7 @@ const ProfileSlide = ({ isOpen, onClose, user, setUser, setIsAdmin }) => {
       
       <div className="text-center">
         <button
-          onClick={() => setCurrentView('main')}
+          onClick={() => changeView('main')}
           className="text-sm text-gray-500 hover:text-gray-700"
         >
           ← Kembali
