@@ -1,13 +1,34 @@
-import React, { useState, useEffect } from 'react';
-import { X, User, Mail, Lock, Eye, EyeOff, Settings, LogOut, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from "react";
+import {
+  X,
+  User,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
+  Settings,
+  LogOut,
+  AlertCircle,
+  AtSign,
+} from "lucide-react";
 
-const ProfileSlide = ({ isOpen, onClose, user, onLogin, onRegister, onLogout }) => {
-  const [currentView, setCurrentView] = useState('main');
+const ProfileSlide = ({
+  isOpen,
+  onClose,
+  user,
+  onLogin,
+  onRegister,
+  onLogout,
+  setActiveSection,
+}) => {
+  const [currentView, setCurrentView] = useState("main");
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    name: '',
-    confirmPassword: ''
+    identifier: "",
+    password: "",
+    name: "",
+    username: "",
+    email: "",
+    confirmPassword: "",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -24,48 +45,75 @@ const ProfileSlide = ({ isOpen, onClose, user, onLogin, onRegister, onLogout }) 
     if (isOpen) {
       setErrorMessage(null);
       setSuccessMessage(null);
-      setCurrentView(user ? 'profile' : 'main');
+      setCurrentView(user ? "profile" : "main");
     }
   }, [isOpen, user]);
 
   const handleInputChange = (e) => {
-    setErrorMessage(null); 
+    setErrorMessage(null);
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [e.target.name]: e.target.value,
     });
   };
 
   const handleLogin = (e) => {
     e.preventDefault();
-    if (formData.email && formData.password) {
-      const error = onLogin(formData.email, formData.password);
+    if (formData.identifier && formData.password) {
+      const error = onLogin(formData.identifier, formData.password);
       if (error) {
         setErrorMessage(error);
       } else {
-        setFormData({ email: '', password: '', name: '', confirmPassword: '' });
+        setFormData({
+          identifier: "",
+          password: "",
+          name: "",
+          username: "",
+          email: "",
+          confirmPassword: "",
+        });
       }
     }
   };
 
   const handleRegister = (e) => {
     e.preventDefault();
-    if (formData.name && formData.email && formData.password && formData.confirmPassword) {
-      if (formData.password !== formData.confirmPassword) {
-        setErrorMessage('Konfirmasi password tidak cocok.');
+    if (
+      formData.username &&
+      formData.name &&
+      formData.email &&
+      formData.password &&
+      formData.confirmPassword
+    ) {
+      if (formData.password.length < 6) {
+        setErrorMessage("Password harus memiliki minimal 6 karakter.");
         return;
       }
-      const error = onRegister(formData.name, formData.email, formData.password);
+      if (formData.password !== formData.confirmPassword) {
+        setErrorMessage("Konfirmasi password tidak cocok.");
+        return;
+      }
+
+      const error = onRegister(
+        formData.username,
+        formData.name,
+        formData.email,
+        formData.password
+      );
       if (error) {
         setErrorMessage(error);
       } else {
-        setSuccessMessage('Pendaftaran berhasil! Silakan login untuk melanjutkan.');
-        changeView('login');
+        setSuccessMessage(
+          "Pendaftaran berhasil! Silakan login untuk melanjutkan."
+        );
+        changeView("login");
         setFormData({
-          email: formData.email, 
-          password: '',
-          name: '',
-          confirmPassword: ''
+          ...formData,
+          identifier: formData.email,
+          password: "",
+          name: "",
+          username: "",
+          confirmPassword: "",
         });
       }
     }
@@ -73,16 +121,28 @@ const ProfileSlide = ({ isOpen, onClose, user, onLogin, onRegister, onLogout }) 
 
   const handleLogout = () => {
     onLogout();
-    changeView('main');
+    changeView("main");
   };
 
   const resetView = () => {
-    setCurrentView(user ? 'profile' : 'main');
-    setFormData({ email: '', password: '', name: '', confirmPassword: '' });
+    setCurrentView(user ? "profile" : "main");
+    setFormData({
+      identifier: "",
+      password: "",
+      name: "",
+      username: "",
+      email: "",
+      confirmPassword: "",
+    });
   };
 
   const handleClose = () => {
     resetView();
+    onClose();
+  };
+
+  const handleAccountSettingsClick = () => {
+    setActiveSection("profile");
     onClose();
   };
 
@@ -95,7 +155,7 @@ const ProfileSlide = ({ isOpen, onClose, user, onLogin, onRegister, onLogout }) 
       </div>
     );
   };
-  
+
   const SuccessMessage = ({ message }) => {
     if (!message) return null;
     return (
@@ -111,36 +171,47 @@ const ProfileSlide = ({ isOpen, onClose, user, onLogin, onRegister, onLogout }) 
         <div className="w-20 h-20 bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center">
           <User size={40} className="text-gray-600" />
         </div>
-        <h3 className="text-lg font-semibold text-gray-900">Selamat datang di Jan Agro</h3>
-        <p className="text-gray-600 mt-2">Silakan mendaftar dan manfaatkan keuntungannya:</p>
+        <h3 className="text-lg font-semibold text-gray-900">
+          Selamat datang di Jan Agro
+        </h3>
+        <p className="text-gray-600 mt-2">
+          Silakan mendaftar dan manfaatkan keuntungannya:
+        </p>
       </div>
-      
       <div className="bg-gray-50 p-4 rounded-lg">
         <div className="flex items-start space-x-3">
           <div className="w-5 h-5 bg-black rounded-full flex-shrink-0 mt-0.5 flex items-center justify-center">
-            <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+            <svg
+              className="w-3 h-3 text-white"
+              fill="currentColor"
+              viewBox="0 0 20 20"
+            >
+              <path
+                fillRule="evenodd"
+                d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+                clipRule="evenodd"
+              />
             </svg>
           </div>
-          <p className="text-sm text-gray-700">Optimisasi tanaman Anda dengan kami.</p>
+          <p className="text-sm text-gray-700">
+            Optimisasi tanaman Anda dengan kami.
+          </p>
         </div>
       </div>
-      
       <div className="space-y-3">
-        <button 
-          onClick={() => changeView('login')}
+        <button
+          onClick={() => changeView("login")}
           className="w-full bg-black text-white py-3 px-4 rounded-md font-medium hover:bg-gray-800 transition-colors"
         >
           Login
         </button>
-        <button 
-          onClick={() => changeView('register')}
+        <button
+          onClick={() => changeView("register")}
           className="w-full border border-gray-300 text-gray-700 py-3 px-4 rounded-md font-medium hover:bg-gray-50 transition-colors"
         >
           Daftar
         </button>
       </div>
-      
       <div className="pt-6 border-t">
         <h4 className="font-semibold mb-3">Keuntungan Member:</h4>
         <ul className="space-y-2 text-sm text-gray-600">
@@ -171,36 +242,44 @@ const ProfileSlide = ({ isOpen, onClose, user, onLogin, onRegister, onLogout }) 
         <h3 className="text-2xl font-bold text-gray-900">Login</h3>
         <p className="text-gray-600 mt-2">Masuk ke akun Anda</p>
       </div>
-      
       <form onSubmit={handleLogin} className="space-y-4">
         <ErrorMessage message={errorMessage} />
         <SuccessMessage message={successMessage} />
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Email or Username
+          </label>
           <div className="relative">
-            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+            <Mail
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+              size={16}
+            />
             <input
-              type="email"
-              name="email"
-              value={formData.email}
+              type="text"
+              name="identifier"
+              value={formData.identifier}
               onChange={handleInputChange}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:border-transparent"
-              placeholder="Enter your email"
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black"
+              placeholder="Enter your email or username"
               required
             />
           </div>
         </div>
-        
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Password
+          </label>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+            <Lock
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+              size={16}
+            />
             <input
               type={showPassword ? "text" : "password"}
               name="password"
               value={formData.password}
               onChange={handleInputChange}
-              className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:border-transparent"
+              className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black"
               placeholder="Enter your password"
               required
             />
@@ -213,7 +292,6 @@ const ProfileSlide = ({ isOpen, onClose, user, onLogin, onRegister, onLogout }) 
             </button>
           </div>
         </div>
-        
         <button
           type="submit"
           className="w-full bg-black text-white py-3 px-4 rounded-md font-medium hover:bg-gray-800 transition-colors"
@@ -221,19 +299,17 @@ const ProfileSlide = ({ isOpen, onClose, user, onLogin, onRegister, onLogout }) 
           Login
         </button>
       </form>
-      
       <div className="text-center">
         <button
-          onClick={() => changeView('register')}
+          onClick={() => changeView("register")}
           className="text-sm text-gray-600 hover:text-black"
         >
           Belum punya akun? <span className="font-medium">Daftar sekarang</span>
         </button>
       </div>
-      
       <div className="text-center">
         <button
-          onClick={() => changeView('main')}
+          onClick={() => changeView("main")}
           className="text-sm text-gray-500 hover:text-gray-700"
         >
           ← Kembali
@@ -248,52 +324,84 @@ const ProfileSlide = ({ isOpen, onClose, user, onLogin, onRegister, onLogout }) 
         <h3 className="text-2xl font-bold text-gray-900">Daftar</h3>
         <p className="text-gray-600 mt-2">Buat akun baru</p>
       </div>
-      
       <form onSubmit={handleRegister} className="space-y-4">
         <ErrorMessage message={errorMessage} />
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Username
+          </label>
           <div className="relative">
-            <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+            <AtSign
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+              size={16}
+            />
+            <input
+              type="text"
+              name="username"
+              value={formData.username}
+              onChange={handleInputChange}
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black"
+              placeholder="Pilih username unik"
+              required
+            />
+          </div>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Nama Lengkap
+          </label>
+          <div className="relative">
+            <User
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+              size={16}
+            />
             <input
               type="text"
               name="name"
               value={formData.name}
               onChange={handleInputChange}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:border-transparent"
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black"
               placeholder="Masukkan nama lengkap"
               required
             />
           </div>
         </div>
-        
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Email
+          </label>
           <div className="relative">
-            <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+            <Mail
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+              size={16}
+            />
             <input
               type="email"
               name="email"
               value={formData.email}
               onChange={handleInputChange}
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:border-transparent"
+              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black"
               placeholder="Masukkan email"
               required
             />
           </div>
         </div>
-        
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Password
+          </label>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+            <Lock
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+              size={16}
+            />
             <input
               type={showPassword ? "text" : "password"}
               name="password"
               value={formData.password}
               onChange={handleInputChange}
-              className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:border-transparent"
-              placeholder="Buat password"
+              className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black"
+              placeholder="Minimal 6 karakter"
               required
             />
             <button
@@ -305,17 +413,21 @@ const ProfileSlide = ({ isOpen, onClose, user, onLogin, onRegister, onLogout }) 
             </button>
           </div>
         </div>
-        
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Konfirmasi Password</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Konfirmasi Password
+          </label>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+            <Lock
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+              size={16}
+            />
             <input
               type={showConfirmPassword ? "text" : "password"}
               name="confirmPassword"
               value={formData.confirmPassword}
               onChange={handleInputChange}
-              className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:border-transparent"
+              className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black"
               placeholder="Ulangi password"
               required
             />
@@ -328,7 +440,6 @@ const ProfileSlide = ({ isOpen, onClose, user, onLogin, onRegister, onLogout }) 
             </button>
           </div>
         </div>
-        
         <button
           type="submit"
           className="w-full bg-black text-white py-3 px-4 rounded-md font-medium hover:bg-gray-800 transition-colors"
@@ -336,19 +447,17 @@ const ProfileSlide = ({ isOpen, onClose, user, onLogin, onRegister, onLogout }) 
           Daftar
         </button>
       </form>
-      
       <div className="text-center">
         <button
-          onClick={() => changeView('login')}
+          onClick={() => changeView("login")}
           className="text-sm text-gray-600 hover:text-black"
         >
           Sudah punya akun? <span className="font-medium">Login</span>
         </button>
       </div>
-      
       <div className="text-center">
         <button
-          onClick={() => changeView('main')}
+          onClick={() => changeView("main")}
           className="text-sm text-gray-500 hover:text-gray-700"
         >
           ← Kembali
@@ -360,16 +469,25 @@ const ProfileSlide = ({ isOpen, onClose, user, onLogin, onRegister, onLogout }) 
   const renderProfileView = () => (
     <div className="space-y-6">
       <div className="text-center">
-        <div className="w-20 h-20 bg-gray-900 rounded-full mx-auto mb-4 flex items-center justify-center">
-          <User size={40} className="text-white" />
+        <div className="w-20 h-20 bg-gray-900 rounded-full mx-auto mb-4 flex items-center justify-center overflow-hidden border-2 border-gray-200">
+          {user?.avatar ? (
+            <img
+              src={user.avatar}
+              alt="User Avatar"
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <User size={40} className="text-white" />
+          )}
         </div>
         <h3 className="text-xl font-bold text-gray-900">{user?.name}</h3>
         <p className="text-gray-600">{user?.email}</p>
         <p className="text-sm text-gray-500">Member since {user?.joinDate}</p>
       </div>
-      
       <div className="bg-gray-50 rounded-lg p-6">
-        <h4 className="font-semibold mb-4 text-gray-900">Account Information</h4>
+        <h4 className="font-semibold mb-4 text-gray-900">
+          Account Information
+        </h4>
         <div className="space-y-3">
           <div className="flex justify-between items-center">
             <span className="text-gray-600">Status</span>
@@ -385,14 +503,15 @@ const ProfileSlide = ({ isOpen, onClose, user, onLogin, onRegister, onLogout }) 
           </div>
         </div>
       </div>
-      
       <div className="space-y-3">
-        <button className="w-full flex items-center justify-center space-x-2 bg-gray-100 text-gray-700 py-3 px-4 rounded-md font-medium hover:bg-gray-200 transition-colors">
+        <button
+          onClick={handleAccountSettingsClick}
+          className="w-full flex items-center justify-center space-x-2 bg-gray-100 text-gray-700 py-3 px-4 rounded-md font-medium hover:bg-gray-200 transition-colors"
+        >
           <Settings size={16} />
           <span>Account Settings</span>
         </button>
-        
-        <button 
+        <button
           onClick={handleLogout}
           className="w-full flex items-center justify-center space-x-2 bg-red-50 text-red-600 py-3 px-4 rounded-md font-medium hover:bg-red-100 transition-colors"
         >
@@ -400,7 +519,6 @@ const ProfileSlide = ({ isOpen, onClose, user, onLogin, onRegister, onLogout }) 
           <span>Logout</span>
         </button>
       </div>
-      
       <div className="pt-6 border-t">
         <h4 className="font-semibold mb-3">Your Benefits:</h4>
         <ul className="space-y-2 text-sm text-gray-600">
@@ -426,28 +544,38 @@ const ProfileSlide = ({ isOpen, onClose, user, onLogin, onRegister, onLogout }) 
   );
 
   return (
-    <div className={`fixed inset-0 z-50 transition-all duration-300 ${isOpen ? 'visible' : 'invisible'}`}>
-      <div 
-        className={`absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0'}`}
+    <div
+      className={`fixed inset-0 z-50 transition-all duration-300 ${
+        isOpen ? "visible" : "invisible"
+      }`}
+    >
+      <div
+        className={`absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${
+          isOpen ? "opacity-100" : "opacity-0"
+        }`}
         onClick={handleClose}
       />
-      
-      <div className={`absolute right-0 top-0 h-full w-full max-w-md bg-white transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+      <div
+        className={`absolute right-0 top-0 h-full w-full max-w-md bg-white transform transition-transform duration-300 ease-in-out ${
+          isOpen ? "translate-x-0" : "translate-x-full"
+        }`}
+      >
         <div className="p-6 h-full overflow-y-auto">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Jan Agro Nusantara</h2>
-            <button 
+            <h2 className="text-2xl font-bold text-gray-900">
+              Jan Agro Nusantara
+            </h2>
+            <button
               onClick={handleClose}
               className="p-2 hover:bg-gray-100 rounded-full transition-colors"
             >
               <X size={24} />
             </button>
           </div>
-          
-          {currentView === 'main' && renderMainView()}
-          {currentView === 'login' && renderLoginView()}
-          {currentView === 'register' && renderRegisterView()}
-          {currentView === 'profile' && renderProfileView()}
+          {currentView === "main" && renderMainView()}
+          {currentView === "login" && renderLoginView()}
+          {currentView === "register" && renderRegisterView()}
+          {currentView === "profile" && renderProfileView()}
         </div>
       </div>
     </div>

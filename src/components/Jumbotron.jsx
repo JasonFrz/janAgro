@@ -14,7 +14,7 @@ const Jumbotron = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % images.length);
-    }, 3000); 
+    }, 5000);
 
     return () => clearInterval(interval);
   }, [images.length]);

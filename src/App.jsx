@@ -7,7 +7,8 @@ import Shop from './pages/Shop';
 import About from './pages/About';
 import Admin from './pages/Admin';
 import Location from './pages/Location';
-import './index.css' 
+import Profile from './pages/Profile';
+import './index.css';
 
 function App() {
   const [activeSection, setActiveSection] = useState('home');
@@ -15,51 +16,120 @@ function App() {
   const [user, setUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
 
+  // Data dummy diperbarui dengan 'username'
   const [users, setUsers] = useState([
-    { id: 1, name: 'John Doe', email: 'user@example.com', password: 'password123', joinDate: '2023' }
-    
+    { id: 1, username: 'johndoe', name: 'John Doe', email: 'user@example.com', password: 'password123', joinDate: '2023', avatar: null }
   ]);
-  const adminUser = { id: 99, name: 'Admin', email: 'admin@gmail.com', password: 'admin', joinDate: '2022' };
+  const [adminUser, setAdminUser] = useState({ 
+    id: 99, username: 'admin', name: 'Admin', email: 'admin@gmail.com', password: 'admin', joinDate: '2022', avatar: null 
+  });
 
-  const handleLogin = (email, password) => {
-    if (email === adminUser.email && password === adminUser.password) {
+  // Logika login diperbarui untuk menerima 'identifier' (email atau username)
+  const handleLogin = (identifier, password) => {
+    const isAdminLogin = 
+      (adminUser.email === identifier || adminUser.username === identifier) && adminUser.password === password;
+
+    if (isAdminLogin) {
       setUser(adminUser);
       setIsAdmin(true);
       setActiveSection('admin');
       setShowProfile(false);
-      return null; 
+      return null;
     }
 
-    const foundUser = users.find(u => u.email === email && u.password === password);
+    const foundUser = users.find(u => 
+      (u.email === identifier || u.username === identifier) && u.password === password
+    );
+
     if (foundUser) {
       setUser(foundUser);
       setIsAdmin(false);
       setShowProfile(false);
-      return null; 
+      return null;
     } else {
-      return 'Email atau password yang Anda masukkan salah.'; // Gagal, kembalikan pesan error
+      return 'Email/Username atau password yang Anda masukkan salah.';
     }
   };
 
-  const handleRegister = (name, email, password) => {
-    if (users.find(u => u.email === email) || email === adminUser.email) {
-      return 'Email ini sudah terdaftar. Silakan gunakan email lain.'; // Gagal, kembalikan pesan error
+  // Logika pendaftaran diperbarui untuk menerima 'username' dan memeriksanya
+  const handleRegister = (username, name, email, password) => {
+    const cleanUsername = username.trim().toLowerCase();
+    
+    if (users.find(u => u.username === cleanUsername) || adminUser.username === cleanUsername) {
+      return 'Username ini sudah digunakan. Silakan pilih yang lain.';
     }
+    
+    if (users.find(u => u.email === email) || adminUser.email === email) {
+      return 'Email ini sudah terdaftar. Silakan gunakan email lain.';
+    }
+
     const newUser = {
       id: users.length + 1,
+      username: cleanUsername,
       name,
       email,
       password,
-      joinDate: new Date().getFullYear().toString()
+      joinDate: new Date().getFullYear().toString(),
+      avatar: null
     };
     setUsers([...users, newUser]);
-    return null; 
+    return null;
   };
 
   const handleLogout = () => {
     setUser(null);
     setIsAdmin(false);
     setActiveSection('home');
+  };
+
+  const handleAvatarChange = (newAvatarUrl) => {
+    if (user) {
+      const updatedUser = { ...user, avatar: newAvatarUrl };
+      setUser(updatedUser);
+      
+      if (updatedUser.id === adminUser.id) {
+        setAdminUser(updatedUser);
+      } else {
+        setUsers(prevUsers => 
+          prevUsers.map(u => (u.id === updatedUser.id ? updatedUser : u))
+        );
+      }
+    }
+  };
+
+  const handleProfileUpdate = (newName) => {
+    if (!user) return;
+    const updatedUser = { ...user, name: newName };
+    setUser(updatedUser);
+
+    if (updatedUser.id === adminUser.id) {
+      setAdminUser(updatedUser);
+    } else {
+      setUsers(prevUsers => 
+        prevUsers.map(u => (u.id === updatedUser.id ? updatedUser : u))
+      );
+    }
+  };
+
+  const handlePasswordChange = (currentPassword, newPassword) => {
+    if (!user) {
+      return { success: false, message: 'No user is currently logged in.' };
+    }
+    if (user.password !== currentPassword) {
+      return { success: false, message: 'Current password is incorrect.' };
+    }
+    const updatedUser = { ...user, password: newPassword };
+    setUser(updatedUser);
+
+    if (updatedUser.id === adminUser.id) {
+      setAdminUser(updatedUser);
+    } else {
+      setUsers(prevUsers => 
+        prevUsers.map(u => (u.id === updatedUser.id ? updatedUser : u))
+      );
+    }
+    
+    return { success: true, message: 'Password updated successfully!' };
   };
 
   const renderContent = () => {
@@ -74,6 +144,14 @@ function App() {
         return isAdmin ? <Admin /> : <Home />;
       case 'location':
         return <Location />;
+      case 'profile':
+        return <Profile 
+                  user={user} 
+                  onAvatarChange={handleAvatarChange}
+                  onProfileUpdate={handleProfileUpdate}
+                  onPasswordChange={handlePasswordChange}
+                  setActiveSection={setActiveSection} 
+                />;
       default:
         return <Home />;
     }
@@ -102,6 +180,7 @@ function App() {
         onLogin={handleLogin}
         onRegister={handleRegister}
         onLogout={handleLogout}
+        setActiveSection={setActiveSection}
       />
     </div>
   );
