@@ -1,26 +1,58 @@
 import React, { useState } from "react";
-import { LayoutDashboard, Users, Package, Settings } from "lucide-react";
+import {
+  LayoutDashboard,
+  Users,
+  Package,
+  Settings,
+  Ticket,
+} from "lucide-react";
 
 import DashboardAdmin from "../admin/DashboardAdmin";
 import UserAdmin from "../admin/UserAdmin";
 import ProdukAdmin from "../admin/ProdukAdmin";
 import SettingAdmin from "../admin/SettingAdmin";
+import Voucher from "../admin/Voucher"; 
 
-function Admin() {
+function Admin({
+  users,
+  vouchers,
+  onUpdateUser,
+  onDeleteUser,
+  onToggleBanUser,
+  onAddVoucher,
+  onUpdateVoucher,
+  onDeleteVoucher,
+}) {
   const [activeTab, setActiveTab] = useState("dashboard");
 
   const renderContent = () => {
     switch (activeTab) {
       case "dashboard":
-        return <DashboardAdmin />;
+        return <DashboardAdmin users={users} vouchers={vouchers} />;
       case "users":
-        return <UserAdmin />;
+        return (
+          <UserAdmin
+            users={users}
+            onUpdate={onUpdateUser}
+            onDelete={onDeleteUser}
+            onToggleBan={onToggleBanUser}
+          />
+        );
       case "produk":
         return <ProdukAdmin />;
+      case "vouchers": 
+        return (
+          <Voucher
+            vouchers={vouchers}
+            onAdd={onAddVoucher}
+            onUpdate={onUpdateVoucher}
+            onDelete={onDeleteVoucher}
+          />
+        );
       case "settings":
         return <SettingAdmin />;
       default:
-        return <DashboardAdmin />;
+        return <DashboardAdmin users={users} vouchers={vouchers} />;
     }
   };
 
@@ -32,7 +64,9 @@ function Admin() {
           <button
             onClick={() => setActiveTab("dashboard")}
             className={`flex items-center w-full px-3 py-2 rounded ${
-              activeTab === "dashboard" ? "bg-black text-white" : "hover:bg-gray-200"
+              activeTab === "dashboard"
+                ? "bg-black text-white"
+                : "hover:bg-gray-200"
             }`}
           >
             <LayoutDashboard className="mr-2 h-5 w-5" /> Dashboard
@@ -40,7 +74,9 @@ function Admin() {
           <button
             onClick={() => setActiveTab("users")}
             className={`flex items-center w-full px-3 py-2 rounded ${
-              activeTab === "users" ? "bg-black text-white" : "hover:bg-gray-200"
+              activeTab === "users"
+                ? "bg-black text-white"
+                : "hover:bg-gray-200"
             }`}
           >
             <Users className="mr-2 h-5 w-5" /> Users
@@ -48,25 +84,38 @@ function Admin() {
           <button
             onClick={() => setActiveTab("produk")}
             className={`flex items-center w-full px-3 py-2 rounded ${
-              activeTab === "produk" ? "bg-black text-white" : "hover:bg-gray-200"
+              activeTab === "produk"
+                ? "bg-black text-white"
+                : "hover:bg-gray-200"
             }`}
           >
             <Package className="mr-2 h-5 w-5" /> Produk
           </button>
+
+          <button
+            onClick={() => setActiveTab("vouchers")}
+            className={`flex items-center w-full px-3 py-2 rounded ${
+              activeTab === "vouchers"
+                ? "bg-black text-white"
+                : "hover:bg-gray-200"
+            }`}
+          >
+            <Ticket className="mr-2 h-5 w-5" /> Vouchers
+          </button>
+
           <button
             onClick={() => setActiveTab("settings")}
             className={`flex items-center w-full px-3 py-2 rounded ${
-              activeTab === "settings" ? "bg-black text-white" : "hover:bg-gray-200"
+              activeTab === "settings"
+                ? "bg-black text-white"
+                : "hover:bg-gray-200"
             }`}
           >
             <Settings className="mr-2 h-5 w-5" /> Settings
           </button>
         </nav>
       </aside>
-
-      <main className="flex-1 p-6 space-y-6 mt-16">
-        {renderContent()}
-      </main>
+      <main className="flex-1 p-6 space-y-6 mt-16">{renderContent()}</main>
     </div>
   );
 }

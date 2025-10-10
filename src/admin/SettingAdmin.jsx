@@ -1,4 +1,3 @@
-// src/admin/SettingAdmin.jsx
 import React from "react";
 
 function SettingAdmin() {

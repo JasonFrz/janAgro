@@ -1,15 +1,14 @@
-// src/admin/DashboardAdmin.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 
-function DashboardAdmin() {
+function DashboardAdmin({ users, vouchers }) {
   const [produk, setProduk] = useState([]);
-  const [users, setUsers] = useState([]);
-  const [sortAsc, setSortAsc] = useState(true); // untuk sorting
+  const [produkSortAsc, setProdukSortAsc] = useState(true);
+
+  const [userSortAsc, setUserSortAsc] = useState(true);
 
   useEffect(() => {
     fetchProduk();
-    fetchUsers();
   }, []);
 
   const fetchProduk = async () => {
@@ -21,16 +20,7 @@ function DashboardAdmin() {
     }
   };
 
-  const fetchUsers = async () => {
-    try {
-      const res = await axios.get("http://localhost:5000/api/users"); // endpoint user
-      setUsers(res.data);
-    } catch (err) {
-      console.error("Gagal fetch users:", err);
-    }
-  };
-
-  const getStatus = (stok) => {
+  const getProdukStatus = (stok) => {
     if (stok === 0)
       return { text: "Out of Stock", color: "bg-red-100 text-red-600" };
     if (stok <= 10)
@@ -38,30 +28,38 @@ function DashboardAdmin() {
     return { text: "Available", color: "bg-green-100 text-green-600" };
   };
 
+  const getUserStatus = (isBanned) => {
+    if (isBanned) return { text: "Banned", color: "bg-red-100 text-red-600" };
+    return { text: "Active", color: "bg-green-100 text-green-600" };
+  };
+
   const cards = [
-    {
-      title: "Total Pupuk",
-      count: produk.filter((p) => p.type === "Pupuk").length,
-      icon: "/icon/pupuk.png",
-    },
-    {
-      title: "Total Alat",
-      count: produk.filter((p) => p.type === "Alat").length,
-      icon: "/icon/tools.png",
-    },
-    { title: "Total Produk", count: produk.length, icon: "/icon/product.png" },
     { title: "Total Users", count: users.length, icon: "/icon/group.png" },
+    { title: "Total Produk", count: produk.length, icon: "/icon/product.png" },
+    {
+      title: "Total Voucher",
+      count: vouchers.length,
+      icon: "/icon/voucher.png",
+    },
   ];
 
-  // Sort produk by name
-  const sortedProduk = [...produk].sort((a, b) => {
-    if (sortAsc) return a.nama.localeCompare(b.nama);
-    else return b.nama.localeCompare(a.nama);
-  });
+  const sortedProduk = useMemo(() => {
+    return [...produk].sort((a, b) => {
+      if (produkSortAsc) return a.nama.localeCompare(b.nama);
+      return b.nama.localeCompare(a.nama);
+    });
+  }, [produk, produkSortAsc]);
+
+  const sortedUsers = useMemo(() => {
+    return [...users].sort((a, b) => {
+      if (userSortAsc) return a.username.localeCompare(b.username);
+      return b.username.localeCompare(a.username);
+    });
+  }, [users, userSortAsc]);
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {cards.map((card, idx) => (
           <div
             key={idx}
@@ -69,28 +67,64 @@ function DashboardAdmin() {
           >
             <img src={card.icon} alt={card.title} className="w-12 h-12" />
             <div>
-              <h2 className="text-lg font-semibold">{card.title}</h2>
-              <p className="text-2xl font-bold">{card.count}</p>
+              <p className="text-gray-600">{card.title}</p>
+              <p className="text-3xl font-bold">{card.count}</p>
             </div>
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Recent Users */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white shadow rounded-lg p-4">
-          <h2 className="text-xl font-semibold mb-4">Recent Users</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-semibold flex items-center space-x-2">
+              <span>Recent Users</span>
+              <button
+                onClick={() => setUserSortAsc(!userSortAsc)}
+                className="p-1 rounded border hover:bg-gray-100"
+                title={`Sort by username ${userSortAsc ? "DESC" : "ASC"}`}
+              >
+                <img
+                  src="/icon/down.png"
+                  alt="Sort"
+                  className={`w-4 h-4 transition-transform duration-300 ${
+                    userSortAsc ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+            </h2>
+          </div>
           {users.length === 0 ? (
-            <p className="text-gray-500">Belum ada user</p>
+            <p className="text-gray-500">No user data available.</p>
           ) : (
-            <ul className="divide-y divide-gray-200">
-              {users.map((u) => (
-                <li key={u._id} className="py-2">
-                  <p className="font-medium">{u.name}</p>
-                  <p className="text-sm text-gray-500">{u.email}</p>
-                </li>
-              ))}
-            </ul>
+            <div className="overflow-y-auto max-h-96">
+              <ul className="divide-y divide-gray-200">
+                {sortedUsers.map((user, idx) => {
+                  if (idx >= 6) return null;
+                  const status = getUserStatus(user.isBanned);
+                  return (
+                    <li
+                      key={user.id}
+                      className="flex items-center justify-between py-3"
+                    >
+                      <div>
+                        <p className="font-medium text-black">{user.name}</p>
+                        <p className="text-sm text-gray-500">
+                          @{user.username}
+                        </p>
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <span
+                          className={`px-2 py-1 text-xs rounded-full font-medium ${status.color}`}
+                        >
+                          {status.text}
+                        </span>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
           )}
         </div>
 
@@ -99,26 +133,25 @@ function DashboardAdmin() {
             <h2 className="text-xl font-semibold flex items-center space-x-2">
               <span>Produk Inventory</span>
               <button
-                onClick={() => setSortAsc(!sortAsc)}
+                onClick={() => setProdukSortAsc(!produkSortAsc)}
                 className="p-1 rounded border hover:bg-gray-100"
-                title={`Sort by name ${sortAsc ? "DESC" : "ASC"}`}
+                title={`Sort by name ${produkSortAsc ? "DESC" : "ASC"}`}
               >
                 <img
                   src="/icon/down.png"
                   alt="Sort"
                   className={`w-4 h-4 transition-transform duration-300 ${
-                    sortAsc ? "rotate-180" : ""
+                    produkSortAsc ? "rotate-180" : ""
                   }`}
                 />
               </button>
             </h2>
           </div>
-
           <div className="overflow-y-auto max-h-96">
             <ul className="divide-y divide-gray-200">
               {sortedProduk.map((p, idx) => {
-                if (idx >= 6) return null; // default menampilkan 6 produk
-                const status = getStatus(p.stok);
+                if (idx >= 6) return null;
+                const status = getProdukStatus(p.stok);
                 return (
                   <li
                     key={p._id}

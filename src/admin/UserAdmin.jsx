@@ -1,25 +1,103 @@
-// src/admin/UserAdmin.jsx
-import React from "react";
+import React, { useState, useMemo } from "react";
+import { Edit, Trash2, UserX, UserCheck } from 'lucide-react';
+import ConfirmationModal from './ConfirmationModal';
+import EditUserModal from './EditUserModal';
 
-function UserAdmin() {
-  return (
-    <div className="bg-white shadow rounded-lg p-6">
-      <h2 className="text-xl font-semibold mb-4">Users Management</h2>
-      <p className="text-gray-500">Belum ada data user</p>
-      
-      <div className="mt-6 space-y-4">
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-          <p className="text-gray-400">User management features akan ditambahkan di sini</p>
-          <ul className="text-sm text-gray-400 mt-2">
-            <li>• View all users</li>
-            <li>• Add new users</li>
-            <li>• Edit user information</li>
-            <li>• Delete users</li>
-            <li>• User roles & permissions</li>
-          </ul>
+function UserAdmin({ users, onUpdate, onDelete, onToggleBan }) {
+  const [editingUser, setEditingUser] = useState(null);
+  const [confirmation, setConfirmation] = useState({ isOpen: false, action: null, user: null });
+
+  const activeUsers = useMemo(() => users.filter(u => !u.isBanned), [users]);
+  const bannedUsers = useMemo(() => users.filter(u => u.isBanned), [users]);
+
+  const openConfirmation = (action, user) => {
+    setConfirmation({ isOpen: true, action, user });
+  };
+
+  const closeConfirmation = () => {
+    setConfirmation({ isOpen: false, action: null, user: null });
+  };
+
+  const handleConfirm = () => {
+    const { action, user } = confirmation;
+    if (action === 'delete') {
+      onDelete(user.id);
+    } else if (action === 'ban' || action === 'unban') {
+      onToggleBan(user.id);
+    }
+    closeConfirmation();
+  };
+
+  const UserTable = ({ title, userList, isBannedList = false }) => (
+    <div>
+      <h3 className="text-lg font-semibold mb-3">{title} ({userList.length})</h3>
+      {userList.length === 0 ? (
+        <p className="text-gray-500 italic">No users in this category.</p>
+      ) : (
+        <div className="overflow-x-auto border border-gray-200 rounded-lg">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Joined</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {userList.map(user => (
+                <tr key={user.id}>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm font-medium text-black">{user.name}</div>
+                    <div className="text-sm text-gray-500">@{user.username}</div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{user.email}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{user.joinDate}</td>
+                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
+                    <button onClick={() => setEditingUser(user)} className="p-2 text-gray-500 hover:text-black"><Edit size={16} /></button>
+                    {isBannedList ? (
+                      <button onClick={() => openConfirmation('unban', user)} className="p-2 text-green-500 hover:text-green-700"><UserCheck size={16} /></button>
+                    ) : (
+                      <button onClick={() => openConfirmation('ban', user)} className="p-2 text-yellow-500 hover:text-yellow-700"><UserX size={16} /></button>
+                    )}
+                    <button onClick={() => openConfirmation('delete', user)} className="p-2 text-red-500 hover:text-red-700"><Trash2 size={16} /></button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-      </div>
+      )}
     </div>
+  );
+
+  const confirmationDetails = {
+    delete: { title: "Delete User", message: `Are you sure you want to permanently delete @${confirmation.user?.username}? This action cannot be undone.`, btnText: "Delete", btnColor: "bg-red-600 hover:bg-red-700" },
+    ban: { title: "Ban User", message: `Are you sure you want to ban @${confirmation.user?.username}? They will not be able to log in.`, btnText: "Ban User", btnColor: "bg-yellow-500 hover:bg-yellow-600" },
+    unban: { title: "Unban User", message: `Are you sure you want to restore @${confirmation.user?.username}? They will be able to log in again.`, btnText: "Unban User", btnColor: "bg-green-500 hover:bg-green-600" }
+  };
+  const details = confirmationDetails[confirmation.action] || {};
+
+  return (
+    <>
+      {editingUser && (
+        <EditUserModal user={editingUser} onClose={() => setEditingUser(null)} onSave={onUpdate} />
+      )}
+      <ConfirmationModal
+        isOpen={confirmation.isOpen}
+        onClose={closeConfirmation}
+        onConfirm={handleConfirm}
+        title={details.title}
+        message={details.message}
+        confirmButtonText={details.btnText}
+        confirmButtonColor={details.btnColor}
+      />
+      <div className="bg-white shadow rounded-lg p-6 space-y-8">
+        <h2 className="text-xl font-semibold">Users Management</h2>
+        <UserTable title="Active Users" userList={activeUsers} />
+        <UserTable title="Banned Users" userList={bannedUsers} isBannedList={true} />
+      </div>
+    </>
   );
 }
 
