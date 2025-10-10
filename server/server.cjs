@@ -46,7 +46,7 @@ const ProdukSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const Produk = mongoose.model("Produk", ProdukSchema);
+const Produk = mongoose.model("Produk", ProdukSchema,"Produk");
 
 app.get("/api/Produk", async (req, res) => {
   try {
