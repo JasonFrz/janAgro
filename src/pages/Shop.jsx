@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
 
+
 const Shop = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -13,13 +14,13 @@ const Shop = () => {
       .catch(err => console.error(err));
   }, []);
 
-  const filteredProduk = produk.filter(item => {
+  const filteredProduk = produk.filter((item) => {
     const matchesCategory =
       selectedCategory === 'all' ||
-      item.type.toLowerCase() === selectedCategory;
+      item.category.toLowerCase() === selectedCategory;
     const matchesSearch =
-      item.nama.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.type.toLowerCase().includes(searchQuery.toLowerCase());
+      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      item.category.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });
 
@@ -73,14 +74,14 @@ const Shop = () => {
               Pupuk
             </button>
             <button
-              onClick={() => setSelectedCategory('alat')}
+              onClick={() => setSelectedCategory('tools')}
               className={`px-4 py-2 rounded-sm border transition ${
-                selectedCategory === 'alat'
+                selectedCategory === 'tools'
                   ? 'bg-black text-white border-black'
                   : 'bg-white text-gray-700 border-gray-300 hover:border-black'
               }`}
             >
-              Alat
+              Tools
             </button>
           </div>
         </div>
@@ -91,34 +92,39 @@ const Shop = () => {
               key={item._id || item.id}
               className="group bg-white rounded-sm shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden border border-gray-100"
             >
-              <div className="relative h-56 bg-gray-100 flex items-center justify-center overflow-hidden">
-                <img
-                  src={item.image}
-                  alt={item.nama}
-                  className="h-full w-full object-cover transform group-hover:scale-110 transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-all duration-500"></div>
+              <div className="relative h-56 bg-gray-100 flex items-center justify-center overflow-hidden text-6xl">
+                {item.image ? (
+                  <img
+                    src={item.image}
+                    alt={item.image}
+                    className="h-full w-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+                  />
+                ) : (
+                  item.image || '🪴'
+                )}
               </div>
 
               <div className="p-6">
                 <div className="mb-4">
                   <h3 className="text-xl font-bold text-black mb-1 group-hover:text-gray-700 transition-colors">
-                    {item.nama}
+                    {item.name}
                   </h3>
                   <p className="text-gray-600 text-sm uppercase tracking-wide">
-                    {item.type}
+                    {item.category}
                   </p>
                 </div>
 
                 <p className="text-gray-700 text-sm mb-4 line-clamp-3">
-                  {item.description || "Tidak ada deskripsi"}
+                  {item.description || "No description available"}
                 </p>
 
                 <div className="mb-6">
                   <p className="text-black font-semibold text-lg">
-                    Rp {item.harga.toLocaleString()}
+                    ${item.price.toFixed(2)}
                   </p>
-                  <p className="text-sm text-gray-500">Stok: {item.stok}</p>
+                  <p className="text-sm text-gray-500">
+                    {item.inStock ? 'In Stock' : 'Out of Stock'}
+                  </p>
                 </div>
 
                 <div className="flex space-x-3">
