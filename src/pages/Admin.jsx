@@ -11,24 +11,30 @@ import DashboardAdmin from "../admin/DashboardAdmin";
 import UserAdmin from "../admin/UserAdmin";
 import ProdukAdmin from "../admin/ProdukAdmin";
 import SettingAdmin from "../admin/SettingAdmin";
-import Voucher from "../admin/Voucher"; 
+import Voucher from "../admin/Voucher";
 
 function Admin({
   users,
   vouchers,
+  produk,
   onUpdateUser,
   onDeleteUser,
   onToggleBanUser,
   onAddVoucher,
   onUpdateVoucher,
   onDeleteVoucher,
+  onAddProduk,
+  onUpdateProduk,
+  onDeleteProduk,
 }) {
   const [activeTab, setActiveTab] = useState("dashboard");
 
   const renderContent = () => {
     switch (activeTab) {
       case "dashboard":
-        return <DashboardAdmin users={users} vouchers={vouchers} />;
+        return (
+          <DashboardAdmin users={users} vouchers={vouchers} produk={produk} />
+        );
       case "users":
         return (
           <UserAdmin
@@ -39,8 +45,15 @@ function Admin({
           />
         );
       case "produk":
-        return <ProdukAdmin />;
-      case "vouchers": 
+        return (
+          <ProdukAdmin
+            produk={produk}
+            onAdd={onAddProduk}
+            onUpdate={onUpdateProduk}
+            onDelete={onDeleteProduk}
+          />
+        );
+      case "vouchers":
         return (
           <Voucher
             vouchers={vouchers}
@@ -52,13 +65,15 @@ function Admin({
       case "settings":
         return <SettingAdmin />;
       default:
-        return <DashboardAdmin users={users} vouchers={vouchers} />;
+        return (
+          <DashboardAdmin users={users} vouchers={vouchers} produk={produk} />
+        );
     }
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-100">
-      <aside className="w-64 bg-white shadow-md p-6">
+    <div className="flex min-h-screen bg-gray-100 pt-24 px-4 sm:px-6 lg:px-8">
+      <aside className="w-64 bg-white shadow-md p-6 hidden md:block">
         <h1 className="text-xl font-bold mb-6">Admin Panel</h1>
         <nav className="space-y-2">
           <button
@@ -91,7 +106,6 @@ function Admin({
           >
             <Package className="mr-2 h-5 w-5" /> Produk
           </button>
-
           <button
             onClick={() => setActiveTab("vouchers")}
             className={`flex items-center w-full px-3 py-2 rounded ${
@@ -102,7 +116,6 @@ function Admin({
           >
             <Ticket className="mr-2 h-5 w-5" /> Vouchers
           </button>
-
           <button
             onClick={() => setActiveTab("settings")}
             className={`flex items-center w-full px-3 py-2 rounded ${
@@ -115,7 +128,7 @@ function Admin({
           </button>
         </nav>
       </aside>
-      <main className="flex-1 p-6 space-y-6 mt-16">{renderContent()}</main>
+      <main className="flex-1 p-0 md:p-6 space-y-6">{renderContent()}</main>
     </div>
   );
 }

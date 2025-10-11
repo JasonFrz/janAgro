@@ -8,10 +8,11 @@ import About from "./pages/About";
 import Admin from "./pages/Admin";
 import Location from "./pages/Location";
 import Profile from "./pages/Profile";
+import ProductDetail from "./pages/ProductDetail";
 import "./index.css";
 
 function App() {
-  const [activeSection, setActiveSection] = useState("home");
+  const [page, setPage] = useState({ name: "home", id: null });
   const [showProfile, setShowProfile] = useState(false);
   const [user, setUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -26,6 +27,8 @@ function App() {
       joinDate: "2023",
       avatar: null,
       isBanned: false,
+      noTelp: "081234567890",
+      alamat: "Jl. Merdeka No. 1, Jakarta Pusat, DKI Jakarta, 10110",
     },
     {
       id: 2,
@@ -36,8 +39,11 @@ function App() {
       joinDate: "2024",
       avatar: null,
       isBanned: true,
+      noTelp: "089876543210",
+      alamat: "Jl. Sudirman Kav. 5, Bandung, Jawa Barat, 40112",
     },
   ]);
+
   const [adminUser, setAdminUser] = useState({
     id: 99,
     username: "admin",
@@ -47,66 +53,155 @@ function App() {
     joinDate: "2022",
     avatar: null,
     isBanned: false,
+    noTelp: "081111111111",
+    alamat: "Kantor Pusat JanAgro, Jl. Teknologi No. 10, Surabaya",
   });
-  const [vouchers, setVouchers] = useState([
+
+  const [vouchers, setVouchers] = useState([]);
+  const [produk, setProduk] = useState([
     {
-      id: 1,
-      code: "HEMAT10",
-      discountPercentage: 10,
-      maxUses: 100,
-      currentUses: 25,
-      isActive: true,
+      _id: 1,
+      name: "Organic Garden Booster",
+      category: "Pupuk",
+      price: 24.99,
+      image: "🌱",
+      description: "Premium organic fertilizer for all garden plants.",
+      rating: 4.8,
+      stock: 17,
+      detail:
+        "Pupuk organik premium untuk semua tanaman kebun, sangat bagus untuk meningkatkan kesuburan tanah dan hasil panen.",
     },
     {
-      id: 2,
-      code: "DISKONBESAR",
-      discountPercentage: 50,
-      maxUses: 20,
-      currentUses: 19,
-      isActive: true,
+      _id: 2,
+      name: "Sekop Taman Pro",
+      category: "Alat",
+      price: 15.5,
+      image: "🛠️",
+      description: "Alat sekop tahan lama untuk kebutuhan berkebun.",
+      rating: 4.5,
+      stock: 8,
+      detail:
+        "Terbuat dari baja berkualitas tinggi, anti karat dan kokoh. Gagang ergonomis untuk kenyamanan maksimal.",
     },
     {
-      id: 3,
-      code: "WELCOME25",
-      discountPercentage: 25,
-      maxUses: 500,
-      currentUses: 500,
-      isActive: false,
+      _id: 3,
+      name: "Bibit Tomat Cherry",
+      category: "Bibit",
+      price: 5.99,
+      image: "🍅",
+      description: "Bibit tomat cherry unggul, cepat berbuah.",
+      rating: 4.9,
+      stock: 50,
+      detail:
+        "Satu paket berisi 50 biji bibit tomat cherry pilihan. Tahan terhadap penyakit dan cocok untuk iklim tropis.",
+    },
+    {
+      _id: 4,
+      name: "Pestisida Organik Neem",
+      category: "Pupuk",
+      price: 12.0,
+      image: "🌿",
+      description: "Pestisida alami dari ekstrak daun neem.",
+      rating: 4.6,
+      stock: 0,
+      detail:
+        "Aman untuk tanaman dan lingkungan, efektif mengusir hama seperti kutu daun, ulat, dan tungau.",
+    },
+  ]);
+  const [reviews] = useState([
+    {
+      id: 101,
+      productId: 1,
+      userId: 1,
+      rating: 5,
+      comment:
+        "Pupuk terbaik! Tanaman saya tumbuh subur. Ini hasilnya setelah 2 minggu pemakaian.",
+      date: "2025-10-01",
+      imageUrl:
+        "https://via.placeholder.com/400x300.png/A7D379/000000?text=Hasil+Panen",
+    },
+    {
+      id: 102,
+      productId: 3,
+      userId: 2,
+      rating: 4,
+      comment:
+        "Bibitnya tumbuh dengan baik, meskipun beberapa tidak berkecambah. Hasil tomatnya manis dan lezat.",
+      date: "2025-09-28",
+      imageUrl: null,
+    },
+    {
+      id: 103,
+      productId: 1,
+      userId: 2,
+      rating: 4,
+      comment: "Cukup bagus, tapi baunya agak menyengat.",
+      date: "2025-09-25",
+      imageUrl: null,
+    },
+    {
+      id: 104,
+      productId: 2,
+      userId: 1,
+      rating: 5,
+      comment:
+        "Sekopnya kokoh dan sangat nyaman digenggam. Materialnya terasa premium. Worth every penny!",
+      date: "2025-10-05",
+      imageUrl:
+        "https://via.placeholder.com/400x300.png/DDDDDD/000000?text=Sekop+Pro",
+    },
+    {
+      id: 105,
+      productId: 2,
+      userId: 2,
+      rating: 1,
+      comment:
+        "Baru dipakai sekali gagangnya sudah patah. Kualitasnya buruk sekali, tidak sesuai deskripsi.",
+      date: "2025-10-06",
+      imageUrl:
+        "https://via.placeholder.com/400x300.png/FF7F7F/FFFFFF?text=Gagang+Patah",
     },
   ]);
 
+  // --- HANDLER FUNCTIONS ---
 
+  // UPDATE: Logika login yang disempurnakan
   const handleLogin = (identifier, password) => {
-    const potentialUser = users.find(
-      (u) => u.email === identifier || u.username === identifier
-    );
-    if (potentialUser && potentialUser.isBanned)
+    // 1. Cari akun pengguna (baik reguler maupun admin) berdasarkan identifier
+    const userAccount =
+      users.find((u) => u.email === identifier || u.username === identifier) ||
+      (adminUser.email === identifier || adminUser.username === identifier
+        ? adminUser
+        : null);
+
+    // 2. Jika tidak ada akun yang ditemukan
+    if (!userAccount) {
+      return "Pengguna dengan email atau username tersebut tidak ditemukan.";
+    }
+
+    // 3. Jika password tidak cocok
+    if (userAccount.password !== password) {
+      return "Password yang Anda masukkan salah.";
+    }
+
+    // 4. Jika akun diblokir
+    if (userAccount.isBanned) {
       return "Akun ini telah ditangguhkan.";
-    const isAdminLogin =
-      (adminUser.email === identifier || adminUser.username === identifier) &&
-      adminUser.password === password;
+    }
+
+    // 5. Jika semua pemeriksaan lolos, lanjutkan login
+    const isAdminLogin = userAccount.id === adminUser.id;
+
+    setUser(userAccount);
+    setIsAdmin(isAdminLogin);
     if (isAdminLogin) {
-      setUser(adminUser);
-      setIsAdmin(true);
-      setActiveSection("admin");
-      setShowProfile(false);
-      return null;
+      setPage({ name: "admin", id: null });
     }
-    const foundUser = users.find(
-      (u) =>
-        (u.email === identifier || u.username === identifier) &&
-        u.password === password
-    );
-    if (foundUser) {
-      setUser(foundUser);
-      setIsAdmin(false);
-      setShowProfile(false);
-      return null;
-    }
-    return "Email/Username atau password yang Anda masukkan salah.";
+    setShowProfile(false);
+    return null; // Sukses
   };
 
-  const handleRegister = (username, name, email, password) => {
+  const handleRegister = (username, name, email, password, noTelp) => {
     const cleanUsername = username.trim().toLowerCase();
     if (
       users.find((u) => u.username === cleanUsername) ||
@@ -121,6 +216,8 @@ function App() {
       name,
       email,
       password,
+      noTelp,
+      alamat: "",
       joinDate: new Date().getFullYear().toString(),
       avatar: null,
       isBanned: false,
@@ -132,8 +229,9 @@ function App() {
   const handleLogout = () => {
     setUser(null);
     setIsAdmin(false);
-    setActiveSection("home");
+    setPage({ name: "home", id: null });
   };
+
   const handleAvatarChange = (newAvatarUrl) => {
     if (!user) return;
     const updatedUser = { ...user, avatar: newAvatarUrl };
@@ -146,9 +244,10 @@ function App() {
       );
     }
   };
-  const handleProfileUpdate = (newName) => {
+
+  const handleProfileUpdate = (updatedData) => {
     if (!user) return;
-    const updatedUser = { ...user, name: newName };
+    const updatedUser = { ...user, ...updatedData };
     setUser(updatedUser);
     if (updatedUser.id === adminUser.id) {
       setAdminUser(updatedUser);
@@ -158,6 +257,7 @@ function App() {
       );
     }
   };
+
   const handlePasswordChange = (currentPassword, newPassword) => {
     if (!user) return { success: false, message: "No user logged in." };
     if (user.password !== currentPassword)
@@ -184,7 +284,7 @@ function App() {
     setUsers(
       users.map((u) => (u.id === userId ? { ...u, isBanned: !u.isBanned } : u))
     );
-  const handleAddVoucher = (id, newData) => {
+  const handleAddVoucher = (newData) => {
     const newVoucher = { ...newData, id: Date.now(), currentUses: 0 };
     setVouchers([...vouchers, newVoucher]);
   };
@@ -194,12 +294,39 @@ function App() {
     );
   const handleDeleteVoucher = (voucherId) =>
     setVouchers(vouchers.filter((v) => v.id !== voucherId));
+  const handleAddProduk = (newData) => {
+    const newProduk = { ...newData, _id: Date.now() };
+    setProduk([...produk, newProduk]);
+  };
+  const handleUpdateProduk = (produkId, updatedData) => {
+    setProduk(
+      produk.map((p) => (p._id === produkId ? { ...p, ...updatedData } : p))
+    );
+  };
+  const handleDeleteProduk = (produkId) => {
+    setProduk(produk.filter((p) => p._id !== produkId));
+  };
+
   const renderContent = () => {
-    switch (activeSection) {
+    switch (page.name) {
       case "home":
         return <Home />;
       case "shop":
-        return <Shop />;
+        return <Shop produk={produk} setPage={setPage} />;
+      case "product-detail": {
+        const selectedProduct = produk.find((p) => p._id === page.id);
+        if (!selectedProduct) {
+          return <Shop produk={produk} setPage={setPage} />;
+        }
+        return (
+          <ProductDetail
+            product={selectedProduct}
+            reviews={reviews}
+            users={users}
+            setPage={setPage}
+          />
+        );
+      }
       case "about":
         return <About />;
       case "admin":
@@ -207,12 +334,16 @@ function App() {
           <Admin
             users={users}
             vouchers={vouchers}
+            produk={produk}
             onUpdateUser={handleUpdateUserByAdmin}
             onDeleteUser={handleDeleteUserByAdmin}
             onToggleBanUser={handleToggleBanUser}
             onAddVoucher={handleAddVoucher}
             onUpdateVoucher={handleUpdateVoucher}
             onDeleteVoucher={handleDeleteVoucher}
+            onAddProduk={handleAddProduk}
+            onUpdateProduk={handleUpdateProduk}
+            onDeleteProduk={handleDeleteProduk}
           />
         ) : (
           <Home />
@@ -226,7 +357,6 @@ function App() {
             onAvatarChange={handleAvatarChange}
             onProfileUpdate={handleProfileUpdate}
             onPasswordChange={handlePasswordChange}
-            setActiveSection={setActiveSection}
           />
         );
       default:
@@ -237,8 +367,10 @@ function App() {
   return (
     <div className="min-h-screen bg-white">
       <Navbar
-        activeSection={activeSection}
-        setActiveSection={setActiveSection}
+        activeSection={page.name}
+        setActiveSection={(sectionName) =>
+          setPage({ name: sectionName, id: null })
+        }
         setShowProfile={setShowProfile}
         user={user}
         isAdmin={isAdmin}
@@ -252,7 +384,9 @@ function App() {
         onLogin={handleLogin}
         onRegister={handleRegister}
         onLogout={handleLogout}
-        setActiveSection={setActiveSection}
+        setActiveSection={(sectionName) =>
+          setPage({ name: sectionName, id: null })
+        }
       />
     </div>
   );

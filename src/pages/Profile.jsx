@@ -7,16 +7,36 @@ import {
   Edit,
   Shield,
   AtSign,
+  Phone,
+  MapPin,
 } from "lucide-react";
 import EditProfileModal from "../components/EditProfileModal";
 import ChangePasswordModal from "../components/ChangePasswordModal";
+
+// Fungsi helper untuk memformat nomor telepon
+const formatPhoneNumber = (phone) => {
+  if (!phone) return "-";
+  const digits = phone.replace(/\D/g, "");
+  let formatted = "+62 ";
+  if (digits.length > 4) {
+    formatted += digits.substring(0, 4) + "-";
+    if (digits.length > 8) {
+      formatted += digits.substring(4, 8) + "-";
+      formatted += digits.substring(8);
+    } else {
+      formatted += digits.substring(4);
+    }
+  } else {
+    formatted += digits;
+  }
+  return formatted;
+};
 
 const Profile = ({
   user,
   onAvatarChange,
   onProfileUpdate,
   onPasswordChange,
-  setActiveSection,
 }) => {
   const [preview, setPreview] = useState(user?.avatar || null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -41,8 +61,11 @@ const Profile = ({
   };
 
   if (!user) {
-    setActiveSection("home");
-    return null;
+    return (
+      <div className="pt-24 text-center">
+        Please log in to view your profile.
+      </div>
+    );
   }
 
   return (
@@ -51,15 +74,16 @@ const Profile = ({
         <EditProfileModal
           user={user}
           onClose={() => setIsEditModalOpen(false)}
-          onSave={(newName) => onProfileUpdate(newName)}
+          onSave={(updatedData) => {
+            onProfileUpdate(updatedData);
+            setIsEditModalOpen(false);
+          }}
         />
       )}
       {isPasswordModalOpen && (
         <ChangePasswordModal
           onClose={() => setIsPasswordModalOpen(false)}
-          onSave={(currentPassword, newPassword) =>
-            onPasswordChange(currentPassword, newPassword)
-          }
+          onSave={onPasswordChange}
         />
       )}
 
@@ -68,10 +92,12 @@ const Profile = ({
           <div className="bg-white p-8 md:p-12 rounded-lg border border-gray-200 shadow-sm">
             <div className="text-center mb-10">
               <h1 className="text-4xl font-bold text-black">
-                Account Settings
+                {" "}
+                Account Settings{" "}
               </h1>
               <p className="text-gray-500 mt-2">
-                Manage your profile and account details.
+                {" "}
+                Manage your profile and account details.{" "}
               </p>
             </div>
             <div className="flex flex-col items-center space-y-4 mb-12">
@@ -106,48 +132,82 @@ const Profile = ({
             </div>
             <div className="border-t border-gray-200 pt-8">
               <h3 className="text-xl font-semibold text-black mb-6">
-                Profile Information
+                {" "}
+                Profile Information{" "}
               </h3>
               <div className="space-y-4">
                 <div className="flex items-center p-4 bg-gray-50 rounded-lg">
+                  {" "}
                   <User
                     className="text-gray-400 mr-4 flex-shrink-0"
                     size={20}
-                  />
+                  />{" "}
                   <div className="flex-grow">
-                    <p className="text-sm text-gray-500">Full Name</p>
-                    <p className="text-black font-medium">{user.name}</p>
-                  </div>
+                    {" "}
+                    <p className="text-sm text-gray-500">Full Name</p>{" "}
+                    <p className="text-black font-medium">{user.name}</p>{" "}
+                  </div>{" "}
                 </div>
                 <div className="flex items-center p-4 bg-gray-50 rounded-lg">
+                  {" "}
                   <AtSign
                     className="text-gray-400 mr-4 flex-shrink-0"
                     size={20}
-                  />
+                  />{" "}
                   <div className="flex-grow">
-                    <p className="text-sm text-gray-500">Username</p>
-                    <p className="text-black font-medium">{user.username}</p>
-                  </div>
+                    {" "}
+                    <p className="text-sm text-gray-500">Username</p>{" "}
+                    <p className="text-black font-medium">{user.username}</p>{" "}
+                  </div>{" "}
                 </div>
                 <div className="flex items-center p-4 bg-gray-50 rounded-lg">
+                  {" "}
                   <Mail
                     className="text-gray-400 mr-4 flex-shrink-0"
                     size={20}
-                  />
+                  />{" "}
                   <div className="flex-grow">
-                    <p className="text-sm text-gray-500">Email Address</p>
-                    <p className="text-black font-medium">{user.email}</p>
-                  </div>
+                    {" "}
+                    <p className="text-sm text-gray-500">Email Address</p>{" "}
+                    <p className="text-black font-medium">{user.email}</p>{" "}
+                  </div>{" "}
                 </div>
                 <div className="flex items-center p-4 bg-gray-50 rounded-lg">
-                  <Calendar
+                  <Phone
                     className="text-gray-400 mr-4 flex-shrink-0"
                     size={20}
                   />
                   <div className="flex-grow">
-                    <p className="text-sm text-gray-500">Member Since</p>
-                    <p className="text-black font-medium">{user.joinDate}</p>
+                    {" "}
+                    <p className="text-sm text-gray-500">Nomor Telepon</p>{" "}
+                    <p className="text-black font-medium">
+                      {formatPhoneNumber(user.noTelp)}
+                    </p>{" "}
                   </div>
+                </div>
+                <div className="flex items-start p-4 bg-gray-50 rounded-lg">
+                  <MapPin
+                    className="text-gray-400 mr-4 flex-shrink-0 mt-1"
+                    size={20}
+                  />
+                  <div className="flex-grow">
+                    <p className="text-sm text-gray-500">Alamat</p>
+                    <p className="text-black font-medium whitespace-pre-line">
+                      {user.alamat || "Alamat belum diatur"}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center p-4 bg-gray-50 rounded-lg">
+                  {" "}
+                  <Calendar
+                    className="text-gray-400 mr-4 flex-shrink-0"
+                    size={20}
+                  />{" "}
+                  <div className="flex-grow">
+                    {" "}
+                    <p className="text-sm text-gray-500">Member Since</p>{" "}
+                    <p className="text-black font-medium">{user.joinDate}</p>{" "}
+                  </div>{" "}
                 </div>
               </div>
             </div>
@@ -156,15 +216,15 @@ const Profile = ({
                 onClick={() => setIsEditModalOpen(true)}
                 className="w-full flex items-center justify-center space-x-2 bg-black text-white py-3 px-4 rounded-md font-medium hover:bg-gray-800 transition-colors"
               >
-                <Edit size={16} />
-                <span>Edit Profile</span>
+                {" "}
+                <Edit size={16} /> <span>Edit Profile</span>{" "}
               </button>
               <button
                 onClick={() => setIsPasswordModalOpen(true)}
                 className="w-full flex items-center justify-center space-x-2 border border-gray-300 text-gray-700 py-3 px-4 rounded-md font-medium hover:bg-gray-50 transition-colors"
               >
-                <Shield size={16} />
-                <span>Change Password</span>
+                {" "}
+                <Shield size={16} /> <span>Change Password</span>{" "}
               </button>
             </div>
           </div>

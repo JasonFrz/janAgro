@@ -1,24 +1,9 @@
-import React, { useState, useEffect, useMemo } from "react";
-import axios from "axios";
+import React, { useState, useMemo } from "react";
 
-// PERBAIKAN: Memberikan nilai default pada props untuk mencegah error jika props tidak ada
-function DashboardAdmin({ users = [], vouchers = [] }) {
-  const [produk, setProduk] = useState([]);
+// Menerima props dengan nilai default untuk mencegah error
+function DashboardAdmin({ users = [], vouchers = [], produk = [] }) {
   const [produkSortAsc, setProdukSortAsc] = useState(true);
   const [userSortAsc, setUserSortAsc] = useState(true);
-
-  useEffect(() => {
-    fetchProduk();
-  }, []);
-
-  const fetchProduk = async () => {
-    try {
-      const res = await axios.get("http://localhost:5000/api/Produk");
-      setProduk(res.data);
-    } catch (err) {
-      console.error("Gagal fetch produk:", err);
-    }
-  };
 
   const getProdukStatus = (stock) => {
     if (stock === 0)
@@ -51,9 +36,9 @@ function DashboardAdmin({ users = [], vouchers = [] }) {
   }, [produk, produkSortAsc]);
 
   const sortedUsers = useMemo(() => {
-    // Kode ini aman sekarang karena `users` dijamin sebagai array
     return [...users].sort((a, b) => {
-      if (userSortAsc) return (a.username || "").localeCompare(b.username || "");
+      if (userSortAsc)
+        return (a.username || "").localeCompare(b.username || "");
       return (b.username || "").localeCompare(a.username || "");
     });
   }, [users, userSortAsc]);
@@ -76,7 +61,7 @@ function DashboardAdmin({ users = [], vouchers = [] }) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* User Section (Tidak ada perubahan logika, hanya memastikan berjalan aman) */}
+        {/* User Section */}
         <div className="bg-white shadow rounded-lg p-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold flex items-center space-x-2">
@@ -101,8 +86,7 @@ function DashboardAdmin({ users = [], vouchers = [] }) {
           ) : (
             <div className="overflow-y-auto max-h-96">
               <ul className="divide-y divide-gray-200">
-                {sortedUsers.map((user, idx) => {
-                  if (idx >= 6) return null;
+                {sortedUsers.slice(0, 6).map((user) => {
                   const status = getUserStatus(user.isBanned);
                   return (
                     <li
@@ -152,8 +136,7 @@ function DashboardAdmin({ users = [], vouchers = [] }) {
           </div>
           <div className="overflow-y-auto max-h-96">
             <ul className="divide-y divide-gray-200">
-              {sortedProduk.map((p, idx) => {
-                if (idx >= 6) return null;
+              {sortedProduk.slice(0, 6).map((p) => {
                 const status = getProdukStatus(p.stock);
                 return (
                   <li
