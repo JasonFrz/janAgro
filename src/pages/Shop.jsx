@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Search, ShoppingCart, AlertCircle, CheckCircle } from "lucide-react";
+import {
+  Search,
+  ShoppingCart,
+  AlertCircle,
+  CheckCircle,
+  Truck,
+} from "lucide-react";
 
 const Notification = ({ message, type }) => {
   if (!message) return null;
@@ -29,7 +35,6 @@ const Shop = ({ produk = [], user, setPage, onAddToCart, cartCount }) => {
       return () => clearTimeout(timer);
     }
   }, [notification]);
-
   const handleAddToCartClick = (productId) => {
     if (!user) {
       setNotification({
@@ -41,7 +46,6 @@ const Shop = ({ produk = [], user, setPage, onAddToCart, cartCount }) => {
       setNotification({ type: "success", message: successMessage });
     }
   };
-
   const filteredProduk = produk.filter((item) => {
     const matchesCategory =
       selectedCategory === "all" ||
@@ -55,18 +59,29 @@ const Shop = ({ produk = [], user, setPage, onAddToCart, cartCount }) => {
   return (
     <>
       <Notification message={notification?.message} type={notification?.type} />
-      <button
-        onClick={() => setPage({ name: "cart" })}
-        className="fixed top-24 right-4 sm:right-8 z-30 bg-white p-4 rounded-full shadow-lg border transition-transform hover:scale-110"
-        aria-label="Buka Keranjang"
-      >
-        <ShoppingCart size={24} className="text-black" />
-        {cartCount > 0 && (
-          <span className="absolute -top-2 -right-2 w-6 h-6 bg-black text-white text-xs font-bold rounded-full flex items-center justify-center border-2 border-white">
-            {cartCount}
-          </span>
+      <div className="fixed top-24 right-4 sm:right-8 z-30 flex flex-col gap-4">
+        <button
+          onClick={() => setPage({ name: "cart" })}
+          className="relative bg-white p-4 rounded-full shadow-lg border transition-transform hover:scale-110"
+          aria-label="Buka Keranjang"
+        >
+          <ShoppingCart size={24} className="text-black" />
+          {cartCount > 0 && (
+            <span className="absolute -top-2 -right-2 w-6 h-6 bg-black text-white text-xs font-bold rounded-full flex items-center justify-center border-2 border-white">
+              {cartCount}
+            </span>
+          )}
+        </button>
+        {user && (
+          <button
+            onClick={() => setPage({ name: "pesanan" })}
+            className="relative bg-white p-4 rounded-full shadow-lg border transition-transform hover:scale-110"
+            aria-label="Lacak Pesanan"
+          >
+            <Truck size={24} className="text-black" />
+          </button>
         )}
-      </button>
+      </div>
       <div className="min-h-screen bg-gray-50 pt-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center mb-12">

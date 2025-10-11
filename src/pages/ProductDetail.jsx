@@ -5,6 +5,7 @@ import {
   ShoppingCart,
   AlertCircle,
   CheckCircle,
+  Truck,
 } from "lucide-react";
 
 const Notification = ({ message, type }) => {
@@ -58,7 +59,6 @@ const ProductDetail = ({
       return () => clearTimeout(timer);
     }
   }, [notification]);
-
   const handleAddToCartClick = (productId) => {
     if (!user) {
       setNotification({
@@ -70,7 +70,6 @@ const ProductDetail = ({
       setNotification({ type: "success", message: successMessage });
     }
   };
-
   const filteredReviews = reviews
     .filter((r) => r.productId === product._id)
     .filter((r) => ratingFilter === 0 || r.rating === ratingFilter)
@@ -84,18 +83,29 @@ const ProductDetail = ({
   return (
     <>
       <Notification message={notification?.message} type={notification?.type} />
-      <button
-        onClick={() => setPage({ name: "cart" })}
-        className="fixed top-24 right-4 sm:right-8 z-30 bg-white p-4 rounded-full shadow-lg border transition-transform hover:scale-110"
-        aria-label="Buka Keranjang"
-      >
-        <ShoppingCart size={24} className="text-black" />
-        {cartCount > 0 && (
-          <span className="absolute -top-2 -right-2 w-6 h-6 bg-black text-white text-xs font-bold rounded-full flex items-center justify-center border-2 border-white">
-            {cartCount}
-          </span>
+      <div className="fixed top-24 right-4 sm:right-8 z-30 flex flex-col gap-4">
+        <button
+          onClick={() => setPage({ name: "cart" })}
+          className="relative bg-white p-4 rounded-full shadow-lg border transition-transform hover:scale-110"
+          aria-label="Buka Keranjang"
+        >
+          <ShoppingCart size={24} className="text-black" />
+          {cartCount > 0 && (
+            <span className="absolute -top-2 -right-2 w-6 h-6 bg-black text-white text-xs font-bold rounded-full flex items-center justify-center border-2 border-white">
+              {cartCount}
+            </span>
+          )}
+        </button>
+        {user && (
+          <button
+            onClick={() => setPage({ name: "pesanan" })}
+            className="relative bg-white p-4 rounded-full shadow-lg border transition-transform hover:scale-110"
+            aria-label="Lacak Pesanan"
+          >
+            <Truck size={24} className="text-black" />
+          </button>
         )}
-      </button>
+      </div>
       <div className="min-h-screen bg-white pt-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <button
@@ -106,38 +116,42 @@ const ProductDetail = ({
             <ArrowLeft size={20} /> Kembali ke Toko{" "}
           </button>
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
+            {" "}
             <div className="lg:col-span-2 flex items-center justify-center bg-gray-100 rounded-sm text-8xl h-96">
               {product.image}
-            </div>
+            </div>{" "}
             <div className="lg:col-span-3 flex flex-col">
+              {" "}
               <span className="text-sm uppercase text-gray-500 tracking-wider">
                 {product.category}
-              </span>
+              </span>{" "}
               <h1 className="text-4xl font-bold text-gray-900 my-2">
                 {product.name}
-              </h1>
+              </h1>{" "}
               <p className="text-3xl font-light text-gray-800 mb-4">
                 Rp {product.price.toLocaleString("id-ID")}
-              </p>
+              </p>{" "}
               <p className="text-gray-600 mb-6 leading-relaxed">
                 {product.detail}
-              </p>
+              </p>{" "}
               {product.stock > 0 && product.stock <= 10 && (
                 <p className="text-sm mb-6 font-semibold text-yellow-600">
                   Stok Terbatas: Tinggal {product.stock} buah!
                 </p>
-              )}
+              )}{" "}
               <button
                 onClick={() => handleAddToCartClick(product._id)}
                 disabled={product.stock === 0}
                 className="w-full bg-black text-white py-4 px-4 rounded-sm transition-all duration-300 hover:bg-gray-800 text-sm font-medium uppercase tracking-wide disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
-                {product.stock > 0 ? "Add to Cart" : "Out of Stock"}
-              </button>
-            </div>
+                {" "}
+                {product.stock > 0 ? "Add to Cart" : "Out of Stock"}{" "}
+              </button>{" "}
+            </div>{" "}
           </div>
           <div className="mt-16 border-t pt-12">
-            <h2 className="text-3xl font-bold mb-4">Ulasan Produk</h2>
+            {" "}
+            <h2 className="text-3xl font-bold mb-4">Ulasan Produk</h2>{" "}
             <div className="flex flex-col md:flex-row gap-4 mb-8 p-4 border rounded-sm">
               {" "}
               <div className="flex-1">
@@ -204,7 +218,7 @@ const ProductDetail = ({
                   </button>{" "}
                 </div>{" "}
               </div>{" "}
-            </div>
+            </div>{" "}
             {filteredReviews.length > 0 ? (
               <div className="space-y-8">
                 {" "}
@@ -256,7 +270,7 @@ const ProductDetail = ({
                 {" "}
                 Tidak ada ulasan yang sesuai dengan filter Anda.{" "}
               </p>
-            )}
+            )}{" "}
           </div>
         </div>
       </div>

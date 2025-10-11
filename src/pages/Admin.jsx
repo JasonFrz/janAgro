@@ -6,7 +6,6 @@ import {
   Settings,
   Ticket,
 } from "lucide-react";
-
 import DashboardAdmin from "../admin/DashboardAdmin";
 import UserAdmin from "../admin/UserAdmin";
 import ProdukAdmin from "../admin/ProdukAdmin";
@@ -17,6 +16,7 @@ function Admin({
   users,
   vouchers,
   produk,
+  checkouts,
   onUpdateUser,
   onDeleteUser,
   onToggleBanUser,
@@ -26,6 +26,7 @@ function Admin({
   onAddProduk,
   onUpdateProduk,
   onDeleteProduk,
+  onUpdateOrderStatus,
 }) {
   const [activeTab, setActiveTab] = useState("dashboard");
 
@@ -63,11 +64,14 @@ function Admin({
           />
         );
       case "settings":
-        return <SettingAdmin />;
-      default:
         return (
-          <DashboardAdmin users={users} vouchers={vouchers} produk={produk} />
+          <SettingAdmin
+            checkouts={checkouts}
+            onUpdateStatus={onUpdateOrderStatus}
+          />
         );
+      default:
+        return <DashboardAdmin users={users} vouchers={vouchers} />;
     }
   };
 

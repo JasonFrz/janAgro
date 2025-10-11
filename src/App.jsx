@@ -10,6 +10,7 @@ import Location from "./pages/Location";
 import Profile from "./pages/Profile";
 import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
+import Pesanan from "./pages/Pesanan";
 import "./index.css";
 
 function App() {
@@ -58,7 +59,6 @@ function App() {
     noTelp: "81111111111",
     alamat: "Kantor Pusat JanAgro, Jl. Teknologi No. 10, Surabaya",
   });
-
   const [vouchers, setVouchers] = useState([
     {
       id: 1,
@@ -77,7 +77,6 @@ function App() {
       isActive: true,
     },
   ]);
-
   const [produk, setProduk] = useState([
     {
       _id: 1,
@@ -212,7 +211,6 @@ function App() {
   const handleRemoveFromCart = (productId) => {
     setCart(cart.filter((item) => item.productId !== productId));
   };
-
   const handleCheckout = (checkoutData) => {
     if (checkoutData.kodeVoucher) {
       const voucherUsed = vouchers.find(
@@ -240,6 +238,7 @@ function App() {
       ...checkoutData,
       id: Date.now(),
       tanggal: new Date().toISOString(),
+      status: "diproses",
     };
     setCheckouts([...checkouts, newCheckout]);
     setCart([]);
@@ -250,7 +249,13 @@ function App() {
       message: "Checkout berhasil! Terima kasih telah berbelanja.",
     };
   };
-
+  const handleUpdateOrderStatus = (orderId, newStatus) => {
+    setCheckouts(
+      checkouts.map((order) =>
+        order.id === orderId ? { ...order, status: newStatus } : order
+      )
+    );
+  };
   const handleLogin = (identifier, password) => {
     const userAccount =
       users.find((u) => u.email === identifier || u.username === identifier) ||
@@ -436,6 +441,8 @@ function App() {
             setPage={setPage}
           />
         );
+      case "pesanan":
+        return <Pesanan checkouts={checkouts} user={user} setPage={setPage} />;
       case "about":
         return <About />;
       case "admin":
@@ -444,6 +451,7 @@ function App() {
             users={users}
             vouchers={vouchers}
             produk={produk}
+            checkouts={checkouts}
             onUpdateUser={handleUpdateUserByAdmin}
             onDeleteUser={handleDeleteUserByAdmin}
             onToggleBanUser={handleToggleBanUser}
@@ -453,6 +461,7 @@ function App() {
             onAddProduk={handleAddProduk}
             onUpdateProduk={handleUpdateProduk}
             onDeleteProduk={handleDeleteProduk}
+            onUpdateOrderStatus={handleUpdateOrderStatus}
           />
         ) : (
           <Home />
