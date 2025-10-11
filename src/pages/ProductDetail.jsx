@@ -8,12 +8,12 @@ import {
 } from "lucide-react";
 
 const Notification = ({ message, type }) => {
-  /* ... (sama seperti di Shop.jsx) ... */ if (!message) return null;
+  if (!message) return null;
   const isError = type === "error";
   return (
     <div
-      className={`fixed top-20 right-4 z-50 p-4 rounded-md shadow-lg flex items-center gap-3 transition-transform animate-fade-in-down ${
-        isError ? "bg-red-500 text-white" : "bg-black text-white"
+      className={`fixed top-5 left-1/2 -translate-x-1/2 z-50 p-4 rounded-md shadow-lg flex items-center gap-3 transition-transform animate-fade-in-down ${
+        isError ? "bg-red-600 text-white" : "bg-green-600 text-white"
       }`}
     >
       {" "}

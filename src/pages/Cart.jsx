@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { ArrowLeft, Trash2, AlertCircle } from "lucide-react";
 
-// Helper untuk memformat input nomor telepon saat diketik
 const formatPhoneInput = (value) => {
   const digits = value.replace(/\D/g, "").substring(0, 15);
   let formatted = "";
   for (let i = 0; i < digits.length; i++) {
-    if (i === 4 || i === 8) {
+    if (i > 0 && i % 4 === 0) {
       formatted += "-";
     }
     formatted += digits[i];
@@ -27,31 +26,54 @@ const Cart = ({
   const [customerName, setCustomerName] = useState("");
   const [customerAddress, setCustomerAddress] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
-  const [useProfileData, setUseProfileData] = useState(false);
+
+  const [useProfileName, setUseProfileName] = useState(false);
+  const [useProfileAddress, setUseProfileAddress] = useState(false);
+  const [useProfilePhone, setUseProfilePhone] = useState(false);
+
   const [voucherCode, setVoucherCode] = useState("");
   const [appliedVoucher, setAppliedVoucher] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (user && useProfileData) {
-      setCustomerName(user.name);
-      setCustomerAddress(user.alamat);
-      setCustomerPhone(user.noTelp.replace(/\D/g, "")); // Gunakan nomor mentah
-    }
-  }, [user, useProfileData]);
-
-  const handleCheckboxChange = (e) => {
-    const isChecked = e.target.checked;
-    setUseProfileData(isChecked);
-    if (isChecked && user) {
-      setCustomerName(user.name);
-      setCustomerAddress(user.alamat);
+    if (user && useProfileName) setCustomerName(user.name);
+    if (user && useProfileAddress) setCustomerAddress(user.alamat);
+    if (user && useProfilePhone)
       setCustomerPhone(user.noTelp.replace(/\D/g, ""));
-    } else {
-      setCustomerName("");
-      setCustomerAddress("");
-      setCustomerPhone("");
+  }, [user, useProfileName, useProfileAddress, useProfilePhone]);
+
+  const handleCheckboxChange = (type, isChecked) => {
+    setError("");
+    switch (type) {
+      case "name":
+        setUseProfileName(isChecked);
+        setCustomerName(isChecked && user ? user.name : "");
+        break;
+      case "address":
+        if (isChecked && user && !user.alamat) {
+          setError(
+            "Alamat profil Anda kosong. Harap isi di halaman profil atau manual."
+          );
+          return; // Jangan centang checkboxnya
+        }
+        setUseProfileAddress(isChecked);
+        setCustomerAddress(isChecked && user ? user.alamat : "");
+        break;
+      case "phone":
+        if (isChecked && user && !user.noTelp) {
+          setError(
+            "No. Telepon profil Anda kosong. Harap isi di halaman profil atau manual."
+          );
+          return; // Jangan centang checkboxnya
+        }
+        setUseProfilePhone(isChecked);
+        setCustomerPhone(
+          isChecked && user ? user.noTelp.replace(/\D/g, "") : ""
+        );
+        break;
+      default:
+        break;
     }
   };
 
@@ -67,16 +89,19 @@ const Cart = ({
     quantity: item.quantity,
   }));
   const subtotal = cartDetails.reduce(
-    (sum, item) => sum + item.price * item.quantity,
+    (sum, item) => sum + (item.quantity > 0 ? item.price * item.quantity : 0),
+    0
+  );
+  const totalQuantity = cartDetails.reduce(
+    (sum, item) => sum + item.quantity,
     0
   );
   const kurirFee = 10000;
 
   const handleApplyVoucher = () => {
-    /* ... logika voucher tidak berubah ... */ const foundVoucher =
-      vouchers.find(
-        (v) => v.code.toLowerCase() === voucherCode.toLowerCase() && v.isActive
-      );
+    const foundVoucher = vouchers.find(
+      (v) => v.code.toLowerCase() === voucherCode.toLowerCase() && v.isActive
+    );
     if (foundVoucher) {
       setAppliedVoucher(foundVoucher);
       setError("");
@@ -108,13 +133,17 @@ const Cart = ({
       setError("Silakan pilih metode pembayaran.");
       return;
     }
+    if (totalQuantity === 0) {
+      setError("Keranjang Anda kosong atau semua kuantitas produk adalah nol.");
+      return;
+    }
 
     const successMessage = onCheckout({
       userId: user.id,
       nama: customerName,
       alamat: customerAddress,
       noTelpPenerima: customerPhone,
-      items: cartDetails,
+      items: cartDetails.filter((i) => i.quantity > 0),
       subtotal,
       diskon: discountAmount,
       kodeVoucher: appliedVoucher ? appliedVoucher.code : null,
@@ -122,31 +151,8 @@ const Cart = ({
       totalHarga,
       metodePembayaran: paymentMethod,
     });
-    alert(successMessage); // Menggunakan alert di sini karena halaman akan berganti
+    alert(successMessage);
   };
-
-  if (cart.length === 0) {
-    /* ... (tampilan keranjang kosong tidak berubah) ... */ return (
-      <div className="min-h-screen bg-gray-50 pt-24">
-        {" "}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
-          {" "}
-          <h1 className="text-3xl font-bold text-black mb-4">
-            Keranjang Anda Kosong
-          </h1>{" "}
-          <p className="text-gray-600 mb-8">
-            Sepertinya Anda belum menambahkan produk apapun ke keranjang.
-          </p>{" "}
-          <button
-            onClick={() => setPage({ name: "shop" })}
-            className="bg-black text-white py-3 px-8 rounded-sm font-medium hover:bg-gray-800 transition"
-          >
-            Mulai Belanja
-          </button>{" "}
-        </div>{" "}
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50 pt-24">
@@ -161,72 +167,116 @@ const Cart = ({
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           <div className="lg:col-span-2 space-y-8">
             <div className="bg-white p-6 rounded-sm border">
-              <h2 className="text-xl font-bold mb-4">Detail Pesanan</h2>
-              <div className="space-y-4">
-                {cartDetails.map((item) => (
-                  <div
-                    key={item._id}
-                    className="flex items-center gap-4 border-b pb-4 last:border-b-0 last:pb-0"
-                  >
-                    <div className="w-20 h-20 bg-gray-100 rounded-sm flex items-center justify-center text-4xl flex-shrink-0">
-                      {item.image}
-                    </div>
-                    <div className="flex-grow">
-                      {" "}
-                      <p className="font-bold">{item.name}</p>{" "}
-                      <p className="text-sm text-gray-500">
-                        Rp {item.price.toLocaleString("id-ID")}
-                      </p>{" "}
-                    </div>
-                    <div className="flex items-center gap-2 border rounded-sm">
-                      {" "}
-                      <button
-                        onClick={() =>
-                          onUpdateQuantity(item._id, item.quantity - 1)
-                        }
-                        className="px-3 py-1 hover:bg-gray-100"
-                      >
-                        -
-                      </button>{" "}
-                      <span className="px-2 font-medium">{item.quantity}</span>{" "}
-                      <button
-                        onClick={() =>
-                          onUpdateQuantity(item._id, item.quantity + 1)
-                        }
-                        className="px-3 py-1 hover:bg-gray-100"
-                      >
-                        +
-                      </button>{" "}
-                    </div>
-                    <p className="font-semibold w-28 text-right">
-                      Rp {(item.price * item.quantity).toLocaleString("id-ID")}
-                    </p>
-                    <button
-                      onClick={() => onRemove(item._id)}
-                      className="text-gray-400 hover:text-red-500"
+              <h2 className="text-xl font-bold mb-4">
+                Detail Pesanan ({totalQuantity} item)
+              </h2>
+              {cartDetails.length > 0 ? (
+                <div className="space-y-4">
+                  {cartDetails.map((item) => (
+                    <div
+                      key={item._id}
+                      className={`flex items-center gap-4 border-b pb-4 last:border-b-0 last:pb-0 ${
+                        item.quantity === 0 ? "opacity-50" : ""
+                      }`}
                     >
-                      <Trash2 size={18} />
-                    </button>
-                  </div>
-                ))}
-              </div>
+                      <div className="w-20 h-20 bg-gray-100 rounded-sm flex items-center justify-center text-4xl flex-shrink-0">
+                        {item.image}
+                      </div>
+                      <div className="flex-grow">
+                        {" "}
+                        <p className="font-bold">{item.name}</p>{" "}
+                        <p className="text-sm text-gray-500">
+                          Rp {item.price.toLocaleString("id-ID")}
+                        </p>{" "}
+                      </div>
+                      <div className="flex items-center gap-2 border rounded-sm">
+                        {" "}
+                        <button
+                          onClick={() =>
+                            onUpdateQuantity(item._id, item.quantity - 1)
+                          }
+                          className="px-3 py-1 hover:bg-gray-100"
+                        >
+                          -
+                        </button>{" "}
+                        <span className="px-2 font-medium">
+                          {item.quantity}
+                        </span>{" "}
+                        <button
+                          onClick={() =>
+                            onUpdateQuantity(item._id, item.quantity + 1)
+                          }
+                          className="px-3 py-1 hover:bg-gray-100"
+                        >
+                          +
+                        </button>{" "}
+                      </div>
+                      <p className="font-semibold w-28 text-right">
+                        Rp{" "}
+                        {(item.price * item.quantity).toLocaleString("id-ID")}
+                      </p>
+                      <button
+                        onClick={() => onRemove(item._id)}
+                        className="text-gray-400 hover:text-red-500"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-10">
+                  <h3 className="text-xl font-semibold text-black">
+                    Keranjang Anda Kosong
+                  </h3>
+                  <p className="text-gray-500 mt-2">
+                    Tambahkan produk dari halaman toko untuk memulai.
+                  </p>
+                </div>
+              )}
             </div>
             <div className="bg-white p-6 rounded-sm border">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold">Detail Pengiriman</h2>
-                {user && (
+              <h2 className="text-xl font-bold mb-4">Detail Pengiriman</h2>
+              {user && (
+                <div className="space-y-2 mb-4 p-3 bg-gray-50 rounded-md border">
                   <label className="flex items-center gap-2 cursor-pointer text-sm">
                     {" "}
                     <input
                       type="checkbox"
-                      checked={useProfileData}
-                      onChange={handleCheckboxChange}
+                      checked={useProfileName}
+                      onChange={(e) =>
+                        handleCheckboxChange("name", e.target.checked)
+                      }
                       className="form-checkbox"
                     />{" "}
-                    Gunakan data profil{" "}
+                    Gunakan nama profil{" "}
                   </label>
-                )}
-              </div>
+                  <label className="flex items-center gap-2 cursor-pointer text-sm">
+                    {" "}
+                    <input
+                      type="checkbox"
+                      checked={useProfileAddress}
+                      onChange={(e) =>
+                        handleCheckboxChange("address", e.target.checked)
+                      }
+                      className="form-checkbox"
+                    />{" "}
+                    Gunakan alamat profil{" "}
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer text-sm">
+                    {" "}
+                    <input
+                      type="checkbox"
+                      checked={useProfilePhone}
+                      onChange={(e) =>
+                        handleCheckboxChange("phone", e.target.checked)
+                      }
+                      className="form-checkbox"
+                    />{" "}
+                    Gunakan no. telp profil{" "}
+                  </label>
+                </div>
+              )}
               <div className="space-y-4">
                 <div>
                   {" "}
@@ -237,7 +287,7 @@ const Cart = ({
                     type="text"
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
-                    disabled={useProfileData}
+                    disabled={useProfileName}
                     className="w-full p-3 border rounded-sm focus:ring-2 focus:ring-black disabled:bg-gray-100"
                   />{" "}
                 </div>
@@ -249,7 +299,7 @@ const Cart = ({
                   <textarea
                     value={customerAddress}
                     onChange={(e) => setCustomerAddress(e.target.value)}
-                    disabled={useProfileData}
+                    disabled={useProfileAddress}
                     className="w-full p-3 border rounded-sm focus:ring-2 focus:ring-black disabled:bg-gray-100"
                     rows="3"
                   ></textarea>{" "}
@@ -266,7 +316,7 @@ const Cart = ({
                       type="tel"
                       value={formatPhoneInput(customerPhone)}
                       onChange={handlePhoneChange}
-                      disabled={useProfileData}
+                      disabled={useProfilePhone}
                       className="w-full pl-10 pr-4 py-3 border rounded-sm focus:ring-2 focus:ring-black disabled:bg-gray-100"
                       placeholder="812-3456-7890"
                     />
@@ -361,7 +411,7 @@ const Cart = ({
               )}
               <button
                 onClick={handleCheckoutClick}
-                disabled={cart.length === 0}
+                disabled={totalQuantity === 0}
                 className="w-full bg-black text-white py-4 rounded-sm font-medium text-lg hover:bg-gray-800 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
                 Checkout

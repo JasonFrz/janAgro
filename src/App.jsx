@@ -43,7 +43,7 @@ function App() {
       avatar: null,
       isBanned: true,
       noTelp: "89876543210",
-      alamat: "Jl. Sudirman Kav. 5, Bandung, Jawa Barat, 40112",
+      alamat: "",
     },
   ]);
   const [adminUser, setAdminUser] = useState({
@@ -58,7 +58,7 @@ function App() {
     noTelp: "81111111111",
     alamat: "Kantor Pusat JanAgro, Jl. Teknologi No. 10, Surabaya",
   });
-  const [vouchers, setVouchers] = useState([
+  const [vouchers] = useState([
     { id: 1, code: "HEMAT10", discountPercentage: 10, isActive: true },
     { id: 2, code: "JANAGRO50", discountPercentage: 50, isActive: true },
   ]);
@@ -182,21 +182,16 @@ function App() {
         return [...prevCart, { productId, quantity: 1 }];
       }
     });
-    return "Produk ditambahkan ke keranjang!"; // <-- Kembalikan pesan sukses
+    return "Produk ditambahkan ke keranjang!";
   };
-
   const handleUpdateCartQuantity = (productId, newQuantity) => {
-    if (newQuantity <= 0) {
-      handleRemoveFromCart(productId);
-    } else {
-      setCart(
-        cart.map((item) =>
-          item.productId === productId
-            ? { ...item, quantity: newQuantity }
-            : item
-        )
-      );
-    }
+    setCart(
+      cart.map((item) =>
+        item.productId === productId
+          ? { ...item, quantity: Math.max(0, newQuantity) }
+          : item
+      )
+    );
   };
   const handleRemoveFromCart = (productId) => {
     setCart(cart.filter((item) => item.productId !== productId));
@@ -212,7 +207,7 @@ function App() {
     setPage({ name: "shop", id: null });
     console.log("Data Pesanan Baru:", newCheckout);
     return "Checkout berhasil! Terima kasih telah berbelanja.";
-  }; // <-- Kembalikan pesan sukses
+  };
   const handleLogin = (identifier, password) => {
     const userAccount =
       users.find((u) => u.email === identifier || u.username === identifier) ||
@@ -345,7 +340,7 @@ function App() {
       case "product-detail": {
         const selectedProduct = produk.find((p) => p._id === page.id);
         if (!selectedProduct) {
-          return <Shop produk={produk} setPage={setPage} />;
+          return <Shop produk={produk} user={user} setPage={setPage} />;
         }
         return (
           <ProductDetail
