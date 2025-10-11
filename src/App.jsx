@@ -58,10 +58,26 @@ function App() {
     noTelp: "81111111111",
     alamat: "Kantor Pusat JanAgro, Jl. Teknologi No. 10, Surabaya",
   });
-  const [vouchers] = useState([
-    { id: 1, code: "HEMAT10", discountPercentage: 10, isActive: true },
-    { id: 2, code: "JANAGRO50", discountPercentage: 50, isActive: true },
+
+  const [vouchers, setVouchers] = useState([
+    {
+      id: 1,
+      code: "HEMAT10",
+      discountPercentage: 10,
+      maxUses: 100,
+      currentUses: 25,
+      isActive: true,
+    },
+    {
+      id: 2,
+      code: "JANAGRO50",
+      discountPercentage: 50,
+      maxUses: 20,
+      currentUses: 19,
+      isActive: true,
+    },
   ]);
+
   const [produk, setProduk] = useState([
     {
       _id: 1,
@@ -196,7 +212,30 @@ function App() {
   const handleRemoveFromCart = (productId) => {
     setCart(cart.filter((item) => item.productId !== productId));
   };
+
   const handleCheckout = (checkoutData) => {
+    if (checkoutData.kodeVoucher) {
+      const voucherUsed = vouchers.find(
+        (v) => v.code === checkoutData.kodeVoucher
+      );
+      if (
+        !voucherUsed ||
+        !voucherUsed.isActive ||
+        voucherUsed.currentUses >= voucherUsed.maxUses
+      ) {
+        return {
+          success: false,
+          message: `Voucher "${checkoutData.kodeVoucher}" tidak lagi valid atau sudah habis.`,
+        };
+      }
+      setVouchers(
+        vouchers.map((v) =>
+          v.code === checkoutData.kodeVoucher
+            ? { ...v, currentUses: v.currentUses + 1 }
+            : v
+        )
+      );
+    }
     const newCheckout = {
       ...checkoutData,
       id: Date.now(),
@@ -206,8 +245,12 @@ function App() {
     setCart([]);
     setPage({ name: "shop", id: null });
     console.log("Data Pesanan Baru:", newCheckout);
-    return "Checkout berhasil! Terima kasih telah berbelanja.";
+    return {
+      success: true,
+      message: "Checkout berhasil! Terima kasih telah berbelanja.",
+    };
   };
+
   const handleLogin = (identifier, password) => {
     const userAccount =
       users.find((u) => u.email === identifier || u.username === identifier) ||
@@ -310,6 +353,32 @@ function App() {
     setUsers(
       users.map((u) => (u.id === userId ? { ...u, isBanned: !u.isBanned } : u))
     );
+  const handleAddVoucher = (newData) => {
+    const newVoucher = {
+      ...newData,
+      id: Date.now(),
+      currentUses: 0,
+      discountPercentage: parseInt(newData.discountPercentage, 10),
+      maxUses: parseInt(newData.maxUses, 10),
+    };
+    setVouchers([...vouchers, newVoucher]);
+  };
+  const handleUpdateVoucher = (voucherId, updatedData) => {
+    setVouchers(
+      vouchers.map((v) =>
+        v.id === voucherId
+          ? {
+              ...v,
+              ...updatedData,
+              discountPercentage: parseInt(updatedData.discountPercentage, 10),
+              maxUses: parseInt(updatedData.maxUses, 10),
+            }
+          : v
+      )
+    );
+  };
+  const handleDeleteVoucher = (voucherId) =>
+    setVouchers(vouchers.filter((v) => v.id !== voucherId));
   const handleAddProduk = (newData) => {
     const newProduk = { ...newData, _id: Date.now() };
     setProduk([...produk, newProduk]);
@@ -378,6 +447,9 @@ function App() {
             onUpdateUser={handleUpdateUserByAdmin}
             onDeleteUser={handleDeleteUserByAdmin}
             onToggleBanUser={handleToggleBanUser}
+            onAddVoucher={handleAddVoucher}
+            onUpdateVoucher={handleUpdateVoucher}
+            onDeleteVoucher={handleDeleteVoucher}
             onAddProduk={handleAddProduk}
             onUpdateProduk={handleUpdateProduk}
             onDeleteProduk={handleDeleteProduk}

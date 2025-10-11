@@ -26,15 +26,14 @@ const Cart = ({
   const [customerName, setCustomerName] = useState("");
   const [customerAddress, setCustomerAddress] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
-
   const [useProfileName, setUseProfileName] = useState(false);
   const [useProfileAddress, setUseProfileAddress] = useState(false);
   const [useProfilePhone, setUseProfilePhone] = useState(false);
-
   const [voucherCode, setVoucherCode] = useState("");
   const [appliedVoucher, setAppliedVoucher] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState("");
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
 
   useEffect(() => {
     if (user && useProfileName) setCustomerName(user.name);
@@ -55,7 +54,7 @@ const Cart = ({
           setError(
             "Alamat profil Anda kosong. Harap isi di halaman profil atau manual."
           );
-          return; // Jangan centang checkboxnya
+          return;
         }
         setUseProfileAddress(isChecked);
         setCustomerAddress(isChecked && user ? user.alamat : "");
@@ -65,7 +64,7 @@ const Cart = ({
           setError(
             "No. Telepon profil Anda kosong. Harap isi di halaman profil atau manual."
           );
-          return; // Jangan centang checkboxnya
+          return;
         }
         setUseProfilePhone(isChecked);
         setCustomerPhone(
@@ -83,7 +82,6 @@ const Cart = ({
       setCustomerPhone(numericValue);
     }
   };
-
   const cartDetails = cart.map((item) => ({
     ...produk.find((p) => p._id === item.productId),
     quantity: item.quantity,
@@ -100,14 +98,19 @@ const Cart = ({
 
   const handleApplyVoucher = () => {
     const foundVoucher = vouchers.find(
-      (v) => v.code.toLowerCase() === voucherCode.toLowerCase() && v.isActive
+      (v) =>
+        v.code.toLowerCase() === voucherCode.toLowerCase() &&
+        v.isActive &&
+        v.currentUses < v.maxUses
     );
     if (foundVoucher) {
       setAppliedVoucher(foundVoucher);
       setError("");
+      setSuccess(`Voucher ${foundVoucher.code} berhasil diterapkan!`);
     } else {
       setAppliedVoucher(null);
-      setError("Kode voucher tidak valid.");
+      setError("Kode voucher tidak valid, tidak aktif, atau sudah habis.");
+      setSuccess("");
     }
   };
   const discountAmount = appliedVoucher
@@ -138,7 +141,7 @@ const Cart = ({
       return;
     }
 
-    const successMessage = onCheckout({
+    const checkoutResult = onCheckout({
       userId: user.id,
       nama: customerName,
       alamat: customerAddress,
@@ -151,7 +154,12 @@ const Cart = ({
       totalHarga,
       metodePembayaran: paymentMethod,
     });
-    alert(successMessage);
+
+    if (checkoutResult.success) {
+      alert(checkoutResult.message);
+    } else {
+      setError(checkoutResult.message);
+    }
   };
 
   return (
@@ -226,12 +234,13 @@ const Cart = ({
                 </div>
               ) : (
                 <div className="text-center py-10">
+                  {" "}
                   <h3 className="text-xl font-semibold text-black">
                     Keranjang Anda Kosong
-                  </h3>
+                  </h3>{" "}
                   <p className="text-gray-500 mt-2">
                     Tambahkan produk dari halaman toko untuk memulai.
-                  </p>
+                  </p>{" "}
                 </div>
               )}
             </div>
@@ -305,13 +314,15 @@ const Cart = ({
                   ></textarea>{" "}
                 </div>
                 <div>
+                  {" "}
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Nomor Telepon Penerima
-                  </label>
+                  </label>{" "}
                   <div className="relative">
+                    {" "}
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
                       +62
-                    </span>
+                    </span>{" "}
                     <input
                       type="tel"
                       value={formatPhoneInput(customerPhone)}
@@ -319,8 +330,8 @@ const Cart = ({
                       disabled={useProfilePhone}
                       className="w-full pl-10 pr-4 py-3 border rounded-sm focus:ring-2 focus:ring-black disabled:bg-gray-100"
                       placeholder="812-3456-7890"
-                    />
-                  </div>
+                    />{" "}
+                  </div>{" "}
                 </div>
               </div>
             </div>
@@ -336,7 +347,11 @@ const Cart = ({
                   type="text"
                   placeholder="Masukkan Kode Voucher"
                   value={voucherCode}
-                  onChange={(e) => setVoucherCode(e.target.value)}
+                  onChange={(e) => {
+                    setVoucherCode(e.target.value);
+                    setError("");
+                    setSuccess("");
+                  }}
                   className="flex-grow p-3 border rounded-sm focus:ring-2 focus:ring-black"
                 />{" "}
                 <button
@@ -346,6 +361,9 @@ const Cart = ({
                   Terapkan
                 </button>{" "}
               </div>
+              {success && (
+                <div className="text-sm text-green-600">{success}</div>
+              )}
               <div className="space-y-2 border-t pt-4">
                 {" "}
                 <div className="flex justify-between">
