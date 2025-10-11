@@ -11,6 +11,7 @@ import Profile from "./pages/Profile";
 import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
 import Pesanan from "./pages/Pesanan";
+import Review from "./pages/Review";
 import "./index.css";
 
 function App() {
@@ -127,7 +128,7 @@ function App() {
         "Aman untuk tanaman dan lingkungan, efektif mengusir hama seperti kutu daun, ulat, dan tungau.",
     },
   ]);
-  const [reviews] = useState([
+  const [reviews, setReviews] = useState([
     {
       id: 101,
       productId: 1,
@@ -262,6 +263,16 @@ function App() {
         order.id === orderId ? { ...order, status: newStatus } : order
       )
     );
+  };
+  const handleAddReview = (reviewData) => {
+    if (!user) return;
+    const newReview = {
+      ...reviewData,
+      id: Date.now(),
+      userId: user.id,
+      date: new Date().toISOString().split("T")[0],
+    };
+    setReviews([...reviews, newReview]);
   };
   const handleLogin = (identifier, password) => {
     const userAccount =
@@ -449,7 +460,28 @@ function App() {
           />
         );
       case "pesanan":
-        return <Pesanan checkouts={checkouts} user={user} setPage={setPage} />;
+        return (
+          <Pesanan
+            checkouts={checkouts}
+            user={user}
+            reviews={reviews}
+            setPage={setPage}
+          />
+        );
+      case "review": {
+        const productToReview = produk.find((p) => p._id === page.id);
+        if (!productToReview)
+          return (
+            <Pesanan checkouts={checkouts} user={user} setPage={setPage} />
+          );
+        return (
+          <Review
+            product={productToReview}
+            onAddReview={handleAddReview}
+            setPage={setPage}
+          />
+        );
+      }
       case "about":
         return <About />;
       case "admin":
