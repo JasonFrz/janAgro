@@ -9,6 +9,7 @@ import Admin from "./pages/Admin";
 import Location from "./pages/Location";
 import Profile from "./pages/Profile";
 import ProductDetail from "./pages/ProductDetail";
+import Cart from "./pages/Cart";
 import "./index.css";
 
 function App() {
@@ -16,6 +17,8 @@ function App() {
   const [showProfile, setShowProfile] = useState(false);
   const [user, setUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [cart, setCart] = useState([]);
+  const [checkouts, setCheckouts] = useState([]);
 
   const [users, setUsers] = useState([
     {
@@ -27,7 +30,7 @@ function App() {
       joinDate: "2023",
       avatar: null,
       isBanned: false,
-      noTelp: "081234567890",
+      noTelp: "81234567890",
       alamat: "Jl. Merdeka No. 1, Jakarta Pusat, DKI Jakarta, 10110",
     },
     {
@@ -39,11 +42,10 @@ function App() {
       joinDate: "2024",
       avatar: null,
       isBanned: true,
-      noTelp: "089876543210",
+      noTelp: "89876543210",
       alamat: "Jl. Sudirman Kav. 5, Bandung, Jawa Barat, 40112",
     },
   ]);
-
   const [adminUser, setAdminUser] = useState({
     id: 99,
     username: "admin",
@@ -53,11 +55,13 @@ function App() {
     joinDate: "2022",
     avatar: null,
     isBanned: false,
-    noTelp: "081111111111",
+    noTelp: "81111111111",
     alamat: "Kantor Pusat JanAgro, Jl. Teknologi No. 10, Surabaya",
   });
-
-  const [vouchers, setVouchers] = useState([]);
+  const [vouchers, setVouchers] = useState([
+    { id: 1, code: "HEMAT10", discountPercentage: 10, isActive: true },
+    { id: 2, code: "JANAGRO50", discountPercentage: 50, isActive: true },
+  ]);
   const [produk, setProduk] = useState([
     {
       _id: 1,
@@ -163,44 +167,76 @@ function App() {
     },
   ]);
 
-  // --- HANDLER FUNCTIONS ---
+  const handleAddToCart = (productId) => {
+    setCart((prevCart) => {
+      const existingItem = prevCart.find(
+        (item) => item.productId === productId
+      );
+      if (existingItem) {
+        return prevCart.map((item) =>
+          item.productId === productId
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        );
+      } else {
+        return [...prevCart, { productId, quantity: 1 }];
+      }
+    });
+    return "Produk ditambahkan ke keranjang!"; // <-- Kembalikan pesan sukses
+  };
 
-  // UPDATE: Logika login yang disempurnakan
+  const handleUpdateCartQuantity = (productId, newQuantity) => {
+    if (newQuantity <= 0) {
+      handleRemoveFromCart(productId);
+    } else {
+      setCart(
+        cart.map((item) =>
+          item.productId === productId
+            ? { ...item, quantity: newQuantity }
+            : item
+        )
+      );
+    }
+  };
+  const handleRemoveFromCart = (productId) => {
+    setCart(cart.filter((item) => item.productId !== productId));
+  };
+  const handleCheckout = (checkoutData) => {
+    const newCheckout = {
+      ...checkoutData,
+      id: Date.now(),
+      tanggal: new Date().toISOString(),
+    };
+    setCheckouts([...checkouts, newCheckout]);
+    setCart([]);
+    setPage({ name: "shop", id: null });
+    console.log("Data Pesanan Baru:", newCheckout);
+    return "Checkout berhasil! Terima kasih telah berbelanja.";
+  }; // <-- Kembalikan pesan sukses
   const handleLogin = (identifier, password) => {
-    // 1. Cari akun pengguna (baik reguler maupun admin) berdasarkan identifier
     const userAccount =
       users.find((u) => u.email === identifier || u.username === identifier) ||
       (adminUser.email === identifier || adminUser.username === identifier
         ? adminUser
         : null);
-
-    // 2. Jika tidak ada akun yang ditemukan
     if (!userAccount) {
       return "Pengguna dengan email atau username tersebut tidak ditemukan.";
     }
-
-    // 3. Jika password tidak cocok
     if (userAccount.password !== password) {
       return "Password yang Anda masukkan salah.";
     }
-
-    // 4. Jika akun diblokir
     if (userAccount.isBanned) {
       return "Akun ini telah ditangguhkan.";
     }
-
-    // 5. Jika semua pemeriksaan lolos, lanjutkan login
     const isAdminLogin = userAccount.id === adminUser.id;
-
     setUser(userAccount);
     setIsAdmin(isAdminLogin);
     if (isAdminLogin) {
       setPage({ name: "admin", id: null });
     }
     setShowProfile(false);
-    return null; // Sukses
+    return null;
   };
-
   const handleRegister = (username, name, email, password, noTelp) => {
     const cleanUsername = username.trim().toLowerCase();
     if (
@@ -225,13 +261,11 @@ function App() {
     setUsers([...users, newUser]);
     return null;
   };
-
   const handleLogout = () => {
     setUser(null);
     setIsAdmin(false);
     setPage({ name: "home", id: null });
   };
-
   const handleAvatarChange = (newAvatarUrl) => {
     if (!user) return;
     const updatedUser = { ...user, avatar: newAvatarUrl };
@@ -244,7 +278,6 @@ function App() {
       );
     }
   };
-
   const handleProfileUpdate = (updatedData) => {
     if (!user) return;
     const updatedUser = { ...user, ...updatedData };
@@ -257,7 +290,6 @@ function App() {
       );
     }
   };
-
   const handlePasswordChange = (currentPassword, newPassword) => {
     if (!user) return { success: false, message: "No user logged in." };
     if (user.password !== currentPassword)
@@ -273,7 +305,6 @@ function App() {
     }
     return { success: true, message: "Password updated successfully!" };
   };
-
   const handleUpdateUserByAdmin = (userId, updatedData) =>
     setUsers(
       users.map((u) => (u.id === userId ? { ...u, ...updatedData } : u))
@@ -284,16 +315,6 @@ function App() {
     setUsers(
       users.map((u) => (u.id === userId ? { ...u, isBanned: !u.isBanned } : u))
     );
-  const handleAddVoucher = (newData) => {
-    const newVoucher = { ...newData, id: Date.now(), currentUses: 0 };
-    setVouchers([...vouchers, newVoucher]);
-  };
-  const handleUpdateVoucher = (voucherId, updatedData) =>
-    setVouchers(
-      vouchers.map((v) => (v.id === voucherId ? { ...v, ...updatedData } : v))
-    );
-  const handleDeleteVoucher = (voucherId) =>
-    setVouchers(vouchers.filter((v) => v.id !== voucherId));
   const handleAddProduk = (newData) => {
     const newProduk = { ...newData, _id: Date.now() };
     setProduk([...produk, newProduk]);
@@ -312,7 +333,15 @@ function App() {
       case "home":
         return <Home />;
       case "shop":
-        return <Shop produk={produk} setPage={setPage} />;
+        return (
+          <Shop
+            produk={produk}
+            user={user}
+            setPage={setPage}
+            onAddToCart={handleAddToCart}
+            cartCount={cart.length}
+          />
+        );
       case "product-detail": {
         const selectedProduct = produk.find((p) => p._id === page.id);
         if (!selectedProduct) {
@@ -323,10 +352,26 @@ function App() {
             product={selectedProduct}
             reviews={reviews}
             users={users}
+            user={user}
             setPage={setPage}
+            onAddToCart={handleAddToCart}
+            cartCount={cart.length}
           />
         );
       }
+      case "cart":
+        return (
+          <Cart
+            cart={cart}
+            produk={produk}
+            user={user}
+            vouchers={vouchers}
+            onUpdateQuantity={handleUpdateCartQuantity}
+            onRemove={handleRemoveFromCart}
+            onCheckout={handleCheckout}
+            setPage={setPage}
+          />
+        );
       case "about":
         return <About />;
       case "admin":
@@ -338,9 +383,6 @@ function App() {
             onUpdateUser={handleUpdateUserByAdmin}
             onDeleteUser={handleDeleteUserByAdmin}
             onToggleBanUser={handleToggleBanUser}
-            onAddVoucher={handleAddVoucher}
-            onUpdateVoucher={handleUpdateVoucher}
-            onDeleteVoucher={handleDeleteVoucher}
             onAddProduk={handleAddProduk}
             onUpdateProduk={handleUpdateProduk}
             onDeleteProduk={handleDeleteProduk}

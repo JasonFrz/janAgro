@@ -1,0 +1,377 @@
+import React, { useState, useEffect } from "react";
+import { ArrowLeft, Trash2, AlertCircle } from "lucide-react";
+
+// Helper untuk memformat input nomor telepon saat diketik
+const formatPhoneInput = (value) => {
+  const digits = value.replace(/\D/g, "").substring(0, 15);
+  let formatted = "";
+  for (let i = 0; i < digits.length; i++) {
+    if (i === 4 || i === 8) {
+      formatted += "-";
+    }
+    formatted += digits[i];
+  }
+  return formatted;
+};
+
+const Cart = ({
+  cart,
+  produk,
+  user,
+  vouchers,
+  onUpdateQuantity,
+  onRemove,
+  onCheckout,
+  setPage,
+}) => {
+  const [customerName, setCustomerName] = useState("");
+  const [customerAddress, setCustomerAddress] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
+  const [useProfileData, setUseProfileData] = useState(false);
+  const [voucherCode, setVoucherCode] = useState("");
+  const [appliedVoucher, setAppliedVoucher] = useState(null);
+  const [paymentMethod, setPaymentMethod] = useState("");
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    if (user && useProfileData) {
+      setCustomerName(user.name);
+      setCustomerAddress(user.alamat);
+      setCustomerPhone(user.noTelp.replace(/\D/g, "")); // Gunakan nomor mentah
+    }
+  }, [user, useProfileData]);
+
+  const handleCheckboxChange = (e) => {
+    const isChecked = e.target.checked;
+    setUseProfileData(isChecked);
+    if (isChecked && user) {
+      setCustomerName(user.name);
+      setCustomerAddress(user.alamat);
+      setCustomerPhone(user.noTelp.replace(/\D/g, ""));
+    } else {
+      setCustomerName("");
+      setCustomerAddress("");
+      setCustomerPhone("");
+    }
+  };
+
+  const handlePhoneChange = (e) => {
+    const numericValue = e.target.value.replace(/\D/g, "");
+    if (numericValue.length <= 15) {
+      setCustomerPhone(numericValue);
+    }
+  };
+
+  const cartDetails = cart.map((item) => ({
+    ...produk.find((p) => p._id === item.productId),
+    quantity: item.quantity,
+  }));
+  const subtotal = cartDetails.reduce(
+    (sum, item) => sum + item.price * item.quantity,
+    0
+  );
+  const kurirFee = 10000;
+
+  const handleApplyVoucher = () => {
+    /* ... logika voucher tidak berubah ... */ const foundVoucher =
+      vouchers.find(
+        (v) => v.code.toLowerCase() === voucherCode.toLowerCase() && v.isActive
+      );
+    if (foundVoucher) {
+      setAppliedVoucher(foundVoucher);
+      setError("");
+    } else {
+      setAppliedVoucher(null);
+      setError("Kode voucher tidak valid.");
+    }
+  };
+  const discountAmount = appliedVoucher
+    ? (subtotal * appliedVoucher.discountPercentage) / 100
+    : 0;
+  const totalHarga = subtotal - discountAmount + kurirFee;
+
+  const handleCheckoutClick = () => {
+    setError("");
+    if (!user) {
+      setError("Silakan login untuk melanjutkan checkout.");
+      return;
+    }
+    if (!customerName || !customerAddress || !customerPhone) {
+      setError("Harap lengkapi semua detail pengiriman.");
+      return;
+    }
+    if (customerPhone.length < 8 || customerPhone.length > 15) {
+      setError("Nomor Telepon harus antara 8 hingga 15 digit.");
+      return;
+    }
+    if (!paymentMethod) {
+      setError("Silakan pilih metode pembayaran.");
+      return;
+    }
+
+    const successMessage = onCheckout({
+      userId: user.id,
+      nama: customerName,
+      alamat: customerAddress,
+      noTelpPenerima: customerPhone,
+      items: cartDetails,
+      subtotal,
+      diskon: discountAmount,
+      kodeVoucher: appliedVoucher ? appliedVoucher.code : null,
+      kurir: { nama: "Kurir JanAgro", biaya: kurirFee },
+      totalHarga,
+      metodePembayaran: paymentMethod,
+    });
+    alert(successMessage); // Menggunakan alert di sini karena halaman akan berganti
+  };
+
+  if (cart.length === 0) {
+    /* ... (tampilan keranjang kosong tidak berubah) ... */ return (
+      <div className="min-h-screen bg-gray-50 pt-24">
+        {" "}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 text-center">
+          {" "}
+          <h1 className="text-3xl font-bold text-black mb-4">
+            Keranjang Anda Kosong
+          </h1>{" "}
+          <p className="text-gray-600 mb-8">
+            Sepertinya Anda belum menambahkan produk apapun ke keranjang.
+          </p>{" "}
+          <button
+            onClick={() => setPage({ name: "shop" })}
+            className="bg-black text-white py-3 px-8 rounded-sm font-medium hover:bg-gray-800 transition"
+          >
+            Mulai Belanja
+          </button>{" "}
+        </div>{" "}
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gray-50 pt-24">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <button
+          onClick={() => setPage({ name: "shop" })}
+          className="flex items-center gap-2 text-gray-600 hover:text-black mb-8 transition"
+        >
+          {" "}
+          <ArrowLeft size={20} /> Lanjut Belanja{" "}
+        </button>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
+          <div className="lg:col-span-2 space-y-8">
+            <div className="bg-white p-6 rounded-sm border">
+              <h2 className="text-xl font-bold mb-4">Detail Pesanan</h2>
+              <div className="space-y-4">
+                {cartDetails.map((item) => (
+                  <div
+                    key={item._id}
+                    className="flex items-center gap-4 border-b pb-4 last:border-b-0 last:pb-0"
+                  >
+                    <div className="w-20 h-20 bg-gray-100 rounded-sm flex items-center justify-center text-4xl flex-shrink-0">
+                      {item.image}
+                    </div>
+                    <div className="flex-grow">
+                      {" "}
+                      <p className="font-bold">{item.name}</p>{" "}
+                      <p className="text-sm text-gray-500">
+                        Rp {item.price.toLocaleString("id-ID")}
+                      </p>{" "}
+                    </div>
+                    <div className="flex items-center gap-2 border rounded-sm">
+                      {" "}
+                      <button
+                        onClick={() =>
+                          onUpdateQuantity(item._id, item.quantity - 1)
+                        }
+                        className="px-3 py-1 hover:bg-gray-100"
+                      >
+                        -
+                      </button>{" "}
+                      <span className="px-2 font-medium">{item.quantity}</span>{" "}
+                      <button
+                        onClick={() =>
+                          onUpdateQuantity(item._id, item.quantity + 1)
+                        }
+                        className="px-3 py-1 hover:bg-gray-100"
+                      >
+                        +
+                      </button>{" "}
+                    </div>
+                    <p className="font-semibold w-28 text-right">
+                      Rp {(item.price * item.quantity).toLocaleString("id-ID")}
+                    </p>
+                    <button
+                      onClick={() => onRemove(item._id)}
+                      className="text-gray-400 hover:text-red-500"
+                    >
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="bg-white p-6 rounded-sm border">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-bold">Detail Pengiriman</h2>
+                {user && (
+                  <label className="flex items-center gap-2 cursor-pointer text-sm">
+                    {" "}
+                    <input
+                      type="checkbox"
+                      checked={useProfileData}
+                      onChange={handleCheckboxChange}
+                      className="form-checkbox"
+                    />{" "}
+                    Gunakan data profil{" "}
+                  </label>
+                )}
+              </div>
+              <div className="space-y-4">
+                <div>
+                  {" "}
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Nama Penerima
+                  </label>{" "}
+                  <input
+                    type="text"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    disabled={useProfileData}
+                    className="w-full p-3 border rounded-sm focus:ring-2 focus:ring-black disabled:bg-gray-100"
+                  />{" "}
+                </div>
+                <div>
+                  {" "}
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Alamat Lengkap
+                  </label>{" "}
+                  <textarea
+                    value={customerAddress}
+                    onChange={(e) => setCustomerAddress(e.target.value)}
+                    disabled={useProfileData}
+                    className="w-full p-3 border rounded-sm focus:ring-2 focus:ring-black disabled:bg-gray-100"
+                    rows="3"
+                  ></textarea>{" "}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Nomor Telepon Penerima
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
+                      +62
+                    </span>
+                    <input
+                      type="tel"
+                      value={formatPhoneInput(customerPhone)}
+                      onChange={handlePhoneChange}
+                      disabled={useProfileData}
+                      className="w-full pl-10 pr-4 py-3 border rounded-sm focus:ring-2 focus:ring-black disabled:bg-gray-100"
+                      placeholder="812-3456-7890"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="lg:col-span-1">
+            <div className="bg-white p-6 rounded-sm border sticky top-24 space-y-6">
+              <h2 className="text-xl font-bold text-center mb-4">
+                Ringkasan Belanja
+              </h2>
+              <div className="flex items-center gap-2">
+                {" "}
+                <input
+                  type="text"
+                  placeholder="Masukkan Kode Voucher"
+                  value={voucherCode}
+                  onChange={(e) => setVoucherCode(e.target.value)}
+                  className="flex-grow p-3 border rounded-sm focus:ring-2 focus:ring-black"
+                />{" "}
+                <button
+                  onClick={handleApplyVoucher}
+                  className="bg-gray-200 text-black p-3 rounded-sm font-medium hover:bg-gray-300"
+                >
+                  Terapkan
+                </button>{" "}
+              </div>
+              <div className="space-y-2 border-t pt-4">
+                {" "}
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Subtotal</span>
+                  <span className="font-medium">
+                    Rp {subtotal.toLocaleString("id-ID")}
+                  </span>
+                </div>{" "}
+                {appliedVoucher && (
+                  <div className="flex justify-between text-green-600">
+                    <span className="text-green-600">
+                      Diskon ({appliedVoucher.discountPercentage}%)
+                    </span>
+                    <span className="font-medium">
+                      - Rp {discountAmount.toLocaleString("id-ID")}
+                    </span>
+                  </div>
+                )}{" "}
+                <div className="flex justify-between">
+                  <span className="text-gray-600">Biaya Kurir</span>
+                  <span className="font-medium">
+                    Rp {kurirFee.toLocaleString("id-ID")}
+                  </span>
+                </div>{" "}
+                <div className="flex justify-between text-lg font-bold border-t pt-2 mt-2">
+                  <span className="text-black">Total Harga</span>
+                  <span className="text-black">
+                    Rp {totalHarga.toLocaleString("id-ID")}
+                  </span>
+                </div>{" "}
+              </div>
+              <div>
+                <h3 className="text-lg font-bold mb-2">Metode Pembayaran</h3>
+                <div className="space-y-2">
+                  {[
+                    "COD (Bayar di Tempat)",
+                    "Transfer Bank",
+                    "Kartu Kredit",
+                  ].map((method) => (
+                    <label
+                      key={method}
+                      className="flex items-center p-3 border rounded-sm has-[:checked]:bg-gray-100 has-[:checked]:border-black cursor-pointer"
+                    >
+                      {" "}
+                      <input
+                        type="radio"
+                        name="payment"
+                        value={method}
+                        checked={paymentMethod === method}
+                        onChange={(e) => setPaymentMethod(e.target.value)}
+                        className="mr-3"
+                      />{" "}
+                      {method}{" "}
+                    </label>
+                  ))}
+                </div>
+              </div>
+              {error && (
+                <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 p-3 rounded-md border border-red-200">
+                  <AlertCircle size={16} />
+                  {error}
+                </div>
+              )}
+              <button
+                onClick={handleCheckoutClick}
+                disabled={cart.length === 0}
+                className="w-full bg-black text-white py-4 rounded-sm font-medium text-lg hover:bg-gray-800 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
+              >
+                Checkout
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default Cart;

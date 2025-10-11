@@ -1,8 +1,30 @@
-import React, { useState } from "react";
-import { Star, ArrowLeft } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import {
+  Star,
+  ArrowLeft,
+  ShoppingCart,
+  AlertCircle,
+  CheckCircle,
+} from "lucide-react";
 
+const Notification = ({ message, type }) => {
+  /* ... (sama seperti di Shop.jsx) ... */ if (!message) return null;
+  const isError = type === "error";
+  return (
+    <div
+      className={`fixed top-20 right-4 z-50 p-4 rounded-md shadow-lg flex items-center gap-3 transition-transform animate-fade-in-down ${
+        isError ? "bg-red-500 text-white" : "bg-black text-white"
+      }`}
+    >
+      {" "}
+      {isError ? <AlertCircle size={20} /> : <CheckCircle size={20} />}{" "}
+      <span>{message}</span>{" "}
+    </div>
+  );
+};
 const StarRating = ({ rating }) => (
   <div className="flex items-center">
+    {" "}
     {[...Array(5)].map((_, index) => (
       <Star
         key={index}
@@ -11,180 +33,234 @@ const StarRating = ({ rating }) => (
           index < rating ? "text-yellow-400 fill-current" : "text-gray-300"
         }
       />
-    ))}
+    ))}{" "}
   </div>
 );
 
-const ProductDetail = ({ product, reviews, users, setPage }) => {
+const ProductDetail = ({
+  product,
+  reviews,
+  users,
+  user,
+  setPage,
+  onAddToCart,
+  cartCount,
+}) => {
   const [ratingFilter, setRatingFilter] = useState(0);
   const [mediaFilter, setMediaFilter] = useState("all");
+  const [notification, setNotification] = useState(null);
 
-  // useMemo dihapus, filter dijalankan pada setiap render
+  useEffect(() => {
+    if (notification) {
+      const timer = setTimeout(() => {
+        setNotification(null);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [notification]);
+
+  const handleAddToCartClick = (productId) => {
+    if (!user) {
+      setNotification({
+        type: "error",
+        message: "Silakan login terlebih dahulu.",
+      });
+    } else {
+      const successMessage = onAddToCart(productId);
+      setNotification({ type: "success", message: successMessage });
+    }
+  };
+
   const filteredReviews = reviews
-    .filter((review) => review.productId === product._id)
-    .filter((review) => {
-      if (ratingFilter === 0) return true;
-      return review.rating === ratingFilter;
-    })
-    .filter((review) => {
-      if (mediaFilter === "all") return true;
-      if (mediaFilter === "dengan-media") return review.imageUrl !== null;
-      if (mediaFilter === "tanpa-media") return review.imageUrl === null;
-      return true;
-    });
+    .filter((r) => r.productId === product._id)
+    .filter((r) => ratingFilter === 0 || r.rating === ratingFilter)
+    .filter(
+      (r) =>
+        mediaFilter === "all" ||
+        (mediaFilter === "dengan-media" && r.imageUrl) ||
+        (mediaFilter === "tanpa-media" && !r.imageUrl)
+    );
 
   return (
-    <div className="min-h-screen bg-white pt-24">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <button
-          onClick={() => setPage({ name: "shop" })}
-          className="flex items-center gap-2 text-gray-600 hover:text-black mb-8 transition"
-        >
-          <ArrowLeft size={20} />
-          Kembali ke Toko
-        </button>
-
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
-          <div className="lg:col-span-2 flex items-center justify-center bg-gray-100 rounded-sm text-8xl h-96">
-            {product.image}
-          </div>
-          <div className="lg:col-span-3 flex flex-col">
-            <span className="text-sm uppercase text-gray-500 tracking-wider">
-              {product.category}
-            </span>
-            <h1 className="text-4xl font-bold text-gray-900 my-2">
-              {product.name}
-            </h1>
-            <p className="text-3xl font-light text-gray-800 mb-4">
-              Rp {product.price.toLocaleString("id-ID")}
-            </p>
-            <p className="text-gray-600 mb-6 leading-relaxed">
-              {product.detail}
-            </p>
-            {product.stock > 0 && product.stock <= 10 && (
-              <p className="text-sm mb-6 font-semibold text-yellow-600">
-                Stok Terbatas: Tinggal {product.stock} buah!
+    <>
+      <Notification message={notification?.message} type={notification?.type} />
+      <button
+        onClick={() => setPage({ name: "cart" })}
+        className="fixed top-24 right-4 sm:right-8 z-30 bg-white p-4 rounded-full shadow-lg border transition-transform hover:scale-110"
+        aria-label="Buka Keranjang"
+      >
+        <ShoppingCart size={24} className="text-black" />
+        {cartCount > 0 && (
+          <span className="absolute -top-2 -right-2 w-6 h-6 bg-black text-white text-xs font-bold rounded-full flex items-center justify-center border-2 border-white">
+            {cartCount}
+          </span>
+        )}
+      </button>
+      <div className="min-h-screen bg-white pt-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <button
+            onClick={() => setPage({ name: "shop" })}
+            className="flex items-center gap-2 text-gray-600 hover:text-black mb-8 transition"
+          >
+            {" "}
+            <ArrowLeft size={20} /> Kembali ke Toko{" "}
+          </button>
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
+            <div className="lg:col-span-2 flex items-center justify-center bg-gray-100 rounded-sm text-8xl h-96">
+              {product.image}
+            </div>
+            <div className="lg:col-span-3 flex flex-col">
+              <span className="text-sm uppercase text-gray-500 tracking-wider">
+                {product.category}
+              </span>
+              <h1 className="text-4xl font-bold text-gray-900 my-2">
+                {product.name}
+              </h1>
+              <p className="text-3xl font-light text-gray-800 mb-4">
+                Rp {product.price.toLocaleString("id-ID")}
               </p>
-            )}
-            <button
-              disabled={product.stock === 0}
-              className="w-full bg-black text-white py-4 px-4 rounded-sm transition-all duration-300 hover:bg-gray-800 text-sm font-medium uppercase tracking-wide disabled:bg-gray-400 disabled:cursor-not-allowed"
-            >
-              {product.stock > 0 ? "Add to Cart" : "Out of Stock"}
-            </button>
+              <p className="text-gray-600 mb-6 leading-relaxed">
+                {product.detail}
+              </p>
+              {product.stock > 0 && product.stock <= 10 && (
+                <p className="text-sm mb-6 font-semibold text-yellow-600">
+                  Stok Terbatas: Tinggal {product.stock} buah!
+                </p>
+              )}
+              <button
+                onClick={() => handleAddToCartClick(product._id)}
+                disabled={product.stock === 0}
+                className="w-full bg-black text-white py-4 px-4 rounded-sm transition-all duration-300 hover:bg-gray-800 text-sm font-medium uppercase tracking-wide disabled:bg-gray-400 disabled:cursor-not-allowed"
+              >
+                {product.stock > 0 ? "Add to Cart" : "Out of Stock"}
+              </button>
+            </div>
           </div>
-        </div>
-
-        <div className="mt-16 border-t pt-12">
-          <h2 className="text-3xl font-bold mb-4">Ulasan Produk</h2>
-          <div className="flex flex-col md:flex-row gap-4 mb-8 p-4 border rounded-sm">
-            <div className="flex-1">
-              <label className="block text-sm font-medium mb-2">
-                Filter Berdasarkan Rating
-              </label>
-              <div className="flex gap-2 flex-wrap">
-                {[0, 5, 4, 3, 2, 1].map((star) => (
+          <div className="mt-16 border-t pt-12">
+            <h2 className="text-3xl font-bold mb-4">Ulasan Produk</h2>
+            <div className="flex flex-col md:flex-row gap-4 mb-8 p-4 border rounded-sm">
+              {" "}
+              <div className="flex-1">
+                {" "}
+                <label className="block text-sm font-medium mb-2">
+                  {" "}
+                  Filter Berdasarkan Rating{" "}
+                </label>{" "}
+                <div className="flex gap-2 flex-wrap">
+                  {" "}
+                  {[0, 5, 4, 3, 2, 1].map((star) => (
+                    <button
+                      key={star}
+                      onClick={() => setRatingFilter(star)}
+                      className={`px-4 py-2 text-sm rounded-sm border transition ${
+                        ratingFilter === star
+                          ? "bg-black text-white border-black"
+                          : "bg-white text-gray-700 border-gray-300 hover:border-black"
+                      }`}
+                    >
+                      {" "}
+                      {star === 0 ? "Semua" : `★ ${star}`}{" "}
+                    </button>
+                  ))}{" "}
+                </div>{" "}
+              </div>{" "}
+              <div className="flex-1">
+                {" "}
+                <label className="block text-sm font-medium mb-2">
+                  {" "}
+                  Filter Berdasarkan Media{" "}
+                </label>{" "}
+                <div className="flex gap-2 flex-wrap">
+                  {" "}
                   <button
-                    key={star}
-                    onClick={() => setRatingFilter(star)}
+                    onClick={() => setMediaFilter("all")}
                     className={`px-4 py-2 text-sm rounded-sm border transition ${
-                      ratingFilter === star
+                      mediaFilter === "all"
                         ? "bg-black text-white border-black"
                         : "bg-white text-gray-700 border-gray-300 hover:border-black"
                     }`}
                   >
-                    {star === 0 ? "Semua" : `★ ${star}`}
-                  </button>
-                ))}
-              </div>
+                    Semua
+                  </button>{" "}
+                  <button
+                    onClick={() => setMediaFilter("dengan-media")}
+                    className={`px-4 py-2 text-sm rounded-sm border transition ${
+                      mediaFilter === "dengan-media"
+                        ? "bg-black text-white border-black"
+                        : "bg-white text-gray-700 border-gray-300 hover:border-black"
+                    }`}
+                  >
+                    Dengan Media
+                  </button>{" "}
+                  <button
+                    onClick={() => setMediaFilter("tanpa-media")}
+                    className={`px-4 py-2 text-sm rounded-sm border transition ${
+                      mediaFilter === "tanpa-media"
+                        ? "bg-black text-white border-black"
+                        : "bg-white text-gray-700 border-gray-300 hover:border-black"
+                    }`}
+                  >
+                    Tanpa Media
+                  </button>{" "}
+                </div>{" "}
+              </div>{" "}
             </div>
-            <div className="flex-1">
-              <label className="block text-sm font-medium mb-2">
-                Filter Berdasarkan Media
-              </label>
-              <div className="flex gap-2 flex-wrap">
-                <button
-                  onClick={() => setMediaFilter("all")}
-                  className={`px-4 py-2 text-sm rounded-sm border transition ${
-                    mediaFilter === "all"
-                      ? "bg-black text-white border-black"
-                      : "bg-white text-gray-700 border-gray-300 hover:border-black"
-                  }`}
-                >
-                  Semua
-                </button>
-                <button
-                  onClick={() => setMediaFilter("dengan-media")}
-                  className={`px-4 py-2 text-sm rounded-sm border transition ${
-                    mediaFilter === "dengan-media"
-                      ? "bg-black text-white border-black"
-                      : "bg-white text-gray-700 border-gray-300 hover:border-black"
-                  }`}
-                >
-                  Dengan Media
-                </button>
-                <button
-                  onClick={() => setMediaFilter("tanpa-media")}
-                  className={`px-4 py-2 text-sm rounded-sm border transition ${
-                    mediaFilter === "tanpa-media"
-                      ? "bg-black text-white border-black"
-                      : "bg-white text-gray-700 border-gray-300 hover:border-black"
-                  }`}
-                >
-                  Tanpa Media
-                </button>
+            {filteredReviews.length > 0 ? (
+              <div className="space-y-8">
+                {" "}
+                {filteredReviews.map((review) => {
+                  const user = users.find((u) => u.id === review.userId);
+                  return (
+                    <div key={review.id} className="flex gap-4 border-b pb-8">
+                      {" "}
+                      <div className="w-12 h-12 rounded-full bg-gray-200 flex-shrink-0 flex items-center justify-center font-bold text-gray-500">
+                        {user ? user.name.charAt(0) : "A"}
+                      </div>{" "}
+                      <div className="flex-1">
+                        {" "}
+                        <div className="flex items-center justify-between">
+                          {" "}
+                          <div>
+                            {" "}
+                            <p className="font-semibold">
+                              {user ? user.name : "Anonymous"}
+                            </p>{" "}
+                            <StarRating rating={review.rating} />{" "}
+                          </div>{" "}
+                          <p className="text-sm text-gray-500">
+                            {new Date(review.date).toLocaleDateString("id-ID", {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                            })}
+                          </p>{" "}
+                        </div>{" "}
+                        <p className="text-gray-700 mt-2">{review.comment}</p>{" "}
+                        {review.imageUrl && (
+                          <div className="mt-4">
+                            {" "}
+                            <img
+                              src={review.imageUrl}
+                              alt="Ulasan produk"
+                              className="max-w-xs rounded-md border"
+                            />{" "}
+                          </div>
+                        )}{" "}
+                      </div>{" "}
+                    </div>
+                  );
+                })}{" "}
               </div>
-            </div>
+            ) : (
+              <p className="text-gray-500 bg-gray-50 p-6 rounded-sm">
+                {" "}
+                Tidak ada ulasan yang sesuai dengan filter Anda.{" "}
+              </p>
+            )}
           </div>
-
-          {filteredReviews.length > 0 ? (
-            <div className="space-y-8">
-              {filteredReviews.map((review) => {
-                const user = users.find((u) => u.id === review.userId);
-                return (
-                  <div key={review.id} className="flex gap-4 border-b pb-8">
-                    <div className="w-12 h-12 rounded-full bg-gray-200 flex-shrink-0 flex items-center justify-center font-bold text-gray-500">
-                      {user ? user.name.charAt(0) : "A"}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-semibold">
-                            {user ? user.name : "Anonymous"}
-                          </p>
-                          <StarRating rating={review.rating} />
-                        </div>
-                        <p className="text-sm text-gray-500">
-                          {new Date(review.date).toLocaleDateString("id-ID", {
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                          })}
-                        </p>
-                      </div>
-                      <p className="text-gray-700 mt-2">{review.comment}</p>
-                      {review.imageUrl && (
-                        <div className="mt-4">
-                          <img
-                            src={review.imageUrl}
-                            alt="Ulasan produk"
-                            className="max-w-xs rounded-md border"
-                          />
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <p className="text-gray-500 bg-gray-50 p-6 rounded-sm">
-              Tidak ada ulasan yang sesuai dengan filter Anda.
-            </p>
-          )}
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
