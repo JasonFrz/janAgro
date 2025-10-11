@@ -234,6 +234,14 @@ function App() {
         )
       );
     }
+    let produkCopy = [...produk];
+    for (const item of checkoutData.items) {
+      const productIndex = produkCopy.findIndex((p) => p._id === item._id);
+      if (productIndex !== -1) {
+        produkCopy[productIndex].stock -= item.quantity;
+      }
+    }
+    setProduk(produkCopy);
     const newCheckout = {
       ...checkoutData,
       id: Date.now(),
@@ -243,7 +251,6 @@ function App() {
     setCheckouts([...checkouts, newCheckout]);
     setCart([]);
     setPage({ name: "shop", id: null });
-    console.log("Data Pesanan Baru:", newCheckout);
     return {
       success: true,
       message: "Checkout berhasil! Terima kasih telah berbelanja.",
