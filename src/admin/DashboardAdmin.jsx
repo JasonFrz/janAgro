@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo } from "react";
 import axios from "axios";
 
-function DashboardAdmin({ users, vouchers }) {
+// PERBAIKAN: Memberikan nilai default pada props untuk mencegah error jika props tidak ada
+function DashboardAdmin({ users = [], vouchers = [] }) {
   const [produk, setProduk] = useState([]);
   const [produkSortAsc, setProdukSortAsc] = useState(true);
-
   const [userSortAsc, setUserSortAsc] = useState(true);
 
   useEffect(() => {
@@ -20,10 +20,10 @@ function DashboardAdmin({ users, vouchers }) {
     }
   };
 
-  const getProdukStatus = (stok) => {
-    if (stok === 0)
+  const getProdukStatus = (stock) => {
+    if (stock === 0)
       return { text: "Out of Stock", color: "bg-red-100 text-red-600" };
-    if (stok <= 10)
+    if (stock <= 10)
       return { text: "Low Stock", color: "bg-yellow-100 text-yellow-600" };
     return { text: "Available", color: "bg-green-100 text-green-600" };
   };
@@ -45,15 +45,16 @@ function DashboardAdmin({ users, vouchers }) {
 
   const sortedProduk = useMemo(() => {
     return [...produk].sort((a, b) => {
-      if (produkSortAsc) return a.nama.localeCompare(b.nama);
-      return b.nama.localeCompare(a.nama);
+      if (produkSortAsc) return (a.name || "").localeCompare(b.name || "");
+      return (b.name || "").localeCompare(a.name || "");
     });
   }, [produk, produkSortAsc]);
 
   const sortedUsers = useMemo(() => {
+    // Kode ini aman sekarang karena `users` dijamin sebagai array
     return [...users].sort((a, b) => {
-      if (userSortAsc) return a.username.localeCompare(b.username);
-      return b.username.localeCompare(a.username);
+      if (userSortAsc) return (a.username || "").localeCompare(b.username || "");
+      return (b.username || "").localeCompare(a.username || "");
     });
   }, [users, userSortAsc]);
 
@@ -75,6 +76,7 @@ function DashboardAdmin({ users, vouchers }) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* User Section (Tidak ada perubahan logika, hanya memastikan berjalan aman) */}
         <div className="bg-white shadow rounded-lg p-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold flex items-center space-x-2">
@@ -128,6 +130,7 @@ function DashboardAdmin({ users, vouchers }) {
           )}
         </div>
 
+        {/* Produk Section */}
         <div className="bg-white shadow rounded-lg p-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold flex items-center space-x-2">
@@ -151,19 +154,19 @@ function DashboardAdmin({ users, vouchers }) {
             <ul className="divide-y divide-gray-200">
               {sortedProduk.map((p, idx) => {
                 if (idx >= 6) return null;
-                const status = getProdukStatus(p.stok);
+                const status = getProdukStatus(p.stock);
                 return (
                   <li
                     key={p._id}
                     className="flex items-center justify-between py-3"
                   >
                     <div>
-                      <p className="font-medium">{p.nama}</p>
-                      <p className="text-sm text-gray-500">{p.type}</p>
+                      <p className="font-medium">{p.name}</p>
+                      <p className="text-sm text-gray-500">{p.category}</p>
                     </div>
                     <div className="flex items-center space-x-3">
                       <span className="text-sm font-semibold">
-                        Stock: {p.stok}
+                        Stock: {p.stock}
                       </span>
                       <span
                         className={`px-2 py-1 text-xs rounded-full ${status.color}`}
