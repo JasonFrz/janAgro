@@ -20,8 +20,7 @@ function App() {
   const [user, setUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [cart, setCart] = useState([]);
-  const [checkouts, setCheckouts] = useState([]);
-
+  
   const [users, setUsers] = useState([
     {
       id: 1,
@@ -45,7 +44,7 @@ function App() {
       avatar: null,
       isBanned: true,
       noTelp: "89876543210",
-      alamat: "",
+      alamat: "Jl. Mawar No. 5, Bandung, Jawa Barat, 40111",
     },
   ]);
   const [adminUser, setAdminUser] = useState({
@@ -183,6 +182,65 @@ function App() {
     },
   ]);
 
+  // Dummy Data for Checkouts
+  const [checkouts, setCheckouts] = useState([
+    {
+      id: 1001,
+      userId: 1,
+      nama: "John Doe",
+      alamat: "Jl. Merdeka No. 1, Jakarta Pusat, DKI Jakarta, 10110",
+      noTelpPenerima: "81234567890",
+      items: [
+        { _id: 1, name: "Organic Garden Booster", image: "🌱", price: 24.99, quantity: 2 },
+        { _id: 3, name: "Bibit Tomat Cherry", image: "🍅", price: 5.99, quantity: 1 },
+      ],
+      subtotal: 55.97,
+      diskon: 0,
+      kodeVoucher: null,
+      kurir: { nama: "Kurir JanAgro", biaya: 10000 },
+      totalHarga: 65970, // 55.97 * 1000 + 10000 = 65970
+      metodePembayaran: "Transfer Bank",
+      tanggal: "2024-05-10T10:30:00Z",
+      status: "sampai", // diproses, dikirim, sampai
+    },
+    {
+      id: 1002,
+      userId: 2,
+      nama: "Jane Doe",
+      alamat: "Jl. Mawar No. 5, Bandung, Jawa Barat, 40111",
+      noTelpPenerima: "89876543210",
+      items: [
+        { _id: 2, name: "Sekop Taman Pro", image: "🛠️", price: 15.5, quantity: 1 },
+      ],
+      subtotal: 15.5,
+      diskon: 7.75, // 50% discount from JANAGRO50
+      kodeVoucher: "JANAGRO50",
+      kurir: { nama: "Kurir JanAgro", biaya: 10000 },
+      totalHarga: 17750, // (15.5 - 7.75) * 1000 + 10000 = 17750
+      metodePembayaran: "COD (Bayar di Tempat)",
+      tanggal: "2024-05-08T14:00:00Z",
+      status: "dikirim",
+    },
+    {
+      id: 1003,
+      userId: 1,
+      nama: "John Doe",
+      alamat: "Jl. Merdeka No. 1, Jakarta Pusat, DKI Jakarta, 10110",
+      noTelpPenerima: "81234567890",
+      items: [
+        { _id: 4, name: "Pestisida Organik Neem", image: "🌿", price: 12.0, quantity: 1 },
+      ],
+      subtotal: 12.0,
+      diskon: 0,
+      kodeVoucher: null,
+      kurir: { nama: "Kurir JanAgro", biaya: 10000 },
+      totalHarga: 22000, // 12.0 * 1000 + 10000 = 22000
+      metodePembayaran: "Kartu Kredit",
+      tanggal: "2024-05-12T09:15:00Z",
+      status: "diproses",
+    },
+  ]);
+
   const handleAddToCart = (productId) => {
     setCart((prevCart) => {
       const existingItem = prevCart.find(
@@ -251,7 +309,7 @@ function App() {
     };
     setCheckouts([...checkouts, newCheckout]);
     setCart([]);
-    setPage({ name: "shop", id: null });
+    setPage({ name: "pesanan", id: null }); // Redirect to pesanan page after successful checkout
     return {
       success: true,
       message: "Checkout berhasil! Terima kasih telah berbelanja.",
