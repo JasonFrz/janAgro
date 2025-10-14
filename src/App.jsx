@@ -12,6 +12,8 @@ import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
 import Pesanan from "./pages/Pesanan";
 import Review from "./pages/Review";
+import LaporanPesanan from "./laporan/LaporanPesanan";
+import PengembalianBarang from "./pages/PengembalianBarang";
 import "./index.css";
 
 function App() {
@@ -20,7 +22,8 @@ function App() {
   const [user, setUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [cart, setCart] = useState([]);
-  
+
+  // ... (Data dummy users, produk, dll. tetap sama)
   const [users, setUsers] = useState([
     {
       id: 1,
@@ -182,7 +185,6 @@ function App() {
     },
   ]);
 
-  // Dummy Data for Checkouts
   const [checkouts, setCheckouts] = useState([
     {
       id: 1001,
@@ -191,17 +193,22 @@ function App() {
       alamat: "Jl. Merdeka No. 1, Jakarta Pusat, DKI Jakarta, 10110",
       noTelpPenerima: "81234567890",
       items: [
-        { _id: 1, name: "Organic Garden Booster", image: "🌱", price: 24.99, quantity: 2 },
-        { _id: 3, name: "Bibit Tomat Cherry", image: "🍅", price: 5.99, quantity: 1 },
+        {
+          _id: 1,
+          name: "Organic Garden Booster",
+          image: "🌱",
+          price: 24.99,
+          quantity: 2,
+        },
       ],
-      subtotal: 55.97,
+      subtotal: 49.98,
       diskon: 0,
       kodeVoucher: null,
       kurir: { nama: "Kurir JanAgro", biaya: 10000 },
-      totalHarga: 65970, // 55.97 * 1000 + 10000 = 65970
+      totalHarga: 59980,
       metodePembayaran: "Transfer Bank",
-      tanggal: "2024-05-10T10:30:00Z",
-      status: "sampai", // diproses, dikirim, sampai
+      tanggal: "2025-08-10T10:30:00Z",
+      status: "selesai",
     },
     {
       id: 1002,
@@ -210,15 +217,21 @@ function App() {
       alamat: "Jl. Mawar No. 5, Bandung, Jawa Barat, 40111",
       noTelpPenerima: "89876543210",
       items: [
-        { _id: 2, name: "Sekop Taman Pro", image: "🛠️", price: 15.5, quantity: 1 },
+        {
+          _id: 2,
+          name: "Sekop Taman Pro",
+          image: "🛠️",
+          price: 15.5,
+          quantity: 1,
+        },
       ],
       subtotal: 15.5,
-      diskon: 7.75, // 50% discount from JANAGRO50
-      kodeVoucher: "JANAGRO50",
+      diskon: 0,
+      kodeVoucher: null,
       kurir: { nama: "Kurir JanAgro", biaya: 10000 },
-      totalHarga: 17750, // (15.5 - 7.75) * 1000 + 10000 = 17750
+      totalHarga: 25500,
       metodePembayaran: "COD (Bayar di Tempat)",
-      tanggal: "2024-05-08T14:00:00Z",
+      tanggal: "2025-09-20T14:00:00Z",
       status: "dikirim",
     },
     {
@@ -228,19 +241,86 @@ function App() {
       alamat: "Jl. Merdeka No. 1, Jakarta Pusat, DKI Jakarta, 10110",
       noTelpPenerima: "81234567890",
       items: [
-        { _id: 4, name: "Pestisida Organik Neem", image: "🌿", price: 12.0, quantity: 1 },
+        {
+          _id: 4,
+          name: "Pestisida Organik Neem",
+          image: "🌿",
+          price: 12.0,
+          quantity: 1,
+        },
       ],
       subtotal: 12.0,
       diskon: 0,
       kodeVoucher: null,
       kurir: { nama: "Kurir JanAgro", biaya: 10000 },
-      totalHarga: 22000, // 12.0 * 1000 + 10000 = 22000
+      totalHarga: 22000,
       metodePembayaran: "Kartu Kredit",
-      tanggal: "2024-05-12T09:15:00Z",
+      tanggal: "2025-10-12T09:15:00Z",
       status: "diproses",
+    },
+    {
+      id: 1004,
+      userId: 1,
+      nama: "John Doe",
+      alamat: "Jl. Merdeka No. 1, Jakarta Pusat, DKI Jakarta, 10110",
+      noTelpPenerima: "81234567890",
+      items: [
+        {
+          _id: 3,
+          name: "Bibit Tomat Cherry",
+          image: "🍅",
+          price: 5.99,
+          quantity: 3,
+        },
+      ],
+      subtotal: 17.97,
+      diskon: 0,
+      kodeVoucher: null,
+      kurir: { nama: "Kurir JanAgro", biaya: 10000 },
+      totalHarga: 27970,
+      metodePembayaran: "Transfer Bank",
+      tanggal: "2025-10-01T11:00:00Z",
+      status: "sampai",
+    },
+    // <-- PERUBAHAN: Data dummy baru untuk penolakan pengembalian -->
+    {
+      id: 1005,
+      userId: 2,
+      nama: "Jane Doe",
+      alamat: "Jl. Mawar No. 5, Bandung",
+      noTelpPenerima: "89876543210",
+      items: [{ _id: 2, name: "Sekop Taman Pro", price: 15.5, quantity: 1 }],
+      subtotal: 15.5,
+      diskon: 0,
+      kodeVoucher: null,
+      kurir: { nama: "Kurir JanAgro", biaya: 10000 },
+      totalHarga: 25500,
+      metodePembayaran: "COD",
+      tanggal: "2025-07-15T10:00:00Z",
+      status: "pengembalian ditolak",
     },
   ]);
 
+  const [returns, setReturns] = useState([
+    // <-- PERUBAHAN: Data dummy untuk pengajuan pengembalian yang ditolak -->
+    {
+      id: 1,
+      orderId: 1005,
+      reason:
+        "Barang yang diterima tidak sesuai dengan deskripsi, gagangnya terasa ringkih.",
+      videos: ["dummy_video_1.mp4"],
+      photos: [
+        "dummy_photo_1.jpg",
+        "dummy_photo_2.jpg",
+        "dummy_photo_3.jpg",
+        "dummy_photo_4.jpg",
+        "dummy_photo_5.jpg",
+        "dummy_photo_6.jpg",
+      ],
+    },
+  ]);
+
+  // ... (Handler lain tetap sama)
   const handleAddToCart = (productId) => {
     setCart((prevCart) => {
       const existingItem = prevCart.find(
@@ -309,7 +389,7 @@ function App() {
     };
     setCheckouts([...checkouts, newCheckout]);
     setCart([]);
-    setPage({ name: "pesanan", id: null }); // Redirect to pesanan page after successful checkout
+    setPage({ name: "pesanan", id: null });
     return {
       success: true,
       message: "Checkout berhasil! Terima kasih telah berbelanja.",
@@ -473,6 +553,47 @@ function App() {
     setProduk(produk.filter((p) => p._id !== produkId));
   };
 
+  const handleConfirmOrderFinished = (orderId) => {
+    setCheckouts(
+      checkouts.map((order) =>
+        order.id === orderId ? { ...order, status: "selesai" } : order
+      )
+    );
+  };
+
+  const handleRequestReturn = (returnData) => {
+    setReturns([...returns, { ...returnData, id: Date.now() }]);
+    setCheckouts(
+      checkouts.map((order) =>
+        order.id === returnData.orderId
+          ? { ...order, status: "pengembalian" }
+          : order
+      )
+    );
+    setPage({ name: "pesanan" });
+  };
+
+  const handleApproveReturn = (orderId) => {
+    setCheckouts(
+      checkouts.map((order) =>
+        order.id === orderId
+          ? { ...order, status: "pengembalian berhasil" }
+          : order
+      )
+    );
+  };
+
+  // <-- PERUBAHAN: Handler baru untuk menolak pengembalian -->
+  const handleRejectReturn = (orderId) => {
+    setCheckouts(
+      checkouts.map((order) =>
+        order.id === orderId
+          ? { ...order, status: "pengembalian ditolak" }
+          : order
+      )
+    );
+  };
+
   const renderContent = () => {
     switch (page.name) {
       case "home":
@@ -489,9 +610,6 @@ function App() {
         );
       case "product-detail": {
         const selectedProduct = produk.find((p) => p._id === page.id);
-        if (!selectedProduct) {
-          return <Shop produk={produk} user={user} setPage={setPage} />;
-        }
         return (
           <ProductDetail
             product={selectedProduct}
@@ -523,15 +641,13 @@ function App() {
             checkouts={checkouts}
             user={user}
             reviews={reviews}
+            returns={returns}
             setPage={setPage}
+            onConfirmFinished={handleConfirmOrderFinished}
           />
         );
       case "review": {
         const productToReview = produk.find((p) => p._id === page.id);
-        if (!productToReview)
-          return (
-            <Pesanan checkouts={checkouts} user={user} setPage={setPage} />
-          );
         return (
           <Review
             product={productToReview}
@@ -549,6 +665,7 @@ function App() {
             vouchers={vouchers}
             produk={produk}
             checkouts={checkouts}
+            returns={returns}
             onUpdateUser={handleUpdateUserByAdmin}
             onDeleteUser={handleDeleteUserByAdmin}
             onToggleBanUser={handleToggleBanUser}
@@ -559,6 +676,9 @@ function App() {
             onUpdateProduk={handleUpdateProduk}
             onDeleteProduk={handleDeleteProduk}
             onUpdateOrderStatus={handleUpdateOrderStatus}
+            onApproveReturn={handleApproveReturn}
+            onRejectReturn={handleRejectReturn}
+            setPage={setPage}
           />
         ) : (
           <Home />
@@ -574,6 +694,22 @@ function App() {
             onPasswordChange={handlePasswordChange}
           />
         );
+      case "laporan":
+        return isAdmin ? (
+          <LaporanPesanan checkouts={checkouts} setPage={setPage} />
+        ) : (
+          <Home />
+        );
+      case "pengembalian-barang": {
+        const orderToReturn = checkouts.find((order) => order.id === page.id);
+        return (
+          <PengembalianBarang
+            order={orderToReturn}
+            setPage={setPage}
+            onSubmitReturn={handleRequestReturn}
+          />
+        );
+      }
       default:
         return <Home />;
     }

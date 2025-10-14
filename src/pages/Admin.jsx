@@ -6,6 +6,7 @@ import {
   Settings,
   Ticket,
 } from "lucide-react";
+// <-- PERUBAHAN: Path import disesuaikan
 import DashboardAdmin from "../admin/DashboardAdmin";
 import UserAdmin from "../admin/UserAdmin";
 import ProdukAdmin from "../admin/ProdukAdmin";
@@ -17,6 +18,7 @@ function Admin({
   vouchers,
   produk,
   checkouts,
+  returns,
   onUpdateUser,
   onDeleteUser,
   onToggleBanUser,
@@ -27,6 +29,9 @@ function Admin({
   onUpdateProduk,
   onDeleteProduk,
   onUpdateOrderStatus,
+  onApproveReturn,
+  onRejectReturn,
+  setPage,
 }) {
   const [activeTab, setActiveTab] = useState("dashboard");
 
@@ -67,7 +72,11 @@ function Admin({
         return (
           <SettingAdmin
             checkouts={checkouts}
+            returns={returns}
             onUpdateStatus={onUpdateOrderStatus}
+            onApproveReturn={onApproveReturn}
+            onRejectReturn={onRejectReturn}
+            setPage={setPage}
           />
         );
       default:
@@ -128,7 +137,7 @@ function Admin({
                 : "hover:bg-gray-200"
             }`}
           >
-            <Settings className="mr-2 h-5 w-5" /> Settings
+            <Settings className="mr-2 h-5 w-5" /> Pesanan
           </button>
         </nav>
       </aside>
