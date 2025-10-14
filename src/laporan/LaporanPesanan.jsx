@@ -20,7 +20,6 @@ ChartJS.register(
   Legend
 );
 
-// Helper Component: Modal Detail Pesanan (tidak diubah)
 const OrderDetailModal = ({ order, onClose }) => {
   if (!order) return null;
   return (
@@ -115,8 +114,6 @@ const OrderDetailModal = ({ order, onClose }) => {
     </div>
   );
 };
-
-// Helper Component: Section Daftar Pesanan (dikembalikan)
 const LaporanSection = ({ title, orders, onOrderClick }) => (
   <div className="bg-white p-6 rounded-lg border border-black">
     <h2 className="text-xl font-bold mb-4 border-b border-black pb-2">
@@ -156,14 +153,12 @@ const LaporanSection = ({ title, orders, onOrderClick }) => (
 );
 
 const LaporanPesanan = ({ checkouts = [], setPage }) => {
-  // --- STATE ---
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [listYear, setListYear] = useState(new Date().getFullYear());
   const [listMonth, setListMonth] = useState("all");
   const [chartYear, setChartYear] = useState(new Date().getFullYear());
   const [purchaseFilter, setPurchaseFilter] = useState("all");
 
-  // --- MEMOIZED DATA ---
   const years = useMemo(() => {
     const uniqueYears = new Set(
       checkouts.map((c) => new Date(c.tanggal).getFullYear())
@@ -171,8 +166,6 @@ const LaporanPesanan = ({ checkouts = [], setPage }) => {
     uniqueYears.add(new Date().getFullYear());
     return Array.from(uniqueYears).sort((a, b) => b - a);
   }, [checkouts]);
-
-  // Data untuk daftar pesanan di bawah
   const filteredCheckoutsForList = useMemo(() => {
     return checkouts.filter((checkout) => {
       const checkoutDate = new Date(checkout.tanggal);
@@ -184,11 +177,9 @@ const LaporanPesanan = ({ checkouts = [], setPage }) => {
     });
   }, [checkouts, listYear, listMonth]);
 
-  // Data untuk diagram
   const chartData = useMemo(() => {
     const successfulPurchases = Array(12).fill(0);
     const failedPurchases = Array(12).fill(0);
-
     checkouts.forEach((checkout) => {
       const checkoutDate = new Date(checkout.tanggal);
       if (checkoutDate.getFullYear() === chartYear) {
@@ -196,9 +187,11 @@ const LaporanPesanan = ({ checkouts = [], setPage }) => {
         if (checkout.status === "selesai") {
           successfulPurchases[month] += 1;
         } else if (
-          ["pengembalian berhasil", "pengembalian ditolak"].includes(
-            checkout.status
-          )
+          [
+            "pengembalian berhasil",
+            "pengembalian ditolak",
+            "dibatalkan",
+          ].includes(checkout.status)
         ) {
           failedPurchases[month] += 1;
         }
@@ -223,12 +216,10 @@ const LaporanPesanan = ({ checkouts = [], setPage }) => {
         borderRadius: 4,
       },
     ];
-
     let filteredDatasets;
     if (purchaseFilter === "success") filteredDatasets = [datasets[0]];
     else if (purchaseFilter === "failed") filteredDatasets = [datasets[1]];
     else filteredDatasets = datasets;
-
     return {
       labels: [
         "Jan",
@@ -248,7 +239,6 @@ const LaporanPesanan = ({ checkouts = [], setPage }) => {
     };
   }, [checkouts, chartYear, purchaseFilter]);
 
-  // Opsi diagram
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -293,7 +283,6 @@ const LaporanPesanan = ({ checkouts = [], setPage }) => {
               Kembali ke Admin
             </button>
           </header>
-
           <div className="bg-white p-6 rounded-lg border border-black space-y-6">
             <div>
               <h2 className="text-xl font-bold mb-4">
@@ -326,7 +315,6 @@ const LaporanPesanan = ({ checkouts = [], setPage }) => {
               <Bar data={chartData} options={chartOptions} />
             </div>
           </div>
-
           <div className="bg-white border border-black p-6 rounded-lg">
             <h2 className="text-xl font-bold mb-4">Filter Daftar Pesanan</h2>
             <div className="flex flex-col sm:flex-row gap-4">
@@ -355,7 +343,6 @@ const LaporanPesanan = ({ checkouts = [], setPage }) => {
               </select>
             </div>
           </div>
-
           <div className="border-t-2 border-black pt-8">
             <h2 className="text-3xl font-bold mb-6">
               Detail Pesanan per Status

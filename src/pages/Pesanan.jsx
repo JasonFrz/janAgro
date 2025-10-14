@@ -39,6 +39,43 @@ const ConfirmationModal = ({ order, onConfirm, onCancel }) => {
   );
 };
 
+const CancellationModal = ({ order, onCancel, onSubmit }) => {
+  const [reason, setReason] = useState("");
+  if (!order) return null;
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
+      <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md animate-fade-in">
+        <h2 className="text-xl font-bold mb-4">Ajukan Pembatalan Pesanan?</h2>
+        <p className="text-gray-600 mb-4">
+          Silakan masukkan alasan Anda membatalkan pesanan #{order.id}.
+        </p>
+        <textarea
+          rows="4"
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          placeholder="Contoh: Saya salah memesan produk..."
+          className="w-full p-2 border border-gray-300 rounded-md focus:ring-black focus:border-black"
+        ></textarea>
+        <div className="flex justify-end gap-4 mt-6">
+          <button
+            onClick={onCancel}
+            className="py-2 px-6 bg-gray-200 text-black rounded-md hover:bg-gray-300"
+          >
+            Tutup
+          </button>
+          <button
+            onClick={() => onSubmit(order.id, reason)}
+            disabled={!reason.trim()}
+            className="py-2 px-6 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:bg-gray-400"
+          >
+            Kirim Pembatalan
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const formatPhoneNumber = (phone) => {
   if (!phone) return "-";
   const digits = phone.replace(/\D/g, "");
@@ -53,7 +90,6 @@ const formatPhoneNumber = (phone) => {
   }
   return formatted;
 };
-
 const TrackerStep = ({ icon, label, isActive, isCompleted }) => {
   return (
     <div className="flex flex-col items-center text-center w-24 z-10">
@@ -82,8 +118,16 @@ const TrackerStep = ({ icon, label, isActive, isCompleted }) => {
   );
 };
 
-const Pesanan = ({ checkouts, user, reviews, setPage, onConfirmFinished }) => {
+const Pesanan = ({
+  checkouts,
+  user,
+  reviews,
+  setPage,
+  onConfirmFinished,
+  onRequestCancellation,
+}) => {
   const [confirmingOrder, setConfirmingOrder] = useState(null);
+  const [cancellingOrder, setCancellingOrder] = useState(null);
 
   if (!user) {
     return (
@@ -109,17 +153,23 @@ const Pesanan = ({ checkouts, user, reviews, setPage, onConfirmFinished }) => {
     .sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
   const statusLevels = {
     diproses: 1,
+    "pembatalan diajukan": 1,
     dikirim: 2,
     sampai: 3,
     pengembalian: 3,
     "pengembalian ditolak": 3,
     "pengembalian berhasil": 4,
     selesai: 4,
+    dibatalkan: 4,
   };
 
   const handleConfirm = (orderId) => {
     onConfirmFinished(orderId);
     setConfirmingOrder(null);
+  };
+  const handleSubmitCancellation = (orderId, reason) => {
+    onRequestCancellation(orderId, reason);
+    setCancellingOrder(null);
   };
 
   return (
@@ -129,6 +179,12 @@ const Pesanan = ({ checkouts, user, reviews, setPage, onConfirmFinished }) => {
         onConfirm={handleConfirm}
         onCancel={() => setConfirmingOrder(null)}
       />
+      <CancellationModal
+        order={cancellingOrder}
+        onSubmit={handleSubmitCancellation}
+        onCancel={() => setCancellingOrder(null)}
+      />
+
       <div className="min-h-screen bg-gray-50 pt-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <button
@@ -147,6 +203,8 @@ const Pesanan = ({ checkouts, user, reviews, setPage, onConfirmFinished }) => {
               {userCheckouts.map((order) => {
                 const isReturnSuccess =
                   order.status === "pengembalian berhasil";
+                const isCancelled = order.status === "dibatalkan";
+
                 return (
                   <div
                     key={order.id}
@@ -171,6 +229,7 @@ const Pesanan = ({ checkouts, user, reviews, setPage, onConfirmFinished }) => {
                         </span>
                       </div>
                     </div>
+
                     <div className="flex items-center justify-between px-2 sm:px-4 my-8 relative">
                       <div className="absolute top-6 left-0 w-full h-1 bg-gray-300 -translate-y-1/2"></div>
                       <div
@@ -184,7 +243,10 @@ const Pesanan = ({ checkouts, user, reviews, setPage, onConfirmFinished }) => {
                       <TrackerStep
                         icon={<Package />}
                         label="Diproses"
-                        isActive={order.status === "diproses"}
+                        isActive={
+                          order.status === "diproses" ||
+                          order.status === "pembatalan diajukan"
+                        }
                         isCompleted={statusLevels[order.status] >= 1}
                       />
                       <TrackerStep
@@ -200,13 +262,42 @@ const Pesanan = ({ checkouts, user, reviews, setPage, onConfirmFinished }) => {
                         isCompleted={statusLevels[order.status] >= 3}
                       />
                       <TrackerStep
-                        icon={<PackageCheck />}
-                        label={isReturnSuccess ? "Dikembalikan" : "Selesai"}
-                        isActive={order.status === "selesai" || isReturnSuccess}
+                        icon={isCancelled ? <XCircle /> : <PackageCheck />}
+                        label={
+                          isReturnSuccess
+                            ? "Dikembalikan"
+                            : isCancelled
+                            ? "Dibatalkan"
+                            : "Selesai"
+                        }
+                        isActive={
+                          order.status === "selesai" ||
+                          isReturnSuccess ||
+                          isCancelled
+                        }
                         isCompleted={statusLevels[order.status] >= 4}
                       />
                     </div>
 
+                    {order.status === "diproses" && (
+                      <div className="text-center border-t border-b py-6 my-6 bg-gray-50">
+                        <h3 className="font-semibold text-black mb-4">
+                          Pesanan Anda sedang kami siapkan.
+                        </h3>
+                        <button
+                          onClick={() => setCancellingOrder(order)}
+                          className="py-2 px-6 bg-red-600 text-white rounded-md hover:bg-red-700"
+                        >
+                          Batalkan Pesanan
+                        </button>
+                      </div>
+                    )}
+                    {order.status === "pembatalan diajukan" && (
+                      <div className="text-center border-t border-b py-6 my-6 bg-yellow-50 text-yellow-800 flex items-center justify-center gap-3">
+                        <AlertCircle size={20} />
+                        <p>Menunggu persetujuan pembatalan dari admin.</p>
+                      </div>
+                    )}
                     {order.status === "sampai" && (
                       <div className="text-center border-t border-b py-6 my-6 bg-gray-50">
                         <h3 className="font-semibold text-black mb-4">
@@ -233,23 +324,21 @@ const Pesanan = ({ checkouts, user, reviews, setPage, onConfirmFinished }) => {
                         </div>
                       </div>
                     )}
-
                     {order.status === "pengembalian" && (
                       <div className="text-center border-t border-b py-6 my-6 bg-yellow-50 text-yellow-800 flex items-center justify-center gap-3">
                         <AlertCircle size={20} />
                         <p>
-                          Menunggu persetujuan admin (proses maks. 2x24 jam).
+                          Menunggu persetujuan pengembalian (proses maks. 2x24
+                          jam).
                         </p>
                       </div>
                     )}
-
                     {isReturnSuccess && (
                       <div className="text-center border-t border-b py-6 my-6 bg-green-50 text-green-800 flex items-center justify-center gap-3">
                         <CheckCircle size={20} />
                         <p>Pengajuan pengembalian Anda telah disetujui.</p>
                       </div>
                     )}
-
                     {order.status === "pengembalian ditolak" && (
                       <div className="text-center border-t border-b py-6 my-6 bg-red-50 text-red-800">
                         <div className="flex items-center justify-center gap-3 mb-4">

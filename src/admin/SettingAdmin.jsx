@@ -6,6 +6,7 @@ import {
   Check,
   AlertCircle,
   X,
+  ShoppingCart,
 } from "lucide-react";
 
 const formatPhoneNumber = (phone) => {
@@ -26,26 +27,23 @@ const formatPhoneNumber = (phone) => {
 const SettingAdmin = ({
   checkouts = [],
   returns = [],
+  cancellations = [],
   onUpdateStatus,
   onApproveReturn,
   onRejectReturn,
+  onApproveCancellation,
+  onRejectCancellation,
   setPage,
 }) => {
   const [expandedOrderId, setExpandedOrderId] = useState(null);
-  // <-- PERUBAHAN: State untuk menyimpan status filter -->
   const [filterStatus, setFilterStatus] = useState("all");
 
   const sortedCheckouts = [...checkouts].sort(
     (a, b) => new Date(b.tanggal) - new Date(a.tanggal)
   );
-
-  // <-- PERUBAHAN: Logika untuk memfilter pesanan berdasarkan state filterStatus -->
-  const filteredCheckouts = sortedCheckouts.filter((order) => {
-    if (filterStatus === "all") {
-      return true; // Tampilkan semua jika filter 'all'
-    }
-    return order.status === filterStatus;
-  });
+  const filteredCheckouts = sortedCheckouts.filter((order) =>
+    filterStatus === "all" ? true : order.status === filterStatus
+  );
 
   const toggleExpand = (orderId) =>
     setExpandedOrderId(expandedOrderId === orderId ? null : orderId);
@@ -66,7 +64,6 @@ const SettingAdmin = ({
       </button>
     );
   };
-
   const StatusBadge = ({ status }) => {
     const statusStyles = {
       selesai: "bg-green-100 text-green-800",
@@ -76,6 +73,8 @@ const SettingAdmin = ({
       dikirim: "bg-blue-100 text-blue-800",
       diproses: "bg-gray-100 text-gray-800",
       sampai: "bg-indigo-100 text-indigo-800",
+      "pembatalan diajukan": "bg-purple-100 text-purple-800",
+      dibatalkan: "bg-gray-400 text-white",
     };
     return (
       <span
@@ -97,7 +96,6 @@ const SettingAdmin = ({
             Kelola dan perbarui status pesanan pelanggan.
           </p>
         </div>
-        {/* <-- PERUBAHAN: Container untuk filter dropdown dan tombol laporan --> */}
         <div className="flex items-center gap-4">
           <select
             value={filterStatus}
@@ -106,11 +104,13 @@ const SettingAdmin = ({
           >
             <option value="all">Semua Status</option>
             <option value="diproses">Diproses</option>
+            <option value="pembatalan diajukan">Pengajuan Pembatalan</option>
             <option value="dikirim">Dikirim</option>
             <option value="sampai">Sampai</option>
             <option value="pengembalian">Pengajuan Pengembalian</option>
             <option value="pengembalian berhasil">Pengembalian Berhasil</option>
             <option value="pengembalian ditolak">Pengembalian Ditolak</option>
+            <option value="dibatalkan">Dibatalkan</option>
             <option value="selesai">Selesai</option>
           </select>
           <button
@@ -123,15 +123,18 @@ const SettingAdmin = ({
         </div>
       </div>
       <div className="space-y-4">
-        {/* <-- PERUBAHAN: Gunakan `filteredCheckouts` untuk me-render daftar --> */}
         {filteredCheckouts.length > 0 ? (
           filteredCheckouts.map((order) => {
             const isOrderFinal = [
               "selesai",
               "pengembalian berhasil",
               "pengembalian ditolak",
+              "dibatalkan",
             ].includes(order.status);
             const returnRequest = returns.find((r) => r.orderId === order.id);
+            const cancelRequest = cancellations.find(
+              (c) => c.orderId === order.id
+            );
 
             return (
               <div key={order.id} className="border rounded-lg overflow-hidden">
@@ -174,16 +177,56 @@ const SettingAdmin = ({
                     )}
                   </div>
                 </div>
-
                 {expandedOrderId === order.id && (
                   <div className="p-6 bg-white border-t animate-fade-in">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       <div className="md:col-span-2">
+                        {cancelRequest &&
+                          ["pembatalan diajukan", "dibatalkan"].includes(
+                            order.status
+                          ) && (
+                            <div className="mb-6 p-4 bg-purple-50 border-l-4 border-purple-400">
+                              <h4 className="font-bold text-purple-800 mb-3 flex items-center gap-2">
+                                <ShoppingCart size={18} />
+                                Pengajuan Pembatalan
+                              </h4>
+                              <div className="text-sm text-purple-700 space-y-3">
+                                <div>
+                                  <p className="font-semibold">Alasan:</p>
+                                  <p className="whitespace-pre-wrap italic">
+                                    "{cancelRequest.reason}"
+                                  </p>
+                                </div>
+                              </div>
+                              {order.status === "pembatalan diajukan" && (
+                                <div className="mt-4 flex gap-3">
+                                  <button
+                                    onClick={() =>
+                                      onRejectCancellation(order.id)
+                                    }
+                                    className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-red-600 text-white rounded-md text-sm font-semibold hover:bg-red-700"
+                                  >
+                                    <X size={16} />
+                                    Tolak
+                                  </button>
+                                  <button
+                                    onClick={() =>
+                                      onApproveCancellation(order.id)
+                                    }
+                                    className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-green-600 text-white rounded-md text-sm font-semibold hover:bg-green-700"
+                                  >
+                                    <Check size={16} />
+                                    Setujui
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          )}
                         {returnRequest && (
                           <div className="mb-6 p-4 bg-yellow-50 border-l-4 border-yellow-400">
                             <h4 className="font-bold text-yellow-800 mb-3 flex items-center gap-2">
-                              <AlertCircle size={18} /> Detail Pengajuan
-                              Pengembalian
+                              <AlertCircle size={18} />
+                              Detail Pengajuan Pengembalian
                             </h4>
                             <div className="text-sm text-yellow-700 space-y-3">
                               <div>
@@ -222,7 +265,6 @@ const SettingAdmin = ({
                                   <X size={16} />
                                   Tolak
                                 </button>
-                                {/* <-- PERUBAHAN: Warna tombol diubah menjadi hijau --> */}
                                 <button
                                   onClick={() => onApproveReturn(order.id)}
                                   className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-green-600 text-white rounded-md text-sm font-semibold hover:bg-green-700"
@@ -297,7 +339,9 @@ const SettingAdmin = ({
                           </div>
                         ) : (
                           <>
-                            {order.status !== "pengembalian" && (
+                            {!["pengembalian", "pembatalan diajukan"].includes(
+                              order.status
+                            ) && (
                               <>
                                 <h4 className="font-semibold mb-3 mt-6">
                                   Update Status

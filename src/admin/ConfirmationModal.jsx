@@ -1,5 +1,5 @@
-import React from 'react';
-import { X, AlertTriangle } from 'lucide-react';
+import React from "react";
+import { X, AlertTriangle } from "lucide-react";
 
 const ConfirmationModal = ({
   isOpen,
@@ -8,7 +8,7 @@ const ConfirmationModal = ({
   title,
   message,
   confirmButtonText = "Confirm",
-  confirmButtonColor = "bg-black hover:bg-gray-800"
+  confirmButtonColor = "bg-black hover:bg-gray-800",
 }) => {
   if (!isOpen) return null;
 
@@ -22,7 +22,7 @@ const ConfirmationModal = ({
           <h2 className="text-2xl font-bold text-black">{title}</h2>
           <p className="text-gray-600 mt-2">{message}</p>
         </div>
-        
+
         <div className="flex space-x-4 pt-8">
           <button
             onClick={onClose}

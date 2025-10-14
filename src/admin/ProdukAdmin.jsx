@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Plus, X } from "lucide-react";
 
-// Definisikan galeri gambar di luar komponen agar tidak dibuat ulang setiap render
 const imageGallery = ['🌱', '🛠️', '🍅', '🌿', '💧', '🌻', '🥕', '🥔', '🪱', '⛏️', '🧤', '🗑️'];
 
 function ProdukAdmin({
@@ -15,14 +14,13 @@ function ProdukAdmin({
     category: "",
     price: "",
     stock: "",
-    image: "", // Tambahkan properti image ke state form
+    image: "", 
   });
   const [editingId, setEditingId] = useState(null);
-  const [isGalleryOpen, setIsGalleryOpen] = useState(false); // State untuk modal galeri
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false); 
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Pastikan ada gambar yang dipilih saat menambah produk baru
     if (!form.image) {
       alert("Silakan pilih gambar produk dari galeri.");
       return;
@@ -33,7 +31,7 @@ function ProdukAdmin({
       category: form.category,
       price: Number(form.price),
       stock: Number(form.stock),
-      image: form.image, // Gunakan gambar dari state form
+      image: form.image, 
       description: "Deskripsi produk baru.",
       rating: 0,
       detail: "Detail produk baru.",
@@ -67,15 +65,14 @@ function ProdukAdmin({
       category: p.category,
       price: p.price,
       stock: p.stock,
-      image: p.image || '📦', // Muat gambar yang ada, atau default jika tidak ada
+      image: p.image || '📦', 
     });
     setEditingId(p._id);
   };
 
-  // Fungsi untuk menangani pemilihan gambar dari galeri
   const handleImageSelect = (selectedImage) => {
     setForm({ ...form, image: selectedImage });
-    setIsGalleryOpen(false); // Tutup galeri setelah gambar dipilih
+    setIsGalleryOpen(false); 
   };
 
   return (
@@ -108,7 +105,6 @@ function ProdukAdmin({
               <option value="Bibit">Bibit</option>
             </select>
 
-            {/* Bagian Baru: Pemilihan Gambar */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Gambar Produk
@@ -184,7 +180,6 @@ function ProdukAdmin({
           </form>
         </div>
 
-        {/* Daftar Produk (Tidak ada perubahan di sini) */}
         <div className="bg-white shadow rounded-lg p-6">
           <h2 className="text-xl font-semibold mb-4">Daftar Produk</h2>
           {produk.length === 0 ? (
@@ -244,7 +239,6 @@ function ProdukAdmin({
         </div>
       </div>
 
-      {/* Bagian Baru: Modal Galeri */}
       {isGalleryOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
