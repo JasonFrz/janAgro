@@ -3,7 +3,7 @@ import {
   LayoutDashboard,
   Users,
   Package,
-  Settings,
+  ShoppingCart,
   Ticket,
 } from "lucide-react";
 import DashboardAdmin from "../admin/DashboardAdmin";
@@ -142,7 +142,7 @@ function Admin({
                 : "hover:bg-gray-200"
             }`}
           >
-            <Settings className="mr-2 h-5 w-5" /> Pesanan
+            <ShoppingCart className="mr-2 h-5 w-5" /> Pesanan
           </button>
         </nav>
       </aside>
