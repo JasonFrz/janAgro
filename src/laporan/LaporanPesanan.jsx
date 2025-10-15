@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from "react";
 import { Bar } from "react-chartjs-2";
-import { X, ArrowLeft } from "lucide-react";
+import { X, ArrowLeft, FileText } from "lucide-react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -10,6 +12,7 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
+import { janAgroLogoBase64 } from "./logoBase64";
 
 ChartJS.register(
   CategoryScale,
@@ -22,6 +25,7 @@ ChartJS.register(
 
 const OrderDetailModal = ({ order, onClose }) => {
   if (!order) return null;
+
   return (
     <div
       className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4"
@@ -155,7 +159,8 @@ const LaporanSection = ({ title, orders, onOrderClick }) => (
 const LaporanPesanan = ({ checkouts = [], setPage }) => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [listYear, setListYear] = useState(new Date().getFullYear());
-  const [listMonth, setListMonth] = useState("all");
+  const [listMonthStart, setListMonthStart] = useState(1);
+  const [listMonthEnd, setListMonthEnd] = useState(12);
   const [chartYear, setChartYear] = useState(new Date().getFullYear());
   const [purchaseFilter, setPurchaseFilter] = useState("all");
 
@@ -166,16 +171,153 @@ const LaporanPesanan = ({ checkouts = [], setPage }) => {
     uniqueYears.add(new Date().getFullYear());
     return Array.from(uniqueYears).sort((a, b) => b - a);
   }, [checkouts]);
+
   const filteredCheckoutsForList = useMemo(() => {
     return checkouts.filter((checkout) => {
       const checkoutDate = new Date(checkout.tanggal);
       const yearMatch = checkoutDate.getFullYear() === listYear;
+      const startMonth = Math.min(listMonthStart, listMonthEnd);
+      const endMonth = Math.max(listMonthStart, listMonthEnd);
       const monthMatch =
-        listMonth === "all" ||
-        checkoutDate.getMonth() + 1 === parseInt(listMonth);
+        checkoutDate.getMonth() + 1 >= startMonth &&
+        checkoutDate.getMonth() + 1 <= endMonth;
       return yearMatch && monthMatch;
     });
-  }, [checkouts, listYear, listMonth]);
+  }, [checkouts, listYear, listMonthStart, listMonthEnd]);
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    const tableColumn = [
+      "ID Pesanan",
+      "Nama Pelanggan",
+      "Tanggal",
+      "Total Harga",
+      "Status",
+    ];
+    const tableRows = [];
+
+    filteredCheckoutsForList.forEach((order) => {
+      const orderData = [
+        `#${order.id}`,
+        order.nama,
+        new Date(order.tanggal).toLocaleDateString("id-ID", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        }),
+        `Rp ${order.totalHarga.toLocaleString("id-ID")}`,
+        order.status.charAt(0).toUpperCase() + order.status.slice(1),
+      ];
+      tableRows.push(orderData);
+    });
+
+    const date = new Date();
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = date.getFullYear();
+    const fullDate = `${day}-${month}-${year}`;
+
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 42,
+      margin: { top: 42 },
+      theme: "grid",
+      styles: {
+        font: "helvetica",
+        fontSize: 8,
+        cellPadding: 2,
+      },
+      headStyles: {
+        fillColor: [41, 41, 41],
+        textColor: [255, 255, 255],
+        fontStyle: "bold",
+      },
+      didDrawPage: function (data) {
+        const logoWidth = 22;
+        const logoHeight = 22;
+        const margin = data.settings.margin.left;
+
+        doc.addImage(
+          janAgroLogoBase64,
+          "JPEG",
+          margin,
+          10,
+          logoWidth,
+          logoHeight,
+          undefined,
+          "FAST"
+        );
+
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "bold");
+        doc.text("PT. Jan Agro Nusantara", margin + logoWidth + 5, 16);
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "normal");
+        doc.text(
+          "Kantor Pusat JanAgro, Jl. Pondok Chandra Indah Gg. Durian, Surabaya, 60111",
+          margin + logoWidth + 5,
+          22
+        );
+        doc.text(
+          "Email: janagronusantara@gmail.com | Telepon: (031) 123-4567",
+          margin + logoWidth + 5,
+          27
+        );
+        doc.setDrawColor(0, 0, 0);
+        doc.line(
+          margin,
+          35,
+          doc.internal.pageSize.getWidth() - data.settings.margin.right,
+          35
+        );
+
+        if (data.pageNumber === doc.internal.getNumberOfPages()) {
+          const pageHeight = doc.internal.pageSize.getHeight();
+          const pageWidth = doc.internal.pageSize.getWidth();
+          let finalY = data.cursor.y;
+
+          if (finalY + 60 > pageHeight) {
+            doc.addPage();
+            finalY = data.settings.margin.top;
+          }
+
+          doc.setFontSize(10);
+          doc.setFont("helvetica", "normal");
+          const signatureX = pageWidth - data.settings.margin.right;
+
+          doc.text(
+            `........................................................`,
+            signatureX,
+            finalY + 20,
+            { align: "right" }
+          );
+
+          doc.setFont("helvetica", "bold");
+          doc.text("J.Alamsjah,S.H", signatureX, finalY + 45, {
+            align: "right",
+          });
+          const nameWidth = doc.getTextWidth("J.Alamsjah,S.H");
+          doc.setLineWidth(0.5);
+          doc.line(
+            signatureX - nameWidth,
+            finalY + 46,
+            signatureX,
+            finalY + 46
+          );
+
+          doc.setFont("helvetica", "normal");
+          doc.text(
+            "Ceo & Founder of Jan Agro Nusantara",
+            signatureX,
+            finalY + 55,
+            { align: "right" }
+          );
+        }
+      },
+    });
+
+    doc.save(`laporan_pesanan_janagronusantara_${fullDate}.pdf`);
+  };
 
   const chartData = useMemo(() => {
     const successfulPurchases = Array(12).fill(0);
@@ -203,23 +345,19 @@ const LaporanPesanan = ({ checkouts = [], setPage }) => {
         label: "Pembelian Berhasil",
         data: successfulPurchases,
         backgroundColor: "rgba(34, 197, 94, 0.8)",
-        borderColor: "rgba(22, 163, 74, 1)",
-        borderWidth: 1,
-        borderRadius: 4,
       },
       {
         label: "Pembelian Gagal",
         data: failedPurchases,
         backgroundColor: "rgba(239, 68, 68, 0.8)",
-        borderColor: "rgba(220, 38, 38, 1)",
-        borderWidth: 1,
-        borderRadius: 4,
       },
     ];
+
     let filteredDatasets;
     if (purchaseFilter === "success") filteredDatasets = [datasets[0]];
     else if (purchaseFilter === "failed") filteredDatasets = [datasets[1]];
     else filteredDatasets = datasets;
+
     return {
       labels: [
         "Jan",
@@ -252,15 +390,7 @@ const LaporanPesanan = ({ checkouts = [], setPage }) => {
     },
     scales: {
       x: { stacked: true },
-      y: {
-        stacked: true,
-        beginAtZero: true,
-        ticks: {
-          stepSize: 1,
-          callback: (value) =>
-            Number.isInteger(value) ? `${value} Pembelian` : "",
-        },
-      },
+      y: { stacked: true, beginAtZero: true, ticks: { stepSize: 1 } },
     },
   };
 
@@ -283,6 +413,7 @@ const LaporanPesanan = ({ checkouts = [], setPage }) => {
               Kembali ke Admin
             </button>
           </header>
+
           <div className="bg-white p-6 rounded-lg border border-black space-y-6">
             <div>
               <h2 className="text-xl font-bold mb-4">
@@ -296,7 +427,8 @@ const LaporanPesanan = ({ checkouts = [], setPage }) => {
                 >
                   {years.map((year) => (
                     <option key={year} value={year}>
-                      {year}
+                      {" "}
+                      {year}{" "}
                     </option>
                   ))}
                 </select>
@@ -315,9 +447,21 @@ const LaporanPesanan = ({ checkouts = [], setPage }) => {
               <Bar data={chartData} options={chartOptions} />
             </div>
           </div>
+
           <div className="bg-white border border-black p-6 rounded-lg">
-            <h2 className="text-xl font-bold mb-4">Filter Daftar Pesanan</h2>
-            <div className="flex flex-col sm:flex-row gap-4">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+              <h2 className="text-xl font-bold mb-4 sm:mb-0">
+                Filter Daftar Pesanan
+              </h2>
+              <button
+                onClick={handleExportPDF}
+                className="bg-green-600 text-white px-4 py-2 rounded-lg flex items-center hover:bg-green-700 transition-colors duration-200"
+              >
+                <FileText className="mr-2 h-5 w-5" />
+                Export PDF
+              </button>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-4 items-center mt-4">
               <select
                 value={listYear}
                 onChange={(e) => setListYear(parseInt(e.target.value))}
@@ -325,24 +469,43 @@ const LaporanPesanan = ({ checkouts = [], setPage }) => {
               >
                 {years.map((year) => (
                   <option key={year} value={year}>
-                    {year}
+                    {" "}
+                    {year}{" "}
                   </option>
                 ))}
               </select>
               <select
-                value={listMonth}
-                onChange={(e) => setListMonth(e.target.value)}
+                value={listMonthStart}
+                onChange={(e) => setListMonthStart(parseInt(e.target.value))}
                 className="w-full sm:w-auto bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
               >
-                <option value="all">Semua Bulan</option>
                 {Array.from({ length: 12 }, (_, i) => (
                   <option key={i + 1} value={i + 1}>
-                    {new Date(0, i).toLocaleString("id-ID", { month: "long" })}
+                    {" "}
+                    {new Date(0, i).toLocaleString("id-ID", {
+                      month: "long",
+                    })}{" "}
+                  </option>
+                ))}
+              </select>
+              <span className="text-gray-600">sampai</span>
+              <select
+                value={listMonthEnd}
+                onChange={(e) => setListMonthEnd(parseInt(e.target.value))}
+                className="w-full sm:w-auto bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
+              >
+                {Array.from({ length: 12 }, (_, i) => (
+                  <option key={i + 1} value={i + 1}>
+                    {" "}
+                    {new Date(0, i).toLocaleString("id-ID", {
+                      month: "long",
+                    })}{" "}
                   </option>
                 ))}
               </select>
             </div>
           </div>
+
           <div className="border-t-2 border-black pt-8">
             <h2 className="text-3xl font-bold mb-6">
               Detail Pesanan per Status
@@ -363,9 +526,9 @@ const LaporanPesanan = ({ checkouts = [], setPage }) => {
                 onOrderClick={setSelectedOrder}
               />
               <LaporanSection
-                title="Pesanan Tiba"
-                orders={filteredCheckoutsForList.filter(
-                  (o) => o.status === "sampai"
+                title="Pesanan Selesai"
+                orders={filteredCheckoutsForList.filter((o) =>
+                  ["selesai", "sampai"].includes(o.status)
                 )}
                 onOrderClick={setSelectedOrder}
               />
