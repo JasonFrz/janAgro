@@ -286,7 +286,7 @@ const LaporanPesanan = ({ checkouts = [], setPage }) => {
           const signatureX = pageWidth - data.settings.margin.right;
 
           doc.text(
-            `........................................................`,
+            `....................,...................................`,
             signatureX,
             finalY + 20,
             { align: "right" }
