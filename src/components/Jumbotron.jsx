@@ -29,32 +29,32 @@ const Jumbotron = () => {
       <div className="relative z-10 text-center text-white max-w-5xl mx-auto px-4">
         <div className="mb-8">
           <p className="text-sm md:text-base tracking-[0.3em] uppercase text-gray-300 mb-6 font-light">
-            GROW THE FUTURE WITH JAN AGRO NUSANTARA
+            BERSAMA PETANI MEMBANGUN NEGERI
           </p>
           <h1 className="text-7xl md:text-9xl font-thin mb-8 tracking-tight">
             <span className="font-bold">JAN AGRO</span>
           </h1>
           <div className="w-24 h-[2px] bg-white mx-auto mb-8"></div>
           <h2 className="text-2xl md:text-4xl font-light mb-10 text-gray-200 tracking-wide">
-            Your Trusted Partner in Agricultural Solutions
+            Mitra Terpercaya Dalam Solusi Pertanian & Perkebunan
           </h2>
         </div>
 
         <p className="text-lg md:text-xl text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed font-light">
-          Empowering Farmers with Quality Products and Expert Support. At Jan
-          Agro Nusantara, we are dedicated to providing innovative agricultural
-          solutions that help farmers thrive and achieve sustainable growth.
+          PT. Jan Agro Nusantara berkomitmen mendukung petani Indonesia melalui
+          produk pupuk organik berkualitas dan pendampingan profesional. 
+          Bersama kami, wujudkan pertanian berkelanjutan dan hasil panen yang lebih baik.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-6 justify-center">
           <button className="group px-10 py-4 bg-white text-black rounded-sm font-medium transition-all duration-500 transform hover:scale-105 hover:shadow-2xl uppercase tracking-wider text-sm">
             <span className="group-hover:tracking-widest transition-all duration-300">
-              Explore Models
+              Lihat Produk
             </span>
           </button>
           <button className="group px-10 py-4 border border-white text-white rounded-sm font-medium transition-all duration-500 hover:bg-white hover:text-black uppercase tracking-wider text-sm">
             <span className="group-hover:tracking-widest transition-all duration-300">
-              Book Test Drive
+              Hubungi Kami
             </span>
           </button>
         </div>
