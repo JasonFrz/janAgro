@@ -369,6 +369,8 @@ function App() {
     });
     return "Produk ditambahkan ke keranjang!";
   };
+
+  
   const handleUpdateCartQuantity = (productId, newQuantity) => {
     setCart(
       cart.map((item) =>

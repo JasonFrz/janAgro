@@ -7,6 +7,7 @@ import {
   Truck,
 } from "lucide-react";
 
+// Notification component remains the same
 const Notification = ({ message, type }) => {
   if (!message) return null;
   const isError = type === "error";
@@ -35,7 +36,18 @@ const Shop = ({ produk = [], user, setPage, onAddToCart, cartCount }) => {
       return () => clearTimeout(timer);
     }
   }, [notification]);
+
   const handleAddToCartClick = (productId) => {
+    // Find the product to check its stock before calling onAddToCart
+    const productToAdd = produk.find(p => p._id === productId);
+    if (productToAdd && productToAdd.stock === 0) {
+      setNotification({
+        type: "error",
+        message: "Produk ini sedang tidak tersedia (Out of Stock).",
+      });
+      return; // Stop the function here if out of stock
+    }
+
     if (!user) {
       setNotification({
         type: "error",
@@ -46,6 +58,7 @@ const Shop = ({ produk = [], user, setPage, onAddToCart, cartCount }) => {
       setNotification({ type: "success", message: successMessage });
     }
   };
+
   const filteredProduk = produk.filter((item) => {
     const matchesCategory =
       selectedCategory === "all" ||
@@ -196,18 +209,19 @@ const Shop = ({ produk = [], user, setPage, onAddToCart, cartCount }) => {
                     </p>{" "}
                   </div>
                   <div className="flex space-x-3">
+                    {/* MODIFICATION HERE: Removed disabled={item.stock === 0} */}
                     <button
                       onClick={() =>
                         setPage({ name: "product-detail", id: item._id })
                       }
-                      disabled={item.stock === 0}
-                      className="flex-1 bg-black text-white py-3 px-4 rounded-sm transition-all duration-300 hover:bg-gray-800 text-sm font-medium uppercase tracking-wide disabled:bg-gray-400 disabled:cursor-not-allowed"
+                      className="flex-1 bg-black text-white py-3 px-4 rounded-sm transition-all duration-300 hover:bg-gray-800 text-sm font-medium uppercase tracking-wide"
                     >
                       View Details
                     </button>
+                    {/* This button should remain disabled if out of stock */}
                     <button
                       onClick={() => handleAddToCartClick(item._id)}
-                      disabled={item.stock === 0}
+                      disabled={item.stock === 0} // Keep this disabled
                       className="border border-gray-300 hover:border-black text-gray-700 hover:text-black py-3 px-4 rounded-sm transition-all duration-300 text-sm font-medium uppercase tracking-wide disabled:bg-gray-200 disabled:cursor-not-allowed disabled:text-gray-400 disabled:border-gray-200"
                     >
                       Add to Cart

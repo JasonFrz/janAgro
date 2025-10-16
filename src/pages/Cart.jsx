@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
-import { ArrowLeft, Trash2, AlertCircle } from "lucide-react";
+import React, { useState, useEffect, useCallback } from "react";
+import { ArrowLeft, Trash2, AlertCircle, CheckCircle } from "lucide-react";
 
+// formatPhoneInput remains the same
 const formatPhoneInput = (value) => {
   const digits = value.replace(/\D/g, "").substring(0, 15);
   let formatted = "";
@@ -13,6 +14,40 @@ const formatPhoneInput = (value) => {
   return formatted;
 };
 
+// Notification component - FIX IS HERE
+const Notification = ({ message, type, onClose }) => {
+  // All Hooks must be called unconditionally at the top level of the component
+  useEffect(() => {
+    if (!message) return; // Only set timer if there's a message to display
+
+    const timer = setTimeout(() => {
+      onClose();
+    }, 3000);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [message, onClose]); // Dependencies: message and onClose
+
+  // Conditional rendering happens AFTER hooks are called
+  if (!message) {
+    return null; // Now, this return is after the useEffect call
+  }
+
+  const bgColor = type === "success" ? "bg-green-600" : "bg-red-600";
+  const Icon = type === "success" ? CheckCircle : AlertCircle;
+
+  return (
+    <div
+      className={`fixed top-5 left-1/2 -translate-x-1/2 z-50 p-4 rounded-md shadow-lg flex items-center gap-3 transition-transform animate-fade-in-down ${bgColor} text-white`}
+    >
+      <Icon size={20} />
+      <span>{message}</span>
+    </div>
+  );
+};
+
+// Cart component remains the same as the previous version
 const Cart = ({
   cart,
   produk,
@@ -33,42 +68,52 @@ const Cart = ({
   const [appliedVoucher, setAppliedVoucher] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState("");
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [notification, setNotification] = useState({ message: "", type: "" });
+
+  const onCloseNotification = useCallback(() => {
+    setNotification({ message: "", type: "" });
+  }, []);
 
   useEffect(() => {
-    if (user && useProfileName) setCustomerName(user.name);
-    if (user && useProfileAddress) setCustomerAddress(user.alamat);
-    if (user && useProfilePhone)
-      setCustomerPhone(user.noTelp.replace(/\D/g, ""));
+    if (user) {
+      if (useProfileName) setCustomerName(user.name || "");
+      if (useProfileAddress) setCustomerAddress(user.alamat || "");
+      if (useProfilePhone)
+        setCustomerPhone(user.noTelp ? user.noTelp.replace(/\D/g, "") : "");
+    }
   }, [user, useProfileName, useProfileAddress, useProfilePhone]);
 
   const handleCheckboxChange = (type, isChecked) => {
     setError("");
+    onCloseNotification();
+
     switch (type) {
       case "name":
         setUseProfileName(isChecked);
-        setCustomerName(isChecked && user ? user.name : "");
+        setCustomerName(isChecked && user ? user.name || "" : "");
         break;
       case "address":
         if (isChecked && user && !user.alamat) {
           setError(
             "Alamat profil Anda kosong. Harap isi di halaman profil atau manual."
           );
+          setUseProfileAddress(false);
           return;
         }
         setUseProfileAddress(isChecked);
-        setCustomerAddress(isChecked && user ? user.alamat : "");
+        setCustomerAddress(isChecked && user ? user.alamat || "" : "");
         break;
       case "phone":
         if (isChecked && user && !user.noTelp) {
           setError(
             "No. Telepon profil Anda kosong. Harap isi di halaman profil atau manual."
           );
+          setUseProfilePhone(false);
           return;
         }
         setUseProfilePhone(isChecked);
         setCustomerPhone(
-          isChecked && user ? user.noTelp.replace(/\D/g, "") : ""
+          isChecked && user ? (user.noTelp ? user.noTelp.replace(/\D/g, "") : "") : ""
         );
         break;
       default:
@@ -81,7 +126,9 @@ const Cart = ({
     if (numericValue.length <= 15) {
       setCustomerPhone(numericValue);
     }
+    if (error.includes("Nomor Telepon")) setError("");
   };
+
   const cartDetails = cart.map((item) => ({
     ...produk.find((p) => p._id === item.productId),
     quantity: item.quantity,
@@ -97,6 +144,9 @@ const Cart = ({
   const kurirFee = 10000;
 
   const handleApplyVoucher = () => {
+    setError("");
+    onCloseNotification();
+
     const foundVoucher = vouchers.find(
       (v) =>
         v.code.toLowerCase() === voucherCode.toLowerCase() &&
@@ -105,12 +155,13 @@ const Cart = ({
     );
     if (foundVoucher) {
       setAppliedVoucher(foundVoucher);
-      setError("");
-      setSuccess(`Voucher ${foundVoucher.code} berhasil diterapkan!`);
+      setNotification({
+        message: `Voucher ${foundVoucher.code} berhasil diterapkan!`,
+        type: "success",
+      });
     } else {
       setAppliedVoucher(null);
       setError("Kode voucher tidak valid, tidak aktif, atau sudah habis.");
-      setSuccess("");
     }
   };
   const discountAmount = appliedVoucher
@@ -118,8 +169,10 @@ const Cart = ({
     : 0;
   const totalHarga = subtotal - discountAmount + kurirFee;
 
-  const handleCheckoutClick = () => {
+  const handleCheckoutClick = async () => {
     setError("");
+    onCloseNotification();
+
     if (!user) {
       setError("Silakan login untuk melanjutkan checkout.");
       return;
@@ -141,7 +194,7 @@ const Cart = ({
       return;
     }
 
-    const checkoutResult = onCheckout({
+    const checkoutData = {
       userId: user.id,
       nama: customerName,
       alamat: customerAddress,
@@ -153,17 +206,42 @@ const Cart = ({
       kurir: { nama: "Kurir JanAgro", biaya: kurirFee },
       totalHarga,
       metodePembayaran: paymentMethod,
-    });
+    };
 
-    if (checkoutResult.success) {
-      alert(checkoutResult.message);
-    } else {
-      setError(checkoutResult.message);
+    try {
+      const checkoutResult = await onCheckout(checkoutData);
+
+      if (checkoutResult.success) {
+        setNotification({
+          message: "Pesanan berhasil dibuat! Terima kasih.",
+          type: "success",
+        });
+      } else {
+        setError(checkoutResult.message || "Terjadi kesalahan saat checkout.");
+        setNotification({
+          message: checkoutResult.message || "Checkout gagal.",
+          type: "error",
+        });
+      }
+    } catch (err) {
+      console.error("Checkout error:", err);
+      setError("Terjadi kesalahan sistem atau jaringan.");
+      setNotification({
+        message: "Terjadi kesalahan saat memproses pesanan Anda.",
+        type: "error",
+      });
     }
   };
 
   return (
     <div className="min-h-screen bg-gray-50 pt-24">
+      {notification.message && (
+        <Notification
+          message={notification.message}
+          type={notification.type}
+          onClose={onCloseNotification}
+        />
+      )}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <button
           onClick={() => setPage({ name: "shop" })}
@@ -350,7 +428,7 @@ const Cart = ({
                   onChange={(e) => {
                     setVoucherCode(e.target.value);
                     setError("");
-                    setSuccess("");
+                    onCloseNotification();
                   }}
                   className="flex-grow p-3 border rounded-sm focus:ring-2 focus:ring-black"
                 />{" "}
@@ -361,9 +439,6 @@ const Cart = ({
                   Terapkan
                 </button>{" "}
               </div>
-              {success && (
-                <div className="text-sm text-green-600">{success}</div>
-              )}
               <div className="space-y-2 border-t pt-4">
                 {" "}
                 <div className="flex justify-between">
@@ -413,7 +488,10 @@ const Cart = ({
                         name="payment"
                         value={method}
                         checked={paymentMethod === method}
-                        onChange={(e) => setPaymentMethod(e.target.value)}
+                        onChange={(e) => {
+                          setPaymentMethod(e.target.value);
+                          if (error.includes("metode pembayaran")) setError("");
+                        }}
                         className="mr-3"
                       />{" "}
                       {method}{" "}
