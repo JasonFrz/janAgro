@@ -10,22 +10,42 @@ import {
   Shield,
 } from "lucide-react";
 import { Navbar as FlowNav } from "flowbite-react";
+import { Link, NavLink } from "react-router-dom"; // Import Link dan NavLink
 
 const Navbar = ({
-  activeSection,
-  setActiveSection,
+  // activeSection dan setActiveSection dihapus
   setShowProfile,
   user,
   isAdmin,
 }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  // Menambahkan properti 'path' untuk routing
   const navItems = [
-    { id: "home", label: "Home", icon: Home },
-    { id: "shop", label: "Shop", icon: ShoppingBag },
-    { id: "about", label: "About", icon: Info },
-    { id: "location", label: "Location", icon: MapPin },
+    { id: "home", label: "Home", icon: Home, path: "/" },
+    { id: "shop", label: "Shop", icon: ShoppingBag, path: "/shop" },
+    { id: "about", label: "About", icon: Info, path: "/about" },
+    { id: "location", label: "Location", icon: MapPin, path: "/location" },
   ];
+
+  // Fungsi untuk menentukan kelas CSS berdasarkan status aktif NavLink
+  const getNavLinkClasses = (isActive) => {
+    const baseClasses =
+      "flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200";
+    if (isActive) {
+      return `${baseClasses} text-black bg-white shadow-md`;
+    }
+    return `${baseClasses} text-gray-300 hover:text-white hover:bg-white/10`;
+  };
+
+  const getMobileNavLinkClasses = (isActive) => {
+    const baseClasses =
+      "flex items-center space-x-2 w-full px-3 py-2 rounded-md text-base font-medium transition-all duration-200";
+    if (isActive) {
+      return `${baseClasses} text-black bg-white shadow-md`;
+    }
+    return `${baseClasses} text-gray-300 hover:text-white hover:bg-white/10`;
+  };
 
   return (
     <FlowNav
@@ -33,50 +53,42 @@ const Navbar = ({
       className="fixed top-0 left-0 right-0 z-50 !bg-black backdrop-blur-md border-b border-gray-800 rounded-none"
     >
       <div className="flex justify-between items-center w-full px-4 sm:px-6 lg:px-8 h-16">
-        {/* Logo */}
-        <div className="flex items-center">
+        {/* Logo sekarang menggunakan Link */}
+        <Link to="/" className="flex items-center">
           <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
             <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center">
-              <img src="image/janAgro.png" alt="logo" className="w-6 h-6" />
+              <img src="/image/janAgro.png" alt="logo" className="w-6 h-6" />
             </div>
           </div>
-        </div>
+        </Link>
 
-        {/* Desktop Menu */}
+        {/* Desktop Menu - Menggunakan NavLink */}
         <div className="hidden md:flex items-center space-x-8">
           {navItems.map((item) => {
             const Icon = item.icon;
             return (
-              <button
+              <NavLink
                 key={item.id}
-                onClick={() => setActiveSection(item.id)}
-                className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
-                  activeSection === item.id
-                    ? "text-black bg-white shadow-md"
-                    : "text-gray-300 hover:text-white hover:bg-white/10"
-                }`}
+                to={item.path}
+                className={({ isActive }) => getNavLinkClasses(isActive)}
               >
                 <Icon size={16} />
                 <span>{item.label}</span>
-              </button>
+              </NavLink>
             );
           })}
 
           {isAdmin && (
-            <button
-              onClick={() => setActiveSection("admin")}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
-                activeSection === "admin"
-                  ? "text-black bg-white shadow-md"
-                  : "text-gray-300 hover:text-white hover:bg-white/10"
-              }`}
+            <NavLink
+              to="/admin"
+              className={({ isActive }) => getNavLinkClasses(isActive)}
             >
               <Shield size={16} />
               <span>Admin</span>
-            </button>
+            </NavLink>
           )}
 
-          {/* Profile — instantly opens view profile */}
+          {/* Tombol Profile tetap sama karena tidak mengubah rute */}
           <button
             onClick={() => setShowProfile(true)}
             className="flex items-center space-x-2 text-gray-300 hover:text-white px-3 py-2 rounded-md text-sm font-medium hover:bg-white/10 transition-all duration-200"
@@ -97,45 +109,33 @@ const Navbar = ({
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu - Menggunakan NavLink */}
       {isMobileMenuOpen && (
         <div className="md:hidden px-4 pb-3 space-y-2 bg-black/90 border-t border-gray-800">
           {navItems.map((item) => {
             const Icon = item.icon;
             return (
-              <button
+              <NavLink
                 key={item.id}
-                onClick={() => {
-                  setActiveSection(item.id);
-                  setIsMobileMenuOpen(false);
-                }}
-                className={`flex items-center space-x-2 w-full px-3 py-2 rounded-md text-base font-medium transition-all duration-200 ${
-                  activeSection === item.id
-                    ? "text-black bg-white shadow-md"
-                    : "text-gray-300 hover:text-white hover:bg-white/10"
-                }`}
+                to={item.path}
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={({ isActive }) => getMobileNavLinkClasses(isActive)}
               >
                 <Icon size={20} />
                 <span>{item.label}</span>
-              </button>
+              </NavLink>
             );
           })}
 
           {isAdmin && (
-            <button
-              onClick={() => {
-                setActiveSection("admin");
-                setIsMobileMenuOpen(false);
-              }}
-              className={`flex items-center space-x-2 w-full px-3 py-2 rounded-md text-base font-medium transition-all duration-200 ${
-                activeSection === "admin"
-                  ? "text-black bg-white shadow-md"
-                  : "text-gray-300 hover:text-white hover:bg-white/10"
-              }`}
+            <NavLink
+              to="/admin"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className={({ isActive }) => getMobileNavLinkClasses(isActive)}
             >
               <Shield size={20} />
               <span>Admin</span>
-            </button>
+            </NavLink>
           )}
 
           {/* Mobile Profile */}

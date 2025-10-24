@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom"; // Import Link
 
 const Jumbotron = () => {
   const images = [
@@ -47,16 +48,20 @@ const Jumbotron = () => {
         </p>
 
         <div className="flex flex-col sm:flex-row gap-6 justify-center">
-          <button className="group px-10 py-4 bg-white text-black rounded-sm font-medium transition-all duration-500 transform hover:scale-105 hover:shadow-2xl uppercase tracking-wider text-sm">
-            <span className="group-hover:tracking-widest transition-all duration-300">
-              Lihat Produk
-            </span>
-          </button>
-          <button className="group px-10 py-4 border border-white text-white rounded-sm font-medium transition-all duration-500 hover:bg-white hover:text-black uppercase tracking-wider text-sm">
-            <span className="group-hover:tracking-widest transition-all duration-300">
-              Hubungi Kami
-            </span>
-          </button>
+          <Link to="/shop">
+            <button className="group w-full sm:w-auto px-10 py-4 bg-white text-black rounded-sm font-medium transition-all duration-500 transform hover:scale-105 hover:shadow-2xl uppercase tracking-wider text-sm">
+              <span className="group-hover:tracking-widest transition-all duration-300">
+                Lihat Produk
+              </span>
+            </button>
+          </Link>
+          <Link to="/location">
+            <button className="group w-full sm:w-auto px-10 py-4 border border-white text-white rounded-sm font-medium transition-all duration-500 hover:bg-white hover:text-black uppercase tracking-wider text-sm">
+              <span className="group-hover:tracking-widest transition-all duration-300">
+                Hubungi Kami
+              </span>
+            </button>
+          </Link>
         </div>
       </div>
 

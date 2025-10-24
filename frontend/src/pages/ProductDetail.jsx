@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom"; 
 import {
   Star,
   ArrowLeft,
@@ -17,9 +18,8 @@ const Notification = ({ message, type }) => {
         isError ? "bg-red-600 text-white" : "bg-green-600 text-white"
       }`}
     >
-      {" "}
-      {isError ? <AlertCircle size={20} /> : <CheckCircle size={20} />}{" "}
-      <span>{message}</span>{" "}
+      {isError ? <AlertCircle size={20} /> : <CheckCircle size={20} />}
+      <span>{message}</span>
     </div>
   );
 };
@@ -43,7 +43,6 @@ const ProductDetail = ({
   reviews,
   users,
   user,
-  setPage,
   onAddToCart,
   cartCount,
 }) => {
@@ -59,6 +58,7 @@ const ProductDetail = ({
       return () => clearTimeout(timer);
     }
   }, [notification]);
+
   const handleAddToCartClick = (productId) => {
     if (!user) {
       setNotification({
@@ -70,6 +70,7 @@ const ProductDetail = ({
       setNotification({ type: "success", message: successMessage });
     }
   };
+
   const filteredReviews = reviews
     .filter((r) => r.productId === product._id)
     .filter((r) => ratingFilter === 0 || r.rating === ratingFilter)
@@ -84,8 +85,8 @@ const ProductDetail = ({
     <>
       <Notification message={notification?.message} type={notification?.type} />
       <div className="fixed top-24 right-4 sm:right-8 z-30 flex flex-col gap-4">
-        <button
-          onClick={() => setPage({ name: "cart" })}
+        <Link
+          to="/cart"
           className="relative bg-white p-4 rounded-full shadow-lg border transition-transform hover:scale-110"
           aria-label="Buka Keranjang"
         >
@@ -95,50 +96,53 @@ const ProductDetail = ({
               {cartCount}
             </span>
           )}
-        </button>
+        </Link>
         {user && (
-          <button
-            onClick={() => setPage({ name: "pesanan" })}
+          <Link
+            to="/pesanan"
             className="relative bg-white p-4 rounded-full shadow-lg border transition-transform hover:scale-110"
             aria-label="Lacak Pesanan"
           >
             <Truck size={24} className="text-black" />
-          </button>
+          </Link>
         )}
       </div>
       <div className="min-h-screen bg-white pt-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <button
-            onClick={() => setPage({ name: "shop" })}
+          <Link
+            to="/shop"
             className="flex items-center gap-2 text-gray-600 hover:text-black mb-8 transition"
           >
-            {" "}
-            <ArrowLeft size={20} /> Kembali ke Toko{" "}
-          </button>
+            <ArrowLeft size={20} /> Kembali ke Toko
+          </Link>
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
-            {" "}
             <div className="lg:col-span-2 flex items-center justify-center bg-gray-100 rounded-sm text-8xl h-96">
-              {product.image}
-            </div>{" "}
-            <div className="lg:col-span-3 flex flex-col">
               {" "}
+              {product.image}{" "}
+            </div>
+            <div className="lg:col-span-3 flex flex-col">
               <span className="text-sm uppercase text-gray-500 tracking-wider">
-                {product.category}
-              </span>{" "}
+                {" "}
+                {product.category}{" "}
+              </span>
               <h1 className="text-4xl font-bold text-gray-900 my-2">
-                {product.name}
-              </h1>{" "}
+                {" "}
+                {product.name}{" "}
+              </h1>
               <p className="text-3xl font-light text-gray-800 mb-4">
-                Rp {product.price.toLocaleString("id-ID")}
-              </p>{" "}
+                {" "}
+                Rp {product.price.toLocaleString("id-ID")}{" "}
+              </p>
               <p className="text-gray-600 mb-6 leading-relaxed">
-                {product.detail}
-              </p>{" "}
+                {" "}
+                {product.detail}{" "}
+              </p>
               {product.stock > 0 && product.stock <= 10 && (
                 <p className="text-sm mb-6 font-semibold text-yellow-600">
-                  Stok Terbatas: Tinggal {product.stock} buah!
+                  {" "}
+                  Stok Terbatas: Tinggal {product.stock} buah!{" "}
                 </p>
-              )}{" "}
+              )}
               <button
                 onClick={() => handleAddToCartClick(product._id)}
                 disabled={product.stock === 0}
@@ -146,22 +150,18 @@ const ProductDetail = ({
               >
                 {" "}
                 {product.stock > 0 ? "Add to Cart" : "Out of Stock"}{" "}
-              </button>{" "}
-            </div>{" "}
+              </button>
+            </div>
           </div>
           <div className="mt-16 border-t pt-12">
-            {" "}
-            <h2 className="text-3xl font-bold mb-4">Ulasan Produk</h2>{" "}
+            <h2 className="text-3xl font-bold mb-4">Ulasan Produk</h2>
             <div className="flex flex-col md:flex-row gap-4 mb-8 p-4 border rounded-sm">
-              {" "}
               <div className="flex-1">
-                {" "}
                 <label className="block text-sm font-medium mb-2">
                   {" "}
                   Filter Berdasarkan Rating{" "}
-                </label>{" "}
+                </label>
                 <div className="flex gap-2 flex-wrap">
-                  {" "}
                   {[0, 5, 4, 3, 2, 1].map((star) => (
                     <button
                       key={star}
@@ -175,17 +175,15 @@ const ProductDetail = ({
                       {" "}
                       {star === 0 ? "Semua" : `★ ${star}`}{" "}
                     </button>
-                  ))}{" "}
-                </div>{" "}
-              </div>{" "}
+                  ))}
+                </div>
+              </div>
               <div className="flex-1">
-                {" "}
                 <label className="block text-sm font-medium mb-2">
                   {" "}
                   Filter Berdasarkan Media{" "}
-                </label>{" "}
+                </label>
                 <div className="flex gap-2 flex-wrap">
-                  {" "}
                   <button
                     onClick={() => setMediaFilter("all")}
                     className={`px-4 py-2 text-sm rounded-sm border transition ${
@@ -194,8 +192,9 @@ const ProductDetail = ({
                         : "bg-white text-gray-700 border-gray-300 hover:border-black"
                     }`}
                   >
-                    Semua
-                  </button>{" "}
+                    {" "}
+                    Semua{" "}
+                  </button>
                   <button
                     onClick={() => setMediaFilter("dengan-media")}
                     className={`px-4 py-2 text-sm rounded-sm border transition ${
@@ -204,8 +203,9 @@ const ProductDetail = ({
                         : "bg-white text-gray-700 border-gray-300 hover:border-black"
                     }`}
                   >
-                    Dengan Media
-                  </button>{" "}
+                    {" "}
+                    Dengan Media{" "}
+                  </button>
                   <button
                     onClick={() => setMediaFilter("tanpa-media")}
                     className={`px-4 py-2 text-sm rounded-sm border transition ${
@@ -214,42 +214,41 @@ const ProductDetail = ({
                         : "bg-white text-gray-700 border-gray-300 hover:border-black"
                     }`}
                   >
-                    Tanpa Media
-                  </button>{" "}
-                </div>{" "}
-              </div>{" "}
-            </div>{" "}
+                    {" "}
+                    Tanpa Media{" "}
+                  </button>
+                </div>
+              </div>
+            </div>
             {filteredReviews.length > 0 ? (
               <div className="space-y-8">
-                {" "}
                 {filteredReviews.map((review) => {
                   const user = users.find((u) => u.id === review.userId);
                   return (
                     <div key={review.id} className="flex gap-4 border-b pb-8">
-                      {" "}
                       <div className="w-12 h-12 rounded-full bg-gray-200 flex-shrink-0 flex items-center justify-center font-bold text-gray-500">
-                        {user ? user.name.charAt(0) : "A"}
-                      </div>{" "}
-                      <div className="flex-1">
                         {" "}
+                        {user ? user.name.charAt(0) : "A"}{" "}
+                      </div>
+                      <div className="flex-1">
                         <div className="flex items-center justify-between">
-                          {" "}
                           <div>
-                            {" "}
                             <p className="font-semibold">
-                              {user ? user.name : "Anonymous"}
-                            </p>{" "}
-                            <StarRating rating={review.rating} />{" "}
-                          </div>{" "}
+                              {" "}
+                              {user ? user.name : "Anonymous"}{" "}
+                            </p>
+                            <StarRating rating={review.rating} />
+                          </div>
                           <p className="text-sm text-gray-500">
+                            {" "}
                             {new Date(review.date).toLocaleDateString("id-ID", {
                               year: "numeric",
                               month: "long",
                               day: "numeric",
-                            })}
-                          </p>{" "}
-                        </div>{" "}
-                        <p className="text-gray-700 mt-2">{review.comment}</p>{" "}
+                            })}{" "}
+                          </p>
+                        </div>
+                        <p className="text-gray-700 mt-2">{review.comment}</p>
                         {review.imageUrl && (
                           <div className="mt-4">
                             {" "}
@@ -259,18 +258,18 @@ const ProductDetail = ({
                               className="max-w-xs rounded-md border"
                             />{" "}
                           </div>
-                        )}{" "}
-                      </div>{" "}
+                        )}
+                      </div>
                     </div>
                   );
-                })}{" "}
+                })}
               </div>
             ) : (
               <p className="text-gray-500 bg-gray-50 p-6 rounded-sm">
                 {" "}
                 Tidak ada ulasan yang sesuai dengan filter Anda.{" "}
               </p>
-            )}{" "}
+            )}
           </div>
         </div>
       </div>

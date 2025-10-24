@@ -12,6 +12,7 @@ import {
   AtSign,
   Phone,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 
 const ProfileSlide = ({
   isOpen,
@@ -20,7 +21,7 @@ const ProfileSlide = ({
   onLogin,
   onRegister,
   onLogout,
-  setActiveSection,
+  // setActiveSection is no longer needed for navigation
 }) => {
   const [currentView, setCurrentView] = useState("main");
   const [formData, setFormData] = useState({
@@ -37,6 +38,9 @@ const ProfileSlide = ({
   const [errorMessage, setErrorMessage] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
 
+  const navigate = useNavigate(); // Initialize useNavigate
+
+  // --- No changes to other functions here ---
   const changeView = (view) => {
     setErrorMessage(null);
     setSuccessMessage(null);
@@ -50,7 +54,7 @@ const ProfileSlide = ({
       setCurrentView(user ? "profile" : "main");
     }
   }, [isOpen, user]);
-
+  
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setErrorMessage(null);
@@ -81,7 +85,7 @@ const ProfileSlide = ({
       }
     }
   };
-
+  
   const handleRegister = (e) => {
     e.preventDefault();
     if (
@@ -135,6 +139,7 @@ const ProfileSlide = ({
     onLogout();
     changeView("main");
   };
+
   const resetView = () => {
     setCurrentView(user ? "profile" : "main");
     setFormData({
@@ -147,34 +152,38 @@ const ProfileSlide = ({
       confirmPassword: "",
     });
   };
+
   const handleClose = () => {
     resetView();
     onClose();
   };
+  
+  // --- THIS FUNCTION IS UPDATED ---
   const handleAccountSettingsClick = () => {
-    setActiveSection("profile");
-    onClose();
+    navigate("/profile"); // Navigate to the profile page
+    onClose(); // Close the slide-out panel
   };
 
   const ErrorMessage = ({ message }) => {
     if (!message) return null;
     return (
       <div className="flex items-center space-x-2 bg-red-50 text-red-700 p-3 rounded-md border border-red-200">
-        {" "}
-        <AlertCircle size={20} /> <span className="text-sm">{message}</span>{" "}
-      </div>
-    );
-  };
-  const SuccessMessage = ({ message }) => {
-    if (!message) return null;
-    return (
-      <div className="bg-green-50 text-green-700 p-3 rounded-md border border-green-200 text-sm">
-        {" "}
-        {message}{" "}
+        <AlertCircle size={20} /> <span className="text-sm">{message}</span>
       </div>
     );
   };
 
+  const SuccessMessage = ({ message }) => {
+    if (!message) return null;
+    return (
+      <div className="bg-green-50 text-green-700 p-3 rounded-md border border-green-200 text-sm">
+        {message}
+      </div>
+    );
+  };
+  
+  // --- No changes to rendering logic below ---
+  // (renderRegisterView, renderMainView, renderLoginView, renderProfileView, and main return)
   const renderRegisterView = () => (
     <div className="space-y-6">
       <div className="text-center">

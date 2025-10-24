@@ -1,7 +1,9 @@
 import React, { useState, useRef } from "react";
+import { useNavigate } from "react-router-dom"; // 1. Impor useNavigate
 import { Star, ArrowLeft, Camera, Image as ImageIcon } from "lucide-react";
 
-const Review = ({ product, onAddReview, setPage }) => {
+// 2. Prop 'setPage' dihapus
+const Review = ({ product, onAddReview }) => {
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState("");
@@ -9,6 +11,9 @@ const Review = ({ product, onAddReview, setPage }) => {
   const [error, setError] = useState("");
   const fileInputRef = useRef(null);
 
+  const navigate = useNavigate(); // 3. Inisialisasi useNavigate
+
+  // Fungsi lain tetap sama
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     if (file && file.type.startsWith("image/")) {
@@ -41,27 +46,30 @@ const Review = ({ product, onAddReview, setPage }) => {
       imageUrl: imagePreview,
     });
     alert("Terima kasih atas ulasan Anda!");
-    setPage({ name: "pesanan" });
+    navigate("/pesanan"); // 4. Menggunakan navigate
   };
 
   return (
     <div className="min-h-screen bg-white pt-24">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <button
-          onClick={() => setPage({ name: "pesanan" })}
+          onClick={() => navigate("/pesanan")} // 5. Menggunakan navigate
           className="flex items-center gap-2 text-gray-600 hover:text-black mb-8 transition"
         >
           <ArrowLeft size={20} />
           Kembali ke Pesanan
         </button>
+        {/* Sisa JSX tidak diubah */}
         <div className="bg-white p-8 rounded-lg border border-gray-200">
           <h1 className="text-3xl font-bold text-black mb-2">Beri Ulasan</h1>
           <p className="text-gray-500 mb-6">
-            Bagikan pendapat Anda tentang produk ini.
+            {" "}
+            Bagikan pendapat Anda tentang produk ini.{" "}
           </p>
           <div className="flex gap-4 items-center border-b pb-6 mb-6">
             <div className="w-20 h-20 bg-gray-100 rounded-md flex items-center justify-center text-4xl flex-shrink-0">
-              {product.image}
+              {" "}
+              {product.image}{" "}
             </div>
             <div>
               <p className="text-gray-500 text-sm">{product.category}</p>
@@ -71,7 +79,8 @@ const Review = ({ product, onAddReview, setPage }) => {
           <div className="space-y-6">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Kualitas Produk (Wajib)
+                {" "}
+                Kualitas Produk (Wajib){" "}
               </label>
               <div className="flex items-center gap-1">
                 {[1, 2, 3, 4, 5].map((star) => (
@@ -95,7 +104,8 @@ const Review = ({ product, onAddReview, setPage }) => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Ulasan Anda (Opsional)
+                {" "}
+                Ulasan Anda (Opsional){" "}
               </label>
               <textarea
                 value={comment}
@@ -107,7 +117,8 @@ const Review = ({ product, onAddReview, setPage }) => {
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Tambah Foto (Opsional)
+                {" "}
+                Tambah Foto (Opsional){" "}
               </label>
               <div className="flex items-center gap-4">
                 <div className="w-24 h-24 border-2 border-dashed rounded-md flex items-center justify-center bg-gray-50">
@@ -126,13 +137,15 @@ const Review = ({ product, onAddReview, setPage }) => {
                     onClick={() => triggerFileInput("environment")}
                     className="flex items-center gap-2 text-sm w-full border border-gray-300 text-gray-700 py-2 px-4 rounded-md font-medium hover:bg-gray-50 transition-colors"
                   >
-                    <Camera size={16} /> Buka Kamera
+                    {" "}
+                    <Camera size={16} /> Buka Kamera{" "}
                   </button>
                   <button
                     onClick={() => triggerFileInput(null)}
                     className="flex items-center gap-2 text-sm w-full border border-gray-300 text-gray-700 py-2 px-4 rounded-md font-medium hover:bg-gray-50 transition-colors"
                   >
-                    <ImageIcon size={16} /> Pilih dari Galeri
+                    {" "}
+                    <ImageIcon size={16} /> Pilih dari Galeri{" "}
                   </button>
                   <input
                     type="file"
@@ -149,7 +162,8 @@ const Review = ({ product, onAddReview, setPage }) => {
               onClick={handleSubmit}
               className="w-full bg-black text-white py-3 rounded-md font-medium hover:bg-gray-800 transition-colors"
             >
-              Kirim Ulasan
+              {" "}
+              Kirim Ulasan{" "}
             </button>
           </div>
         </div>

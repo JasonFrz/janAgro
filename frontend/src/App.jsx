@@ -1,4 +1,11 @@
 import React, { useState } from "react";
+import {
+  Routes,
+  Route,
+  useNavigate,
+  useParams,
+} from "react-router-dom";
+
 import Navbar from "./components/Navbar";
 import ProfileSlide from "./components/ProfileSlide";
 import Footer from "./components/Footer";
@@ -17,13 +24,13 @@ import PengembalianBarang from "./pages/PengembalianBarang";
 import "./index.css";
 
 function App() {
-  const [page, setPage] = useState({ name: "home", id: null });
   const [showProfile, setShowProfile] = useState(false);
   const [user, setUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [cart, setCart] = useState([]);
 
-  // Data Dummy (Users, Vouchers, Produk, Reviews) tetap sama
+  const navigate = useNavigate();
+
   const [users, setUsers] = useState([
     {
       id: 1,
@@ -153,7 +160,6 @@ function App() {
       imageUrl: null,
     },
   ]);
-
   const [checkouts, setCheckouts] = useState([
     {
       id: 1001,
@@ -324,7 +330,6 @@ function App() {
       status: "diproses",
     },
   ]);
-
   const [returns, setReturns] = useState([
     {
       id: 1,
@@ -351,7 +356,6 @@ function App() {
     { id: 2, orderId: 1006, reason: "Tidak sengaja melakukan pemesanan." },
   ]);
 
-  // Handler dasar (tidak diubah)
   const handleAddToCart = (productId) => {
     setCart((prevCart) => {
       const existingItem = prevCart.find(
@@ -369,7 +373,6 @@ function App() {
     });
     return "Produk ditambahkan ke keranjang!";
   };
-
   const handleUpdateCartQuantity = (productId, newQuantity) => {
     setCart(
       cart.map((item) =>
@@ -382,37 +385,8 @@ function App() {
   const handleRemoveFromCart = (productId) => {
     setCart(cart.filter((item) => item.productId !== productId));
   };
+
   const handleCheckout = (checkoutData) => {
-    if (checkoutData.kodeVoucher) {
-      const voucherUsed = vouchers.find(
-        (v) => v.code === checkoutData.kodeVoucher
-      );
-      if (
-        !voucherUsed ||
-        !voucherUsed.isActive ||
-        voucherUsed.currentUses >= voucherUsed.maxUses
-      ) {
-        return {
-          success: false,
-          message: `Voucher "${checkoutData.kodeVoucher}" tidak lagi valid atau sudah habis.`,
-        };
-      }
-      setVouchers(
-        vouchers.map((v) =>
-          v.code === checkoutData.kodeVoucher
-            ? { ...v, currentUses: v.currentUses + 1 }
-            : v
-        )
-      );
-    }
-    let produkCopy = [...produk];
-    for (const item of checkoutData.items) {
-      const productIndex = produkCopy.findIndex((p) => p._id === item._id);
-      if (productIndex !== -1) {
-        produkCopy[productIndex].stock -= item.quantity;
-      }
-    }
-    setProduk(produkCopy);
     const newCheckout = {
       ...checkoutData,
       id: Date.now(),
@@ -421,19 +395,52 @@ function App() {
     };
     setCheckouts([...checkouts, newCheckout]);
     setCart([]);
-    setPage({ name: "pesanan", id: null });
+    navigate("/pesanan"); 
     return {
       success: true,
       message: "Checkout berhasil! Terima kasih telah berbelanja.",
     };
   };
-  const handleUpdateOrderStatus = (orderId, newStatus) => {
+
+  const handleLogin = (identifier, password) => {
+    const userAccount =
+      users.find((u) => u.email === identifier || u.username === identifier) ||
+      (adminUser.email === identifier || adminUser.username === identifier
+        ? adminUser
+        : null);
+    if (!userAccount)
+      return "Pengguna dengan email atau username tersebut tidak ditemukan.";
+    if (userAccount.password !== password)
+      return "Password yang Anda masukkan salah.";
+    if (userAccount.isBanned) return "Akun ini telah ditangguhkan.";
+    const isAdminLogin = userAccount.id === adminUser.id;
+    setUser(userAccount);
+    setIsAdmin(isAdminLogin);
+    if (isAdminLogin) {
+      navigate("/admin"); 
+    }
+    setShowProfile(false);
+    return null;
+  };
+
+  const handleLogout = () => {
+    setUser(null);
+    setIsAdmin(false);
+    navigate("/");
+  };
+
+  const handleRequestReturn = (returnData) => {
+    setReturns([...returns, { ...returnData, id: Date.now() }]);
     setCheckouts(
       checkouts.map((order) =>
-        order.id === orderId ? { ...order, status: newStatus } : order
+        order.id === returnData.orderId
+          ? { ...order, status: "pengembalian" }
+          : order
       )
     );
+    navigate("/pesanan"); 
   };
+
   const handleAddReview = (reviewData) => {
     if (!user) return;
     const newReview = {
@@ -443,31 +450,9 @@ function App() {
       date: new Date().toISOString().split("T")[0],
     };
     setReviews([...reviews, newReview]);
+    navigate("/pesanan"); 
   };
-  const handleLogin = (identifier, password) => {
-    const userAccount =
-      users.find((u) => u.email === identifier || u.username === identifier) ||
-      (adminUser.email === identifier || adminUser.username === identifier
-        ? adminUser
-        : null);
-    if (!userAccount) {
-      return "Pengguna dengan email atau username tersebut tidak ditemukan.";
-    }
-    if (userAccount.password !== password) {
-      return "Password yang Anda masukkan salah.";
-    }
-    if (userAccount.isBanned) {
-      return "Akun ini telah ditangguhkan.";
-    }
-    const isAdminLogin = userAccount.id === adminUser.id;
-    setUser(userAccount);
-    setIsAdmin(isAdminLogin);
-    if (isAdminLogin) {
-      setPage({ name: "admin", id: null });
-    }
-    setShowProfile(false);
-    return null;
-  };
+
   const handleRegister = (username, name, email, password, noTelp) => {
     const cleanUsername = username.trim().toLowerCase();
     if (
@@ -491,11 +476,6 @@ function App() {
     };
     setUsers([...users, newUser]);
     return null;
-  };
-  const handleLogout = () => {
-    setUser(null);
-    setIsAdmin(false);
-    setPage({ name: "home", id: null });
   };
   const handleAvatarChange = (newAvatarUrl) => {
     if (!user) return;
@@ -584,25 +564,12 @@ function App() {
   const handleDeleteProduk = (produkId) => {
     setProduk(produk.filter((p) => p._id !== produkId));
   };
-
-  // Handler untuk penyelesaian, pengembalian, dan pembatalan
   const handleConfirmOrderFinished = (orderId) => {
     setCheckouts(
       checkouts.map((order) =>
         order.id === orderId ? { ...order, status: "selesai" } : order
       )
     );
-  };
-  const handleRequestReturn = (returnData) => {
-    setReturns([...returns, { ...returnData, id: Date.now() }]);
-    setCheckouts(
-      checkouts.map((order) =>
-        order.id === returnData.orderId
-          ? { ...order, status: "pengembalian" }
-          : order
-      )
-    );
-    setPage({ name: "pesanan" });
   };
   const handleApproveReturn = (orderId) => {
     setCheckouts(
@@ -644,143 +611,144 @@ function App() {
       )
     );
   };
-
-  const renderContent = () => {
-    switch (page.name) {
-      case "home":
-        return <Home />;
-      case "shop":
-        return (
-          <Shop
-            produk={produk}
-            user={user}
-            setPage={setPage}
-            onAddToCart={handleAddToCart}
-            cartCount={cart.length}
-          />
-        );
-      case "product-detail": {
-        const selectedProduct = produk.find((p) => p._id === page.id);
-        return (
-          <ProductDetail
-            product={selectedProduct}
-            reviews={reviews}
-            users={users}
-            user={user}
-            setPage={setPage}
-            onAddToCart={handleAddToCart}
-            cartCount={cart.length}
-          />
-        );
-      }
-      case "cart":
-        return (
-          <Cart
-            cart={cart}
-            produk={produk}
-            user={user}
-            vouchers={vouchers}
-            onUpdateQuantity={handleUpdateCartQuantity}
-            onRemove={handleRemoveFromCart}
-            onCheckout={handleCheckout}
-            setPage={setPage}
-          />
-        );
-      case "pesanan":
-        return (
-          <Pesanan
-            checkouts={checkouts}
-            user={user}
-            reviews={reviews}
-            setPage={setPage}
-            onConfirmFinished={handleConfirmOrderFinished}
-            onRequestCancellation={handleRequestCancellation}
-          />
-        );
-      case "review": {
-        const productToReview = produk.find((p) => p._id === page.id);
-        return (
-          <Review
-            product={productToReview}
-            onAddReview={handleAddReview}
-            setPage={setPage}
-          />
-        );
-      }
-      case "about":
-        return <About />;
-      case "admin":
-        return isAdmin ? (
-          <Admin
-            users={users}
-            vouchers={vouchers}
-            produk={produk}
-            checkouts={checkouts}
-            returns={returns}
-            cancellations={cancellations}
-            onUpdateUser={handleUpdateUserByAdmin}
-            onDeleteUser={handleDeleteUserByAdmin}
-            onToggleBanUser={handleToggleBanUser}
-            onAddVoucher={handleAddVoucher}
-            onUpdateVoucher={handleUpdateVoucher}
-            onDeleteVoucher={handleDeleteVoucher}
-            onAddProduk={handleAddProduk}
-            onUpdateProduk={handleUpdateProduk}
-            onDeleteProduk={handleDeleteProduk}
-            onUpdateOrderStatus={handleUpdateOrderStatus}
-            onApproveReturn={handleApproveReturn}
-            onRejectReturn={handleRejectReturn}
-            onApproveCancellation={handleApproveCancellation}
-            onRejectCancellation={handleRejectCancellation}
-            setPage={setPage}
-          />
-        ) : (
-          <Home />
-        );
-      case "location":
-        return <Location />;
-      case "profile":
-        return (
-          <Profile
-            user={user}
-            onAvatarChange={handleAvatarChange}
-            onProfileUpdate={handleProfileUpdate}
-            onPasswordChange={handlePasswordChange}
-          />
-        );
-      case "laporan":
-        return isAdmin ? (
-          <LaporanPesanan checkouts={checkouts} setPage={setPage} />
-        ) : (
-          <Home />
-        );
-      case "pengembalian-barang": {
-        const orderToReturn = checkouts.find((order) => order.id === page.id);
-        return (
-          <PengembalianBarang
-            order={orderToReturn}
-            setPage={setPage}
-            onSubmitReturn={handleRequestReturn}
-          />
-        );
-      }
-      default:
-        return <Home />;
-    }
+  const handleUpdateOrderStatus = (orderId, newStatus) => {
+    setCheckouts(
+      checkouts.map((order) =>
+        order.id === orderId ? { ...order, status: newStatus } : order
+      )
+    );
   };
 
   return (
     <div className="min-h-screen bg-white">
-      <Navbar
-        activeSection={page.name}
-        setActiveSection={(sectionName) =>
-          setPage({ name: sectionName, id: null })
-        }
-        setShowProfile={setShowProfile}
-        user={user}
-        isAdmin={isAdmin}
-      />
-      <main>{renderContent()}</main>
+      <Navbar setShowProfile={setShowProfile} user={user} isAdmin={isAdmin} />
+
+      <main>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route
+            path="/shop"
+            element={
+              <Shop
+                produk={produk}
+                user={user}
+                onAddToCart={handleAddToCart}
+                cartCount={cart.length}
+              />
+            }
+          />
+          <Route
+            path="/product/:id"
+            element={
+              <ProductDetailWrapper
+                produk={produk}
+                reviews={reviews}
+                users={users}
+                user={user}
+                onAddToCart={handleAddToCart}
+                cartCount={cart.length}
+              />
+            }
+          />
+          <Route
+            path="/cart"
+            element={
+              <Cart
+                cart={cart}
+                produk={produk}
+                user={user}
+                vouchers={vouchers}
+                onUpdateQuantity={handleUpdateCartQuantity}
+                onRemove={handleRemoveFromCart}
+                onCheckout={handleCheckout}
+              />
+            }
+          />
+          <Route
+            path="/pesanan"
+            element={
+              <Pesanan
+                checkouts={checkouts}
+                user={user}
+                reviews={reviews}
+                onConfirmFinished={handleConfirmOrderFinished}
+                onRequestCancellation={handleRequestCancellation}
+              />
+            }
+          />
+          <Route
+            path="/review/:productId"
+            element={
+              <ReviewWrapper produk={produk} onAddReview={handleAddReview} />
+            }
+          />
+          <Route
+            path="/pengembalian-barang/:orderId"
+            element={
+              <PengembalianBarangWrapper
+                checkouts={checkouts}
+                onSubmitReturn={handleRequestReturn}
+              />
+            }
+          />
+          <Route path="/about" element={<About />} />
+          <Route path="/location" element={<Location />} />
+          <Route
+            path="/profile"
+            element={
+              user ? (
+                <Profile
+                  user={user}
+                  onAvatarChange={handleAvatarChange}
+                  onProfileUpdate={handleProfileUpdate}
+                  onPasswordChange={handlePasswordChange}
+                />
+              ) : (
+                <Home />
+              )
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              isAdmin ? (
+                <Admin
+                  users={users}
+                  vouchers={vouchers}
+                  produk={produk}
+                  checkouts={checkouts}
+                  returns={returns}
+                  cancellations={cancellations}
+                  onUpdateUser={handleUpdateUserByAdmin}
+                  onDeleteUser={handleDeleteUserByAdmin}
+                  onToggleBanUser={handleToggleBanUser}
+                  onAddVoucher={handleAddVoucher}
+                  onUpdateVoucher={handleUpdateVoucher}
+                  onDeleteVoucher={handleDeleteVoucher}
+                  onAddProduk={handleAddProduk}
+                  onUpdateProduk={handleUpdateProduk}
+                  onDeleteProduk={handleDeleteProduk}
+                  onUpdateOrderStatus={handleUpdateOrderStatus}
+                  onApproveReturn={handleApproveReturn}
+                  onRejectReturn={handleRejectReturn}
+                  onApproveCancellation={handleApproveCancellation}
+                  onRejectCancellation={handleRejectCancellation}
+                />
+              ) : (
+                <Home />
+              )
+            }
+          />
+          <Route
+            path="/laporan"
+            element={
+              isAdmin ? <LaporanPesanan checkouts={checkouts} /> : <Home />
+            }
+          />
+          <Route path="*" element={<Home />} />
+        </Routes>
+      </main>
+
       <Footer />
       <ProfileSlide
         isOpen={showProfile}
@@ -789,12 +757,47 @@ function App() {
         onLogin={handleLogin}
         onRegister={handleRegister}
         onLogout={handleLogout}
-        setActiveSection={(sectionName) =>
-          setPage({ name: sectionName, id: null })
-        }
       />
     </div>
   );
 }
+
+const ProductDetailWrapper = ({
+  produk,
+  reviews,
+  users,
+  user,
+  onAddToCart,
+  cartCount,
+}) => {
+  const { id } = useParams();
+  const selectedProduct = produk.find((p) => p._id === parseInt(id));
+  return (
+    <ProductDetail
+      product={selectedProduct}
+      reviews={reviews}
+      users={users}
+      user={user}
+      onAddToCart={onAddToCart}
+      cartCount={cartCount}
+    />
+  );
+};
+
+const ReviewWrapper = ({ produk, onAddReview }) => {
+  const { productId } = useParams();
+  const productToReview = produk.find((p) => p._id === parseInt(productId));
+  return <Review product={productToReview} onAddReview={onAddReview} />;
+};
+
+const PengembalianBarangWrapper = ({ checkouts, onSubmitReturn }) => {
+  const { orderId } = useParams();
+  const orderToReturn = checkouts.find(
+    (order) => order.id === parseInt(orderId)
+  );
+  return (
+    <PengembalianBarang order={orderToReturn} onSubmitReturn={onSubmitReturn} />
+  );
+};
 
 export default App;
