@@ -1,11 +1,5 @@
-import React, { useState } from "react";
-import {
-  Routes,
-  Route,
-  useNavigate,
-  useParams,
-} from "react-router-dom";
-
+import React, { useState, useEffect } from "react";
+import { Routes, Route, useNavigate, useParams } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import ProfileSlide from "./components/ProfileSlide";
 import Footer from "./components/Footer";
@@ -395,7 +389,7 @@ function App() {
     };
     setCheckouts([...checkouts, newCheckout]);
     setCart([]);
-    navigate("/pesanan"); 
+    navigate("/pesanan");
     return {
       success: true,
       message: "Checkout berhasil! Terima kasih telah berbelanja.",
@@ -417,7 +411,7 @@ function App() {
     setUser(userAccount);
     setIsAdmin(isAdminLogin);
     if (isAdminLogin) {
-      navigate("/admin"); 
+      navigate("/admin");
     }
     setShowProfile(false);
     return null;
@@ -438,7 +432,7 @@ function App() {
           : order
       )
     );
-    navigate("/pesanan"); 
+    navigate("/pesanan");
   };
 
   const handleAddReview = (reviewData) => {
@@ -450,7 +444,7 @@ function App() {
       date: new Date().toISOString().split("T")[0],
     };
     setReviews([...reviews, newReview]);
-    navigate("/pesanan"); 
+    navigate("/pesanan");
   };
 
   const handleRegister = (username, name, email, password, noTelp) => {
@@ -619,10 +613,11 @@ function App() {
     );
   };
 
+  const [allProducts, setAllProducts] = useState([]);
+
   return (
     <div className="min-h-screen bg-white">
       <Navbar setShowProfile={setShowProfile} user={user} isAdmin={isAdmin} />
-
       <main>
         <Routes>
           <Route path="/" element={<Home />} />

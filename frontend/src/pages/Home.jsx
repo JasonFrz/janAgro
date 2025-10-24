@@ -12,7 +12,7 @@ const Home = () => {
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-black mb-4">
               {" "}
-              Mengapa Memilih Jan Agro?{" "}
+              Mengapa Memilih Jan Agro?
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
               {" "}
