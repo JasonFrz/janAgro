@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const Users = require("./src/models/Users");
+const Users = require("../models/Users");
 const { hashPassword } = require("../functions/passwordHasing");
 const {
   registerSchema,
