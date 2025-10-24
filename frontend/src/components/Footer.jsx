@@ -1,5 +1,6 @@
 import { MapPin, Phone, Mail, Facebook, Instagram, Twitter, Youtube } from 'lucide-react';
 import React, { useState, useEffect } from "react";
+import { Link } from 'react-router-dom'; // Import Link
 import './Footer.css'
 import axios from "axios";
 
@@ -20,7 +21,6 @@ const Footer = () => {
     }
   };
 
-
   return (
     <footer className="bg-black text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -30,7 +30,7 @@ const Footer = () => {
             <div className="flex items-center mb-6">
               <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center mr-4">
                 <div className="w-8 h-8 bg-black rounded-full flex items-center justify-center">
-                  <img src="image/janAgro.png" alt="" />
+                  <img src="/image/janAgro.png" alt="logo" />
                 </div>
               </div>
               <span className="text-2xl font-light">Jan Agro Nusantara</span>
@@ -63,11 +63,11 @@ const Footer = () => {
             <ul className="space-y-3 text-sm text-gray-400">
              {produk.slice(0,6).map((p) => (
               <li key={p._id}>
-                <a href="#" className="hover:text-white transition-colors">{p.nama}</a>   
+                <Link to={`/product/${p._id}`} className="hover:text-white transition-colors">{p.nama}</Link>   
               </li>
               ))}
               <br />
-              <a href="#" className="hover:text-white transition-colors">Lihat Product Lainnya...</a>   
+              <Link to="/shop" className="hover:text-white transition-colors">Lihat Product Lainnya...</Link>   
             </ul>
           </div>
 
@@ -104,8 +104,8 @@ const Footer = () => {
             <div className="mt-6">
               <h4 className="font-medium mb-3">Support Links</h4>
               <ul className="space-y-2 text-sm text-gray-400">
-                <li><a href="#" className="hover:text-white transition-colors">Find a Warehouse</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Customer Support</a></li>
+                <li><Link to="/location" className="hover:text-white transition-colors">Find a Warehouse</Link></li>
+                <li><Link to="/about" className="hover:text-white transition-colors">Customer Support</Link></li>
                 <li><a href="#" className="hover:text-white transition-colors">Career Opportunities</a></li>
                 <li><a href="#" className="hover:text-white transition-colors">Press & Media</a></li>
               </ul>

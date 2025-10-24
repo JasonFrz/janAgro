@@ -33,7 +33,6 @@ function Admin({
   onRejectReturn,
   onApproveCancellation,
   onRejectCancellation,
-  setPage,
 }) {
   const [activeTab, setActiveTab] = useState("dashboard");
 
@@ -81,7 +80,6 @@ function Admin({
             onRejectReturn={onRejectReturn}
             onApproveCancellation={onApproveCancellation}
             onRejectCancellation={onRejectCancellation}
-            setPage={setPage}
           />
         );
       default:
@@ -102,7 +100,8 @@ function Admin({
                 : "hover:bg-gray-200"
             }`}
           >
-            <LayoutDashboard className="mr-2 h-5 w-5" /> Dashboard
+            {" "}
+            <LayoutDashboard className="mr-2 h-5 w-5" /> Dashboard{" "}
           </button>
           <button
             onClick={() => setActiveTab("users")}
@@ -112,7 +111,8 @@ function Admin({
                 : "hover:bg-gray-200"
             }`}
           >
-            <Users className="mr-2 h-5 w-5" /> Users
+            {" "}
+            <Users className="mr-2 h-5 w-5" /> Users{" "}
           </button>
           <button
             onClick={() => setActiveTab("produk")}
@@ -122,7 +122,8 @@ function Admin({
                 : "hover:bg-gray-200"
             }`}
           >
-            <Package className="mr-2 h-5 w-5" /> Produk
+            {" "}
+            <Package className="mr-2 h-5 w-5" /> Produk{" "}
           </button>
           <button
             onClick={() => setActiveTab("vouchers")}
@@ -132,7 +133,8 @@ function Admin({
                 : "hover:bg-gray-200"
             }`}
           >
-            <Ticket className="mr-2 h-5 w-5" /> Vouchers
+            {" "}
+            <Ticket className="mr-2 h-5 w-5" /> Vouchers{" "}
           </button>
           <button
             onClick={() => setActiveTab("settings")}
@@ -142,7 +144,8 @@ function Admin({
                 : "hover:bg-gray-200"
             }`}
           >
-            <ShoppingCart className="mr-2 h-5 w-5" /> Pesanan
+            {" "}
+            <ShoppingCart className="mr-2 h-5 w-5" /> Pesanan{" "}
           </button>
         </nav>
       </aside>
