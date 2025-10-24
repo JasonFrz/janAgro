@@ -1,11 +1,14 @@
 const express = require("express");
 const mongoose = require("mongoose");
 
-const ProductsSchema = new mongoose.Schema({
-  name: String,
-  price: Number,
-  stock: Number,
-  deskripsi: String,
-});
-
-module.exports = mongoose.model("Products", ProductsSchema);
+const Productschema = new mongoose.Schema(
+  {
+    name: { type: String, required: true },
+    kategori: { type: String, required: true },
+    harga: { type: Number, required: true },
+    deskripsi: { type: String, default: "" },
+    stok: { type: Number, default: 0 },
+  },
+  { timestamps: true }
+);
+module.exports = mongoose.model("Products", Productschema);

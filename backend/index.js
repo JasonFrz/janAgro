@@ -5,5 +5,7 @@ const port = 3000;
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-app.get("/", (req, res) => res.send("Hello World!"));
+const loginRegisterRoutes = require("./src/routes/routesLoginRegister");
+
+app.use("/api/auth", loginRegisterRoutes);
 app.listen(port, () => console.log(`Example app listening on port ${port}!`));
