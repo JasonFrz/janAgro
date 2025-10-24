@@ -1,5 +1,3 @@
-const mongoose = require("mongoose");
-require("dotenv").config();
 const Users = require("./src/models/Users");
 const { faker } = require("@faker-js/faker");
 const Products = require("./src/models/Products");
@@ -7,21 +5,17 @@ const Transactions = require("./src/models/Transactions");
 const Vouchers = require("./src/models/Vouchers");
 const Reviews = require("./src/models/Reviews");
 const { hashPassword } = require("./src/functions/passwordHasing");
-
-const uri = `${process.env.MONGO_URI}/${process.env.DB_NAME}`;
-console.log(uri);
+const {
+  connectDatabase,
+  disconnectDatabase,
+} = require("./src/database/database");
 
 faker.seed(23);
-
-async function connectDatabase() {
-  await mongoose.connect(uri);
-  console.log("Connected to MongoDB");
-}
 
 //password semuanya password123
 const createUser = async (role) => {
   console.log("Password semuanya password123");
-  const hashedPassword = hashPassword("password123");
+  const hashedPassword = await hashPassword("password123");
   return {
     username: faker.internet.username(),
     name: faker.person.fullName(),
@@ -59,7 +53,7 @@ async function createProducts() {
       stok: 50,
     },
     {
-      name: "Pestisida Organik Neem",
+      name: "Pestisida Organik Neem", 
       kategori: "Pupuk",
       harga: 12.0,
       deskripsi: "Pestisida alami dari ekstrak daun neem.",
@@ -115,7 +109,7 @@ async function seed() {
     console.error("Seeder error: ", error);
     process.exit(1);
   } finally {
-    await mongoose.disconnect();
+    await disconnectDatabase();
     console.log("Disconnected from MongoDB");
   }
 }
