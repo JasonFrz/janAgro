@@ -59,3 +59,6 @@ pids
 
 # Yarn Integrity file
 .yarn-integrity
+
+# Sensitive credentials
+backend/mongoDB_atlas.txt
