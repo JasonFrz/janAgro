@@ -1,2 +1,2 @@
-Password buat seeder password123
-ok thankyou -hans
+passwordnya semua akun password123
+sama buat .env ya biar backend e isa kerja, udh ada template e
