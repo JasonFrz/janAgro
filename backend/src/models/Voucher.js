@@ -1,7 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 
-const VouchersScehma = new mongoose.Schema(
+const VoucherScehma = new mongoose.Schema(
   {
     kode: { type: String, required: true },
     diskon: { type: Number, required: true },
@@ -10,4 +10,4 @@ const VouchersScehma = new mongoose.Schema(
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Vouchers", VouchersScehma);
+module.exports = mongoose.model("Voucher", VoucherScehma);

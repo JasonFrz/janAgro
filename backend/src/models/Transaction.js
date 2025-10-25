@@ -1,7 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 
-const TransactionsSchema = new mongoose.Schema({
+const TransactionSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: "Users", required: true },
   items: [
     {
@@ -19,4 +19,4 @@ const TransactionsSchema = new mongoose.Schema({
   },
 });
 
-module.exports = mongoose.model("Transactions", TransactionsSchema);
+module.exports = mongoose.model("Transaction", TransactionSchema);

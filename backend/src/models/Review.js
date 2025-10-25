@@ -1,7 +1,7 @@
 const express = require("express");
 const mongoose = require("mongoose");
 
-const ReviewsSchema = new mongoose.Schema({
+const ReviewSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: "Users", required: true },
   product: {
     type: mongoose.Schema.Types.ObjectId,
@@ -12,4 +12,4 @@ const ReviewsSchema = new mongoose.Schema({
   comment: { type: String, default: "" },
 });
 
-module.exports = mongoose.model("Reviews", ReviewsSchema);
+module.exports = mongoose.model("Review", ReviewSchema);

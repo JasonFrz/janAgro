@@ -1,9 +1,9 @@
-const Users = require("./src/models/Users");
+const User = require("./src/models/User");
 const { faker } = require("@faker-js/faker");
-const Products = require("./src/models/Products");
-const Transactions = require("./src/models/Transactions");
-const Vouchers = require("./src/models/Vouchers");
-const Reviews = require("./src/models/Reviews");
+const Product = require("./src/models/Product");
+const Transaction = require("./src/models/Transaction");
+const Voucher = require("./src/models/Voucher");
+const Review = require("./src/models/Review");
 const { hashPassword } = require("./src/functions/passwordHasing");
 const {
   connectDatabase,
@@ -83,24 +83,24 @@ async function createVouchers() {
 async function seed() {
   try {
     await connectDatabase();
-    await Users.deleteMany({});
-    await Products.deleteMany({});
-    await Transactions.deleteMany({});
-    await Vouchers.deleteMany({});
+    await User.deleteMany({});
+    await Product.deleteMany({});
+    await Transaction.deleteMany({});
+    await Voucher.deleteMany({});
     console.log("Table Users cleared");
     const adminUser = await createUser("admin");
-    await Users.create(adminUser);
+    await User.create(adminUser);
     const PemilikUser = await createUser("pemilik");
-    await Users.create(PemilikUser);
+    await User.create(PemilikUser);
     for (let i = 0; i < 10; i++) {
       const pengguna = await createUser("pengguna");
       console.log(pengguna);
-      await Users.create(pengguna);
+      await User.create(pengguna);
     }
     await createProducts();
     await createVouchers();
-    await Transactions.insertMany([]);
-    await Reviews.insertMany([]);
+    await Transaction.insertMany([]);
+    await Review.insertMany([]);
     console.log("berhasil menambah users");
     console.log("berhasil menambah transactions");
     console.log("berhasil menambah products");
