@@ -1,13 +1,15 @@
-const express = require("express");
 const mongoose = require("mongoose");
 
 const ProductSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
-    kategori: { type: String, required: true },
-    harga: { type: Number, required: true },
-    deskripsi: { type: String, default: "" },
-    stok: { type: Number, default: 0 },
+    category: { type: String, required: true },
+    price: { type: Number, required: true },
+    image: { type: String, default: "" },
+    description: { type: String, default: "" },
+    stock: { type: Number, default: 0 },
+    detail: { type: String, required: true },
+    rating: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

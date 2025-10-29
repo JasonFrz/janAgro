@@ -1,15 +1,22 @@
-const express = require("express");
 const mongoose = require("mongoose");
 
-const ReviewSchema = new mongoose.Schema({
-  user: { type: mongoose.Schema.Types.ObjectId, ref: "Users", required: true },
-  product: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Products",
-    required: true,
+const ReviewSchema = new mongoose.Schema(
+  {
+    user: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    product: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Product",
+      required: true,
+    },
+    rating: { type: Number, required: true, min: 1, max: 5 },
+    comment: { type: String, default: "" },
+    imageUrl: { type: String, default: "" },
   },
-  rating: { type: Number, required: true, min: 1, max: 5 },
-  comment: { type: String, default: "" },
-});
+  { timestamps: true }
+);
 
 module.exports = mongoose.model("Review", ReviewSchema);

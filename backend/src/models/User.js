@@ -1,4 +1,3 @@
-const express = require("express");
 const mongoose = require("mongoose");
 
 const UserSchema = new mongoose.Schema(
@@ -14,7 +13,7 @@ const UserSchema = new mongoose.Schema(
       {
         products: {
           type: mongoose.Schema.Types.ObjectId,
-          ref: "Products",
+          ref: "Product",
         },
         quantitas: {
           type: Number,
@@ -24,6 +23,8 @@ const UserSchema = new mongoose.Schema(
         },
       },
     ],
+    isBanned: { type: Boolean, default: false },
+    avatar: { type: String, default: null },
   },
   { timestamps: true }
 );
