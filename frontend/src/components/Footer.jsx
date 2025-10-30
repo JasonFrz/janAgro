@@ -14,8 +14,10 @@ const Footer = () => {
 
   const fetchProduk = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/Produk");
-      setProduk(res.data);
+      const res = await axios.get("http://localhost:3000/api/products/get-all-products");
+        if (res.data.success) {
+          setProduk(res.data.data);
+        }
     } catch (err) {
       console.error("Gagal fetch produk:", err);
     }
@@ -63,7 +65,7 @@ const Footer = () => {
             <ul className="space-y-3 text-sm text-gray-400">
              {produk.slice(0,6).map((p) => (
               <li key={p._id}>
-                <Link to={`/product/${p._id}`} className="hover:text-white transition-colors">{p.nama}</Link>   
+                <Link to={`/product/${p._id}`} className="hover:text-white transition-colors">{p.name}</Link>   
               </li>
               ))}
               <br />

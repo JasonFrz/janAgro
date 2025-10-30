@@ -31,28 +31,28 @@ const createUser = async (role) => {
   };
 };
 
-async function createReviews() {
-  const reviews = [
-    {
-      productId: 1,
-      userId: 1,
-      rating: 5,
-      comment:
-        "Pupuk terbaik! Tanaman saya tumbuh subur. Ini hasilnya setelah 2 minggu pemakaian.",
-      imageUrl:
-        "https://via.placeholder.com/400x300.png/A7D379/000000?text=Hasil+Panen",
-    },
-    {
-      productId: 3,
-      userId: 2,
-      rating: 4,
-      comment:
-        "Bibitnya tumbuh dengan baik, meskipun beberapa tidak berkecambah. Hasil tomatnya manis dan lezat.",
-      imageUrl: null,
-    },
-  ];
-  await Review.insertMany(reviews);
-}
+// async function createReviews() {
+//   const reviews = [
+//     {
+//       productId: 1,
+//       userId: 1,
+//       rating: 5,
+//       comment:
+//         "Pupuk terbaik! Tanaman saya tumbuh subur. Ini hasilnya setelah 2 minggu pemakaian.",
+//       imageUrl:
+//         "https://via.placeholder.com/400x300.png/A7D379/000000?text=Hasil+Panen",
+//     },
+//     {
+//       productId: 3,
+//       userId: 2,
+//       rating: 4,
+//       comment:
+//         "Bibitnya tumbuh dengan baik, meskipun beberapa tidak berkecambah. Hasil tomatnya manis dan lezat.",
+//       imageUrl: null,
+//     },
+//   ];
+//   await Review.insertMany(reviews);
+// }
 
 async function createProducts() {
   console.log("Membuat produk");
@@ -105,34 +105,34 @@ async function createProducts() {
   await Product.insertMany(products);
 }
 
-async function createVouchers() {
-  console.log("Membuat voucher");
-  const vouchers = [
-    {
-      kode: "HEMAT10",
-      diskon: 10,
-      tanggal_kadaluarsa: null,
-    },
-    {
-      kode: "JANAGRO50",
-      diskon: 50,
-      tanggal_kadaluarsa: new Date("2026-12-31"),
-    },
-  ];
-  await Voucher.insertMany(vouchers);
-}
+// async function createVouchers() {
+//   console.log("Membuat voucher");
+//   const vouchers = [
+//     {
+//       kode: "HEMAT10",
+//       diskon: 10,
+//       tanggal_kadaluarsa: null,
+//     },
+//     {
+//       kode: "JANAGRO50",
+//       diskon: 50,
+//       tanggal_kadaluarsa: new Date("2026-12-31"),
+//     },
+//   ];
+//   await Voucher.insertMany(vouchers);
+// }
 
-async function createCheckout() {
-  console.log("Membuat Checkout");
-}
+// async function createCheckout() {
+//   console.log("Membuat Checkout");
+// }
 
-async function createCancellation() {
-  console.log("Membuat cancellation");
-}
+// async function createCancellation() {
+//   console.log("Membuat cancellation");
+// }
 
-async function createCancellation() {
-  console.log("Membuat Checkout");
-}
+// async function createCancellation() {
+//   console.log("Membuat Checkout");
+// }
 
 async function seed() {
   try {

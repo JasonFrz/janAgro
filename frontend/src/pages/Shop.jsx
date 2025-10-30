@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { Link } from "react-router-dom";
 import {
   Search,
@@ -23,10 +24,29 @@ const Notification = ({ message, type }) => {
   );
 };
 
-const Shop = ({ produk = [], user, onAddToCart, cartCount }) => {
+const Shop = ({ user, onAddToCart, cartCount }) => {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [notification, setNotification] = useState(null);
+
+
+  const [produk, setProduk] = useState([]);
+
+  useEffect(() => {
+    fetchProduk();
+  }, []);
+
+  const fetchProduk = async () => {
+    try {
+      const res = await axios.get("http://localhost:3000/api/products/get-all-products");
+        if (res.data.success) {
+          setProduk(res.data.data);
+        }
+    } catch (err) {
+      console.error("Gagal fetch produk:", err);
+    }
+  };
+
 
   useEffect(() => {
     if (notification) {

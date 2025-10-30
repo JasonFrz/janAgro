@@ -33,7 +33,7 @@ const CheckoutSchema = new mongoose.Schema(
       required: true,
     },
     status: {
-      type: string,
+      type: String,
       enum: [
         "diproses",
         "dikirim",
