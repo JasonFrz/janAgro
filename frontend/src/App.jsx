@@ -23,7 +23,39 @@ function App() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [cart, setCart] = useState([]);
 
+  const API_URL = import.meta.env.VITE_API_URL;
+
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      const token = localStorage.getItem("token");
+      if (token) {
+        try {
+          const response = await fetch(`${API_URL}/auth/profile`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            setUser(data.user);
+            if (data.user.role === "admin") {
+              setIsAdmin(true);
+            }
+          } else {
+            // Token is invalid or expired
+            localStorage.removeItem("token");
+          }
+        } catch (error) {
+          console.error("Error fetching profile:", error);
+          localStorage.removeItem("token");
+        }
+      }
+    };
+    fetchUserProfile();
+  }, []);
 
   const [users, setUsers] = useState([
     {
@@ -350,7 +382,8 @@ function App() {
     { id: 2, orderId: 1006, reason: "Tidak sengaja melakukan pemesanan." },
   ]);
 
-  const handleAddToCart = (productId) => {
+ const handleAddToCart = (productId) => {
+    // This logic would be updated to call your backend
     setCart((prevCart) => {
       const existingItem = prevCart.find(
         (item) => item.productId === productId
@@ -396,32 +429,7 @@ function App() {
     };
   };
 
-  const handleLogin = (identifier, password) => {
-    const userAccount =
-      users.find((u) => u.email === identifier || u.username === identifier) ||
-      (adminUser.email === identifier || adminUser.username === identifier
-        ? adminUser
-        : null);
-    if (!userAccount)
-      return "Pengguna dengan email atau username tersebut tidak ditemukan.";
-    if (userAccount.password !== password)
-      return "Password yang Anda masukkan salah.";
-    if (userAccount.isBanned) return "Akun ini telah ditangguhkan.";
-    const isAdminLogin = userAccount.id === adminUser.id;
-    setUser(userAccount);
-    setIsAdmin(isAdminLogin);
-    if (isAdminLogin) {
-      navigate("/admin");
-    }
-    setShowProfile(false);
-    return null;
-  };
-
-  const handleLogout = () => {
-    setUser(null);
-    setIsAdmin(false);
-    navigate("/");
-  };
+  // --- handleLogin, handleRegister, and handleLogout logic moved to ProfileSlide.jsx ---
 
   const handleRequestReturn = (returnData) => {
     setReturns([...returns, { ...returnData, id: Date.now() }]);
@@ -447,30 +455,6 @@ function App() {
     navigate("/pesanan");
   };
 
-  const handleRegister = (username, name, email, password, noTelp) => {
-    const cleanUsername = username.trim().toLowerCase();
-    if (
-      users.find((u) => u.username === cleanUsername) ||
-      adminUser.username === cleanUsername
-    )
-      return "Username ini sudah digunakan.";
-    if (users.find((u) => u.email === email) || adminUser.email === email)
-      return "Email ini sudah terdaftar.";
-    const newUser = {
-      id: Date.now(),
-      username: cleanUsername,
-      name,
-      email,
-      password,
-      noTelp,
-      alamat: "",
-      joinDate: new Date().getFullYear().toString(),
-      avatar: null,
-      isBanned: false,
-    };
-    setUsers([...users, newUser]);
-    return null;
-  };
   const handleAvatarChange = (newAvatarUrl) => {
     if (!user) return;
     const updatedUser = { ...user, avatar: newAvatarUrl };
@@ -613,19 +597,20 @@ function App() {
     );
   };
 
-  const [allProducts, setAllProducts] = useState([]);
+  // const [allProducts, setAllProducts] = useState([]);
 
   return (
     <div className="min-h-screen bg-white">
       <Navbar setShowProfile={setShowProfile} user={user} isAdmin={isAdmin} />
       <main>
         <Routes>
+          
           <Route path="/" element={<Home />} />
           <Route
             path="/shop"
             element={
               <Shop
-                produk={produk}
+                // produk={produk} // This 'produk' state is now empty
                 user={user}
                 onAddToCart={handleAddToCart}
                 cartCount={cart.length}
@@ -749,9 +734,11 @@ function App() {
         isOpen={showProfile}
         onClose={() => setShowProfile(false)}
         user={user}
-        onLogin={handleLogin}
-        onRegister={handleRegister}
-        onLogout={handleLogout}
+        // --- Pass state setters to ProfileSlide ---
+        setUser={setUser}
+        setIsAdmin={setIsAdmin}
+        setShowProfile={setShowProfile}
+        API_URL={API_URL} // Pass the API URL
       />
     </div>
   );

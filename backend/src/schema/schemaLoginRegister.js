@@ -1,26 +1,40 @@
 const Joi = require("joi");
 
-const cartItemSchema = Joi.object({
-  prodcts: Joi.string().hex().length(24),
-  quantitas: Joi.number().integer().min(1),
-});
-
+// --- Schema for Register ---
 const registerSchema = Joi.object({
-  name: Joi.string().min(3).max(30).required(),
-  username: Joi.string().alphanum().min(3).max(30).required(),
-  password: Joi.string().min(5).max(20).required(),
-  email: Joi.string()
-    .email({ minDomainSegments: 2, tlds: { allow: ["com", "net"] } })
-    .required(),
-  alamat: Joi.string().required(),
-  no_telp: Joi.string().required(),
-  role: Joi.string().valid("pengguna", "admin", "pemilik").required(),
-  cart: Joi.array().items(cartItemSchema).optional(),
+  name: Joi.string().required().messages({
+    "string.empty": "Nama lengkap wajib diisi",
+  }),
+  username: Joi.string().required().messages({
+    "string.empty": "Username wajib diisi",
+  }),
+  email: Joi.string().email({ tlds: { allow: false } }).required().messages({
+    "string.empty": "Email wajib diisi",
+    "string.email": "Format email tidak valid",
+  }),
+  no_telp: Joi.string()
+    .pattern(/^[0-9]{8,15}$/)
+    .required()
+    .messages({
+      "string.empty": "Nomor telepon wajib diisi",
+      "string.pattern.base": "Nomor telepon harus antara 8 hingga 15 digit",
+    }),
+  password: Joi.string().min(6).required().messages({
+    "string.empty": "Password wajib diisi",
+    "string.min": "Password minimal 6 karakter",
+  }),
+  // This assumes 'confirmPassword' is only checked on the frontend
+  // and not sent to the backend. If you send it, add it here.
 });
 
+// --- Schema for Login ---
 const loginSchema = Joi.object({
-  username: Joi.string().alphanum().min(3).max(30).required(),
-  password: Joi.string().min(5).max(20).required(),
+  identifier: Joi.string().required().messages({
+    "string.empty": "Email atau username wajib diisi",
+  }),
+  password: Joi.string().required().messages({
+    "string.empty": "Password wajib diisi",
+  }),
 });
 
 module.exports = {
