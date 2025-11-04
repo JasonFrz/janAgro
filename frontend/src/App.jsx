@@ -28,6 +28,7 @@ function App() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Fetch user profile
     const fetchUserProfile = async () => {
       const token = localStorage.getItem("token");
       if (token) {
@@ -45,7 +46,6 @@ function App() {
               setIsAdmin(true);
             }
           } else {
-            // Token is invalid or expired
             localStorage.removeItem("token");
           }
         } catch (error) {
@@ -54,35 +54,40 @@ function App() {
         }
       }
     };
-    fetchUserProfile();
-  }, []);
 
-  const [users, setUsers] = useState([
-    {
-      id: 1,
-      username: "johndoe",
-      name: "John Doe",
-      email: "user@example.com",
-      password: "password123",
-      joinDate: "2023",
-      avatar: null,
-      isBanned: false,
-      noTelp: "81234567890",
-      alamat: "Jl. Merdeka No. 1, Jakarta Pusat, DKI Jakarta, 10110",
-    },
-    {
-      id: 2,
-      username: "janedoe",
-      name: "Jane Doe",
-      email: "jane@example.com",
-      password: "password456",
-      joinDate: "2024",
-      avatar: null,
-      isBanned: true,
-      noTelp: "89876543210",
-      alamat: "Jl. Mawar No. 5, Bandung, Jawa Barat, 40111",
-    },
-  ]);
+    // Fetch products
+    // --- (Inside App.jsx's useEffect) ---
+
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch(`${API_URL}/products`); 
+        if (response.ok) {
+          const data = await response.json();
+          
+          // --- THIS IS THE MOST IMPORTANT LOG ---
+          // --- WHAT DOES THIS SAY IN YOUR CONSOLE? ---
+          console.log("API response for products:", data); 
+
+          // This line assumes 'data' is an array [...]
+          // or an object { products: [...] }
+          setProduk(data.products || data); 
+        } else {
+          console.error("Failed to fetch products");
+          setProduk([]); // Set to empty on failure
+        }
+      } catch (error) {
+        console.error("Error fetching products:", error);
+        setProduk([]); // Set to empty on failure
+      }
+    };
+
+    fetchUserProfile();
+    fetchProducts();
+  }, []);
+    // You would also add functions here to fetch reviews, checkouts, etc.
+
+  const [users, setUsers] = useState([]);
+
   const [adminUser, setAdminUser] = useState({
     id: 99,
     username: "admin",
@@ -113,56 +118,7 @@ function App() {
       isActive: true,
     },
   ]);
-  const [produk, setProduk] = useState([
-    {
-      _id: 1,
-      name: "Organic Garden Booster",
-      category: "Pupuk",
-      price: 24.99,
-      image: "🌱",
-      description: "Premium organic fertilizer for all garden plants.",
-      rating: 4.8,
-      stock: 17,
-      detail:
-        "Pupuk organik premium untuk semua tanaman kebun, sangat bagus untuk meningkatkan kesuburan tanah dan hasil panen.",
-    },
-    {
-      _id: 2,
-      name: "Sekop Taman Pro",
-      category: "Alat",
-      price: 15.5,
-      image: "🛠️",
-      description: "Alat sekop tahan lama untuk kebutuhan berkebun.",
-      rating: 4.5,
-      stock: 8,
-      detail:
-        "Terbuat dari baja berkualitas tinggi, anti karat dan kokoh. Gagang ergonomis untuk kenyamanan maksimal.",
-    },
-    {
-      _id: 3,
-      name: "Bibit Tomat Cherry",
-      category: "Bibit",
-      price: 5.99,
-      image: "🍅",
-      description: "Bibit tomat cherry unggul, cepat berbuah.",
-      rating: 4.9,
-      stock: 50,
-      detail:
-        "Satu paket berisi 50 biji bibit tomat cherry pilihan. Tahan terhadap penyakit dan cocok untuk iklim tropis.",
-    },
-    {
-      _id: 4,
-      name: "Pestisida Organik Neem",
-      category: "Pupuk",
-      price: 12.0,
-      image: "🌿",
-      description: "Pestisida alami dari ekstrak daun neem.",
-      rating: 4.6,
-      stock: 0,
-      detail:
-        "Aman untuk tanaman dan lingkungan, efektif mengusir hama seperti kutu daun, ulat, dan tungau.",
-    },
-  ]);
+  const [produk, setProduk] = useState([]);
   const [reviews, setReviews] = useState([
     {
       id: 101,
@@ -382,45 +338,80 @@ function App() {
     { id: 2, orderId: 1006, reason: "Tidak sengaja melakukan pemesanan." },
   ]);
 
- const handleAddToCart = (productId) => {
-    // This logic would be updated to call your backend
+
+  
+
+const handleAddToCart = (productId) => {
+    // --- FIX ---
+    // If no productId is given, do nothing. This stops the crash.
+    if (!productId) {
+      console.error("handleAddToCart called with undefined productId");
+      return;
+    }
+    // --- END FIX ---
+
+    const productIdStr = productId.toString();
+
     setCart((prevCart) => {
       const existingItem = prevCart.find(
-        (item) => item.productId === productId
+        (item) => item.productId && item.productId.toString() === productIdStr
       );
+
       if (existingItem) {
         return prevCart.map((item) =>
-          item.productId === productId
+          item.productId && item.productId.toString() === productIdStr
             ? { ...item, quantity: item.quantity + 1 }
             : item
         );
       } else {
-        return [...prevCart, { productId, quantity: 1 }];
+        console.log("Adding new item to cart:", productId);
+        return [...prevCart, { productId: productId, quantity: 1 }];
       }
     });
     return "Produk ditambahkan ke keranjang!";
   };
-  const handleUpdateCartQuantity = (productId, newQuantity) => {
-    setCart(
-      cart.map((item) =>
-        item.productId === productId
+
+const handleUpdateCartQuantity = (productId, newQuantity) => {
+    // --- FIX ---
+    if (!productId) {
+      console.error("handleUpdateCartQuantity called with undefined productId");
+      return;
+    }
+    // --- END FIX ---
+
+    const productIdStr = productId.toString();
+
+    setCart((prevCart) =>
+      prevCart.map((item) =>
+        item.productId && item.productId.toString() === productIdStr
           ? { ...item, quantity: Math.max(0, newQuantity) }
           : item
       )
     );
   };
-  const handleRemoveFromCart = (productId) => {
-    setCart(cart.filter((item) => item.productId !== productId));
-  };
 
+
+const handleRemoveFromCart = (productId) => {
+    // --- FIX ---
+    if (!productId) {
+      console.error("handleRemoveFromCart called with undefined productId");
+      return;
+    }
+    // --- END FIX ---
+
+    const productIdStr = productId.toString();
+
+    setCart((prevCart) =>
+      prevCart.filter(
+        (item) =>
+          !item.productId || item.productId.toString() !== productIdStr
+      )
+    );
+  };
+  
   const handleCheckout = (checkoutData) => {
-    const newCheckout = {
-      ...checkoutData,
-      id: Date.now(),
-      tanggal: new Date().toISOString(),
-      status: "diproses",
-    };
-    setCheckouts([...checkouts, newCheckout]);
+    // This would be an API call
+    console.log("Checkout:", checkoutData);
     setCart([]);
     navigate("/pesanan");
     return {
@@ -604,16 +595,16 @@ function App() {
       <Navbar setShowProfile={setShowProfile} user={user} isAdmin={isAdmin} />
       <main>
         <Routes>
-          
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<Home API_URL={API_URL} />} />
           <Route
             path="/shop"
             element={
               <Shop
-                // produk={produk} // This 'produk' state is now empty
+                produk={produk}
                 user={user}
                 onAddToCart={handleAddToCart}
                 cartCount={cart.length}
+                API_URL={API_URL}
               />
             }
           />
@@ -623,10 +614,11 @@ function App() {
               <ProductDetailWrapper
                 produk={produk}
                 reviews={reviews}
-                users={users}
+                // users={users} // This data is not available yet
                 user={user}
                 onAddToCart={handleAddToCart}
                 cartCount={cart.length}
+                API_URL={API_URL}
               />
             }
           />
@@ -641,6 +633,7 @@ function App() {
                 onUpdateQuantity={handleUpdateCartQuantity}
                 onRemove={handleRemoveFromCart}
                 onCheckout={handleCheckout}
+                API_URL={API_URL}
               />
             }
           />
@@ -651,15 +644,20 @@ function App() {
                 checkouts={checkouts}
                 user={user}
                 reviews={reviews}
-                onConfirmFinished={handleConfirmOrderFinished}
-                onRequestCancellation={handleRequestCancellation}
+                // onConfirmFinished={handleConfirmOrderFinished}
+                // onRequestCancellation={handleRequestCancellation}
+                API_URL={API_URL}
               />
             }
           />
           <Route
             path="/review/:productId"
             element={
-              <ReviewWrapper produk={produk} onAddReview={handleAddReview} />
+              <ReviewWrapper
+                produk={produk}
+                // onAddReview={handleAddReview}
+                API_URL={API_URL}
+              />
             }
           />
           <Route
@@ -667,7 +665,8 @@ function App() {
             element={
               <PengembalianBarangWrapper
                 checkouts={checkouts}
-                onSubmitReturn={handleRequestReturn}
+                // onSubmitReturn={handleRequestReturn}
+                API_URL={API_URL}
               />
             }
           />
@@ -679,12 +678,13 @@ function App() {
               user ? (
                 <Profile
                   user={user}
-                  onAvatarChange={handleAvatarChange}
-                  onProfileUpdate={handleProfileUpdate}
-                  onPasswordChange={handlePasswordChange}
+                  // onAvatarChange={handleAvatarChange}
+                  // onProfileUpdate={handleProfileUpdate}
+                  // onPasswordChange={handlePasswordChange}
+                  API_URL={API_URL}
                 />
               ) : (
-                <Home />
+                <Home API_URL={API_URL} /> // Redirect to Home if no user
               )
             }
           />
@@ -693,39 +693,31 @@ function App() {
             element={
               isAdmin ? (
                 <Admin
-                  users={users}
+                  // users={users}
                   vouchers={vouchers}
                   produk={produk}
                   checkouts={checkouts}
-                  returns={returns}
-                  cancellations={cancellations}
-                  onUpdateUser={handleUpdateUserByAdmin}
-                  onDeleteUser={handleDeleteUserByAdmin}
-                  onToggleBanUser={handleToggleBanUser}
-                  onAddVoucher={handleAddVoucher}
-                  onUpdateVoucher={handleUpdateVoucher}
-                  onDeleteVoucher={handleDeleteVoucher}
-                  onAddProduk={handleAddProduk}
-                  onUpdateProduk={handleUpdateProduk}
-                  onDeleteProduk={handleDeleteProduk}
-                  onUpdateOrderStatus={handleUpdateOrderStatus}
-                  onApproveReturn={handleApproveReturn}
-                  onRejectReturn={handleRejectReturn}
-                  onApproveCancellation={handleApproveCancellation}
-                  onRejectCancellation={handleRejectCancellation}
+                  // returns={returns}
+                  // cancellations={cancellations}
+                  // ... (pass other admin props & handlers) ...
+                  API_URL={API_URL}
                 />
               ) : (
-                <Home />
+                <Home API_URL={API_URL} /> // Redirect to Home if not admin
               )
             }
           />
           <Route
             path="/laporan"
             element={
-              isAdmin ? <LaporanPesanan checkouts={checkouts} /> : <Home />
+              isAdmin ? (
+                <LaporanPesanan checkouts={checkouts} />
+              ) : (
+                <Home API_URL={API_URL} />
+              )
             }
           />
-          <Route path="*" element={<Home />} />
+          <Route path="*" element={<Home API_URL={API_URL} />} />
         </Routes>
       </main>
 
@@ -734,11 +726,10 @@ function App() {
         isOpen={showProfile}
         onClose={() => setShowProfile(false)}
         user={user}
-        // --- Pass state setters to ProfileSlide ---
         setUser={setUser}
         setIsAdmin={setIsAdmin}
         setShowProfile={setShowProfile}
-        API_URL={API_URL} // Pass the API URL
+        API_URL={API_URL}
       />
     </div>
   );
@@ -751,9 +742,22 @@ const ProductDetailWrapper = ({
   user,
   onAddToCart,
   cartCount,
+  API_URL,
 }) => {
   const { id } = useParams();
-  const selectedProduct = produk.find((p) => p._id === parseInt(id));
+  // Find product from the fetched list
+  const selectedProduct = produk.find((p) => p._id === id); 
+  
+  // You might need to add a check here if 'produk' is still loading
+  if (produk.length === 0) {
+    return <div>Loading product...</div>; // Or a loading spinner
+  }
+
+  // Handle if product not found (e.g., bad ID)
+  if (!selectedProduct) {
+     return <div>Product not found.</div>;
+  }
+  
   return (
     <ProductDetail
       product={selectedProduct}
@@ -762,24 +766,45 @@ const ProductDetailWrapper = ({
       user={user}
       onAddToCart={onAddToCart}
       cartCount={cartCount}
+      API_URL={API_URL}
     />
   );
 };
 
-const ReviewWrapper = ({ produk, onAddReview }) => {
+const ReviewWrapper = ({ produk, onAddReview, API_URL }) => {
   const { productId } = useParams();
-  const productToReview = produk.find((p) => p._id === parseInt(productId));
-  return <Review product={productToReview} onAddReview={onAddReview} />;
+  const productToReview = produk.find((p) => p._id === productId);
+
+  if (produk.length === 0) {
+    return <div>Loading product...</div>;
+  }
+
+  return (
+    <Review
+      product={productToReview}
+      onAddReview={onAddReview}
+      API_URL={API_URL}
+    />
+  );
 };
 
-const PengembalianBarangWrapper = ({ checkouts, onSubmitReturn }) => {
+const PengembalianBarangWrapper = ({ checkouts, onSubmitReturn, API_URL }) => {
   const { orderId } = useParams();
   const orderToReturn = checkouts.find(
     (order) => order.id === parseInt(orderId)
   );
+
+  if (checkouts.length === 0) {
+    return <div>Loading order...</div>;
+  }
+
   return (
-    <PengembalianBarang order={orderToReturn} onSubmitReturn={onSubmitReturn} />
+    <PengembalianBarang
+      order={orderToReturn}
+      onSubmitReturn={onSubmitReturn}
+      API_URL={API_URL}
+    />
   );
 };
 
-export default App;
+  export default App;

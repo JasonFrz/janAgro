@@ -118,10 +118,32 @@ const Cart = ({
     }
     if (error.includes("Nomor Telepon")) setError("");
   };
-  const cartDetails = cart.map((item) => ({
-    ...produk.find((p) => p._id === item.productId),
-    quantity: item.quantity,
-  }));
+  const cartDetails = cart
+    .map((item) => {
+      // Find the product safely
+      const product = produk.find(
+        (p) => p._id.toString() === item.productId.toString()
+      );
+
+      if (produk.length > 0) {
+        console.log("--- Cart Item Debug ---");
+        console.log("Looking for cart item ID:", item.productId.toString());
+        console.log("First product ID in state:", produk[0]._id.toString());
+        console.log("Does it match?", produk[0]._id.toString() === item.productId.toString());
+      }
+
+      // If product isn't found (e.g., still loading), return null
+      if (!product) {
+        return null;
+      }
+
+      // If found, return the merged object
+      return {
+        ...product,
+        quantity: item.quantity,
+      };
+    })
+    .filter(Boolean); // <-- This is key: it removes all null items
   const subtotal = cartDetails.reduce(
     (sum, item) => sum + (item.quantity > 0 ? item.price * item.quantity : 0),
     0
