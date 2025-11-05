@@ -52,7 +52,7 @@ const VoucherModal = ({ isOpen, onClose, onSave, voucher }) => {
       setError("Penggunaan maksimal harus berupa angka yang lebih dari 0.");
       return;
     }
-    onSave(isEditMode ? voucher.id : null, formData);
+    onSave(formData); 
     onClose();
   };
 

@@ -1,12 +1,34 @@
 const mongoose = require("mongoose");
 
-const VoucherScehma = new mongoose.Schema(
+const VoucherSchema = new mongoose.Schema(
   {
-    kode: { type: String, required: true },
-    diskon: { type: Number, required: true },
-    tanggal_kadaluarsa: { type: Date },
+    code: {
+      type: String,
+      required: true,
+      unique: true, // Setiap kode voucher harus unik
+      uppercase: true, // Simpan dalam huruf besar
+    },
+    discountPercentage: {
+      type: Number,
+      required: true,
+      min: 1,
+      max: 100,
+    },
+    maxUses: {
+      type: Number,
+      required: true,
+      min: 1,
+    },
+    currentUses: {
+      type: Number,
+      default: 0,
+    },
+    isActive: {
+      type: Boolean,
+      default: true,
+    },
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Voucher", VoucherScehma);
+module.exports = mongoose.model("Voucher", VoucherSchema);

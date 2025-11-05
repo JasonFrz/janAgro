@@ -22,15 +22,15 @@ function Voucher({ vouchers, onAdd, onUpdate, onDelete }) {
     setIsConfirmOpen(true);
   };
   const handleDelete = () => {
-    onDelete(voucherToDelete.id);
+    onDelete(voucherToDelete._id); // <-- Gunakan _id
     setIsConfirmOpen(false);
     setVoucherToDelete(null);
   };
-  const handleSaveVoucher = (voucherId, data) => {
-    if (voucherId) {
-      onUpdate(voucherId, data);
+  const handleSaveVoucher = (voucherData) => {
+    if (editingVoucher) {
+      onUpdate(editingVoucher._id, voucherData); // <-- Gunakan _id
     } else {
-      onAdd(data);
+      onAdd(voucherData);
     }
   };
 
@@ -86,7 +86,9 @@ function Voucher({ vouchers, onAdd, onUpdate, onDelete }) {
             <tbody className="bg-white divide-y divide-gray-200">
               {vouchers.length > 0 ? (
                 vouchers.map((voucher) => (
-                  <tr key={voucher.id}>
+                  <tr key={voucher._id}>
+                    {" "}
+                    {/* <-- Gunakan _id */}
                     <td className="px-6 py-4 whitespace-nowrap font-mono font-bold text-black">
                       {voucher.code}
                     </td>
@@ -143,3 +145,4 @@ function Voucher({ vouchers, onAdd, onUpdate, onDelete }) {
 }
 
 export default Voucher;
+                        

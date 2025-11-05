@@ -60,17 +60,17 @@ function App() {
 
     const fetchProducts = async () => {
       try {
-        const response = await fetch(`${API_URL}/products`); 
+        const response = await fetch(`${API_URL}/products`);
         if (response.ok) {
           const data = await response.json();
-          
+
           // --- THIS IS THE MOST IMPORTANT LOG ---
           // --- WHAT DOES THIS SAY IN YOUR CONSOLE? ---
-          console.log("API response for products:", data); 
+          console.log("API response for products:", data);
 
           // This line assumes 'data' is an array [...]
           // or an object { products: [...] }
-          setProduk(data.products || data); 
+          setProduk(data.products || data);
         } else {
           console.error("Failed to fetch products");
           setProduk([]); // Set to empty on failure
@@ -84,7 +84,7 @@ function App() {
     fetchUserProfile();
     fetchProducts();
   }, []);
-    // You would also add functions here to fetch reviews, checkouts, etc.
+  // You would also add functions here to fetch reviews, checkouts, etc.
 
   const [users, setUsers] = useState([]);
 
@@ -338,10 +338,7 @@ function App() {
     { id: 2, orderId: 1006, reason: "Tidak sengaja melakukan pemesanan." },
   ]);
 
-
-  
-
-const handleAddToCart = (productId) => {
+  const handleAddToCart = (productId) => {
     // --- FIX ---
     // If no productId is given, do nothing. This stops the crash.
     if (!productId) {
@@ -371,7 +368,7 @@ const handleAddToCart = (productId) => {
     return "Produk ditambahkan ke keranjang!";
   };
 
-const handleUpdateCartQuantity = (productId, newQuantity) => {
+  const handleUpdateCartQuantity = (productId, newQuantity) => {
     // --- FIX ---
     if (!productId) {
       console.error("handleUpdateCartQuantity called with undefined productId");
@@ -390,8 +387,7 @@ const handleUpdateCartQuantity = (productId, newQuantity) => {
     );
   };
 
-
-const handleRemoveFromCart = (productId) => {
+  const handleRemoveFromCart = (productId) => {
     // --- FIX ---
     if (!productId) {
       console.error("handleRemoveFromCart called with undefined productId");
@@ -403,12 +399,11 @@ const handleRemoveFromCart = (productId) => {
 
     setCart((prevCart) =>
       prevCart.filter(
-        (item) =>
-          !item.productId || item.productId.toString() !== productIdStr
+        (item) => !item.productId || item.productId.toString() !== productIdStr
       )
     );
   };
-  
+
   const handleCheckout = (checkoutData) => {
     // This would be an API call
     console.log("Checkout:", checkoutData);
@@ -495,32 +490,9 @@ const handleRemoveFromCart = (productId) => {
     setUsers(
       users.map((u) => (u.id === userId ? { ...u, isBanned: !u.isBanned } : u))
     );
-  const handleAddVoucher = (newData) => {
-    const newVoucher = {
-      ...newData,
-      id: Date.now(),
-      currentUses: 0,
-      discountPercentage: parseInt(newData.discountPercentage, 10),
-      maxUses: parseInt(newData.maxUses, 10),
-    };
-    setVouchers([...vouchers, newVoucher]);
-  };
-  const handleUpdateVoucher = (voucherId, updatedData) => {
-    setVouchers(
-      vouchers.map((v) =>
-        v.id === voucherId
-          ? {
-              ...v,
-              ...updatedData,
-              discountPercentage: parseInt(updatedData.discountPercentage, 10),
-              maxUses: parseInt(updatedData.maxUses, 10),
-            }
-          : v
-      )
-    );
-  };
-  const handleDeleteVoucher = (voucherId) =>
-    setVouchers(vouchers.filter((v) => v.id !== voucherId));
+  
+  
+             
 
   const handleConfirmOrderFinished = (orderId) => {
     setCheckouts(
@@ -528,7 +500,7 @@ const handleRemoveFromCart = (productId) => {
         order.id === orderId ? { ...order, status: "selesai" } : order
       )
     );
-  };
+  };            
   const handleApproveReturn = (orderId) => {
     setCheckouts(
       checkouts.map((order) =>
@@ -581,7 +553,7 @@ const handleRemoveFromCart = (productId) => {
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch(`${API_URL}/products/get-all-products`); 
+      const response = await fetch(`${API_URL}/products/get-all-products`);
       if (response.ok) {
         const result = await response.json();
         setProduk(result.data || []);
@@ -599,9 +571,9 @@ const handleRemoveFromCart = (productId) => {
   const handleAddProduk = async (newData) => {
     try {
       const response = await fetch(`${API_URL}/products/add-product`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
           // 'Authorization': `Bearer ${localStorage.getItem('token')}` // Jika perlu
         },
         body: JSON.stringify(newData),
@@ -623,20 +595,21 @@ const handleRemoveFromCart = (productId) => {
   // [UPDATE] Mengirim data produk yang diperbarui ke server
   const handleUpdateProduk = async (produkId, updatedData) => {
     try {
-      const response = await fetch(`${API_URL}/products/update-product/${produkId}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          // 'Authorization': `Bearer ${localStorage.getItem('token')}` // Jika perlu
-        },
-        body: JSON.stringify(updatedData),
-      });
+      const response = await fetch(
+        `${API_URL}/products/update-product/${produkId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            // 'Authorization': `Bearer ${localStorage.getItem('token')}` // Jika perlu
+          },
+          body: JSON.stringify(updatedData),
+        }
+      );
 
       const result = await response.json();
       if (response.ok) {
-        setProduk(
-          produk.map((p) => (p._id === produkId ? result.data : p))
-        );
+        setProduk(produk.map((p) => (p._id === produkId ? result.data : p)));
         alert(result.message);
       } else {
         alert(result.message || "Gagal memperbarui produk.");
@@ -650,12 +623,15 @@ const handleRemoveFromCart = (productId) => {
   // [DELETE] Menghapus produk dari server
   const handleDeleteProduk = async (produkId) => {
     try {
-      const response = await fetch(`${API_URL}/products/delete-product/${produkId}`, {
-        method: 'DELETE',
-        headers: {
-          // 'Authorization': `Bearer ${localStorage.getItem('token')}` // Jika perlu
-        },
-      });
+      const response = await fetch(
+        `${API_URL}/products/delete-product/${produkId}`,
+        {
+          method: "DELETE",
+          headers: {
+            // 'Authorization': `Bearer ${localStorage.getItem('token')}` // Jika perlu
+          },
+        }
+      );
 
       const result = await response.json();
       if (response.ok) {
@@ -670,12 +646,91 @@ const handleRemoveFromCart = (productId) => {
     }
   };
 
+  const fetchVouchers = async () => {
+    try {
+      const response = await fetch(`${API_URL}/vouchers/get-all-vouchers`);
+      if (response.ok) {
+        const result = await response.json();
+        setVouchers(result.data || []);
+      } else {
+        console.error("Gagal mengambil data voucher");
+      }
+    } catch (error) {
+      console.error("Error saat mengambil data voucher:", error);
+    }
+  };
+
+  const handleAddVoucher = async (voucherData) => {
+    try {
+      const response = await fetch(`${API_URL}/vouchers/add-voucher`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(voucherData),
+      });
+      const result = await response.json();
+      if (response.ok) {
+        setVouchers([result.data, ...vouchers]); // Tambahkan di awal array
+        alert(result.message);
+      } else {
+        alert(result.message || "Gagal menambahkan voucher.");
+      }
+    } catch (error) {
+      alert("Terjadi kesalahan pada server.");
+    }
+  };
+
+  const handleUpdateVoucher = async (voucherId, updatedData) => {
+    try {
+      const response = await fetch(
+        `${API_URL}/vouchers/update-voucher/${voucherId}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updatedData),
+        }
+      );
+      const result = await response.json();
+      if (response.ok) {
+        setVouchers(
+          vouchers.map((v) => (v._id === voucherId ? result.data : v))
+        );
+        alert(result.message);
+      } else {
+        alert(result.message || "Gagal memperbarui voucher.");
+      }
+    } catch (error) {
+      alert("Terjadi kesalahan pada server.");
+    }
+  };
+
+  // [DELETE] Menghapus voucher
+  const handleDeleteVoucher = async (voucherId) => {
+    try {
+      const response = await fetch(
+        `${API_URL}/vouchers/delete-voucher/${voucherId}`,
+        {
+          method: "DELETE",
+        }
+      );
+      const result = await response.json();
+      if (response.ok) {
+        setVouchers(vouchers.filter((v) => v._id !== voucherId));
+        alert(result.message);
+      } else {
+        alert(result.message || "Gagal menghapus voucher.");
+      }
+    } catch (error) {
+      alert("Terjadi kesalahan pada server.");
+    }
+  };
+
   // useEffect untuk memuat data saat komponen pertama kali dirender
   useEffect(() => {
     // fetchUserProfile(); // Panggil fungsi untuk mengambil data user
+    fetchVouchers();
     fetchProducts();
   }, []);
-  
+
   return (
     <div className="min-h-screen bg-white">
       <Navbar setShowProfile={setShowProfile} user={user} isAdmin={isAdmin} />
@@ -781,13 +836,16 @@ const handleRemoveFromCart = (productId) => {
                 <Admin
                   // users={users}
                   vouchers={vouchers}
+                  onAddVoucher={handleAddVoucher}
+                  onUpdateVoucher={handleUpdateVoucher}
+                  onDeleteVoucher={handleDeleteVoucher}
                   produk={produk}
                   checkouts={checkouts}
                   // returns={returns}
                   // cancellations={cancellations}
                   // ... (pass other admin props & handlers) ..
                   // .
-                   onAddProduk={handleAddProduk}
+                  onAddProduk={handleAddProduk}
                   onUpdateProduk={handleUpdateProduk}
                   onDeleteProduk={handleDeleteProduk}
                   API_URL={API_URL}
@@ -836,8 +894,8 @@ const ProductDetailWrapper = ({
 }) => {
   const { id } = useParams();
   // Find product from the fetched list
-  const selectedProduct = produk.find((p) => p._id === id); 
-  
+  const selectedProduct = produk.find((p) => p._id === id);
+
   // You might need to add a check here if 'produk' is still loading
   if (produk.length === 0) {
     return <div>Loading product...</div>; // Or a loading spinner
@@ -845,9 +903,9 @@ const ProductDetailWrapper = ({
 
   // Handle if product not found (e.g., bad ID)
   if (!selectedProduct) {
-     return <div>Product not found.</div>;
+    return <div>Product not found.</div>;
   }
-  
+
   return (
     <ProductDetail
       product={selectedProduct}
@@ -897,4 +955,4 @@ const PengembalianBarangWrapper = ({ checkouts, onSubmitReturn, API_URL }) => {
   );
 };
 
-  export default App;
+export default App;

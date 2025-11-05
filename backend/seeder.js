@@ -53,7 +53,35 @@ const createUser = async (role) => {
 //   ];
 //   await Review.insertMany(reviews);
 // }
+async function createVouchers() {
+  console.log("Membuat voucher");
+  const vouchers = [
+    {
+      code: "HEMAT10",
+      discountPercentage: 10,
+      maxUses: 100,
+      currentUses: 25,
+      isActive: true,
+    },
+    {
+      code: "JANAGRO50",
+      discountPercentage: 50,
+      maxUses: 20,
+      currentUses: 19,
+      isActive: true,
+    },
+    {
+      code: "DISKONBARU",
+      discountPercentage: 15,
+      maxUses: 200,
+      isActive: false, // Contoh voucher tidak aktif
+    },
+  ];
+  await Voucher.insertMany(vouchers);
+}
 
+
+   
 async function createProducts() {
   console.log("Membuat produk");
   const products = [
