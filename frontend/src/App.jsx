@@ -521,18 +521,7 @@ const handleRemoveFromCart = (productId) => {
   };
   const handleDeleteVoucher = (voucherId) =>
     setVouchers(vouchers.filter((v) => v.id !== voucherId));
-  const handleAddProduk = (newData) => {
-    const newProduk = { ...newData, _id: Date.now() };
-    setProduk([...produk, newProduk]);
-  };
-  const handleUpdateProduk = (produkId, updatedData) => {
-    setProduk(
-      produk.map((p) => (p._id === produkId ? { ...p, ...updatedData } : p))
-    );
-  };
-  const handleDeleteProduk = (produkId) => {
-    setProduk(produk.filter((p) => p._id !== produkId));
-  };
+
   const handleConfirmOrderFinished = (orderId) => {
     setCheckouts(
       checkouts.map((order) =>
@@ -590,6 +579,103 @@ const handleRemoveFromCart = (productId) => {
 
   // const [allProducts, setAllProducts] = useState([]);
 
+  const fetchProducts = async () => {
+    try {
+      const response = await fetch(`${API_URL}/products/get-all-products`); 
+      if (response.ok) {
+        const result = await response.json();
+        setProduk(result.data || []);
+      } else {
+        console.error("Gagal mengambil data produk");
+        setProduk([]);
+      }
+    } catch (error) {
+      console.error("Error saat mengambil data produk:", error);
+      setProduk([]);
+    }
+  };
+
+  // [CREATE] Mengirim data produk baru ke server
+  const handleAddProduk = async (newData) => {
+    try {
+      const response = await fetch(`${API_URL}/products/add-product`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          // 'Authorization': `Bearer ${localStorage.getItem('token')}` // Jika perlu
+        },
+        body: JSON.stringify(newData),
+      });
+
+      const result = await response.json();
+      if (response.ok) {
+        setProduk([...produk, result.data]);
+        alert(result.message);
+      } else {
+        alert(result.message || "Gagal menambahkan produk.");
+      }
+    } catch (error) {
+      console.error("Error saat menambahkan produk:", error);
+      alert("Terjadi kesalahan pada server.");
+    }
+  };
+
+  // [UPDATE] Mengirim data produk yang diperbarui ke server
+  const handleUpdateProduk = async (produkId, updatedData) => {
+    try {
+      const response = await fetch(`${API_URL}/products/update-product/${produkId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          // 'Authorization': `Bearer ${localStorage.getItem('token')}` // Jika perlu
+        },
+        body: JSON.stringify(updatedData),
+      });
+
+      const result = await response.json();
+      if (response.ok) {
+        setProduk(
+          produk.map((p) => (p._id === produkId ? result.data : p))
+        );
+        alert(result.message);
+      } else {
+        alert(result.message || "Gagal memperbarui produk.");
+      }
+    } catch (error) {
+      console.error("Error saat memperbarui produk:", error);
+      alert("Terjadi kesalahan pada server.");
+    }
+  };
+
+  // [DELETE] Menghapus produk dari server
+  const handleDeleteProduk = async (produkId) => {
+    try {
+      const response = await fetch(`${API_URL}/products/delete-product/${produkId}`, {
+        method: 'DELETE',
+        headers: {
+          // 'Authorization': `Bearer ${localStorage.getItem('token')}` // Jika perlu
+        },
+      });
+
+      const result = await response.json();
+      if (response.ok) {
+        setProduk(produk.filter((p) => p._id !== produkId));
+        alert(result.message);
+      } else {
+        alert(result.message || "Gagal menghapus produk.");
+      }
+    } catch (error) {
+      console.error("Error saat menghapus produk:", error);
+      alert("Terjadi kesalahan pada server.");
+    }
+  };
+
+  // useEffect untuk memuat data saat komponen pertama kali dirender
+  useEffect(() => {
+    // fetchUserProfile(); // Panggil fungsi untuk mengambil data user
+    fetchProducts();
+  }, []);
+  
   return (
     <div className="min-h-screen bg-white">
       <Navbar setShowProfile={setShowProfile} user={user} isAdmin={isAdmin} />
@@ -699,7 +785,11 @@ const handleRemoveFromCart = (productId) => {
                   checkouts={checkouts}
                   // returns={returns}
                   // cancellations={cancellations}
-                  // ... (pass other admin props & handlers) ...
+                  // ... (pass other admin props & handlers) ..
+                  // .
+                   onAddProduk={handleAddProduk}
+                  onUpdateProduk={handleUpdateProduk}
+                  onDeleteProduk={handleDeleteProduk}
                   API_URL={API_URL}
                 />
               ) : (

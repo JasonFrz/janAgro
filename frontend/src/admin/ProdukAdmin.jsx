@@ -14,10 +14,12 @@ function ProdukAdmin({
     category: "",
     price: "",
     stock: "",
-    image: "", 
+    image: "",
+    description: "",
+    detail: "",
   });
   const [editingId, setEditingId] = useState(null);
-  const [isGalleryOpen, setIsGalleryOpen] = useState(false); 
+  const [isGalleryOpen, setIsGalleryOpen] = useState(false);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -27,14 +29,10 @@ function ProdukAdmin({
     }
     
     const produkData = {
-      name: form.name,
-      category: form.category,
+      ...form,
       price: Number(form.price),
       stock: Number(form.stock),
-      image: form.image, 
-      description: "Deskripsi produk baru.",
       rating: 0,
-      detail: "Detail produk baru.",
     };
 
     if (editingId) {
@@ -46,7 +44,7 @@ function ProdukAdmin({
   };
 
   const handleCancel = () => {
-    setForm({ name: "", category: "", price: "", stock: "", image: "" });
+    setForm({ name: "", category: "", price: "", stock: "", image: "", description: "", detail: "" });
     setEditingId(null);
   };
 
@@ -65,15 +63,19 @@ function ProdukAdmin({
       category: p.category,
       price: p.price,
       stock: p.stock,
-      image: p.image || '📦', 
+      image: p.image || '📦',
+      description: p.description || '',
+      detail: p.detail || '',
     });
     setEditingId(p._id);
   };
 
   const handleImageSelect = (selectedImage) => {
     setForm({ ...form, image: selectedImage });
-    setIsGalleryOpen(false); 
+    setIsGalleryOpen(false);
   };
+
+  const isFormInvalid = !form.name || !form.category || !form.image || !form.detail || form.price <= 0 || form.stock < 0;
 
   return (
     <>
@@ -97,18 +99,14 @@ function ProdukAdmin({
               className="w-full p-2 border rounded"
               required
             >
-              <option value="" disabled>
-                Pilih Kategori Produk
-              </option>
+              <option value="" disabled>Pilih Kategori Produk</option>
               <option value="Pupuk">Pupuk</option>
               <option value="Alat">Alat</option>
               <option value="Bibit">Bibit</option>
             </select>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Gambar Produk
-              </label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Gambar Produk</label>
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 flex items-center justify-center border rounded-md bg-gray-100 text-4xl">
                   {form.image ? form.image : "?"}
@@ -122,17 +120,29 @@ function ProdukAdmin({
                 </button>
               </div>
             </div>
+            
+            <textarea
+              placeholder="Deskripsi Singkat Produk"
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+              className="w-full p-2 border rounded"
+              rows="3"
+            />
+            
+            <textarea
+              placeholder="Detail Lengkap Produk (Wajib diisi)"
+              value={form.detail}
+              onChange={(e) => setForm({ ...form, detail: e.target.value })}
+              className="w-full p-2 border rounded"
+              rows="5"
+              required
+            />
 
             <input
               type="number"
               placeholder="Harga"
               value={form.price}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  price: Math.max(0, Number(e.target.value)),
-                })
-              }
+              onChange={(e) => setForm({ ...form, price: Math.max(0, Number(e.target.value))})}
               className="w-full p-2 border rounded"
               required
             />
@@ -140,23 +150,16 @@ function ProdukAdmin({
               type="number"
               placeholder="Stok"
               value={form.stock}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  stock: Math.max(0, Number(e.target.value)),
-                })
-              }
+              onChange={(e) => setForm({ ...form, stock: Math.max(0, Number(e.target.value))})}
               className="w-full p-2 border rounded"
               required
             />
             <div className="flex space-x-2">
               <button
                 type="submit"
-                disabled={!form.name || !form.category || !form.image || form.price < 0 || form.stock < 0}
+                disabled={isFormInvalid}
                 className={`bg-green-600 text-white px-4 py-2 rounded flex items-center ${
-                  !form.name || !form.category || !form.image || form.price < 0 || form.stock < 0
-                    ? "opacity-50 cursor-not-allowed"
-                    : "hover:bg-green-700"
+                  isFormInvalid ? "opacity-50 cursor-not-allowed" : "hover:bg-green-700"
                 }`}
               >
                 <Plus className="mr-2 h-4 w-4" />
@@ -168,12 +171,8 @@ function ProdukAdmin({
                   onClick={handleCancel}
                   className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500 flex items-center"
                 >
-                  <img
-                    src="/icon/remove.png"
-                    alt="Cancel"
-                    className="w-4 h-4 mr-2"
-                  />
-                  Cancel
+                  <X className="w-4 h-4 mr-2" />
+                  Batal
                 </button>
               )}
             </div>
@@ -183,10 +182,9 @@ function ProdukAdmin({
         <div className="bg-white shadow rounded-lg p-6">
           <h2 className="text-xl font-semibold mb-4">Daftar Produk</h2>
           {produk.length === 0 ? (
-            <p className="text-gray-500">Belum ada produk</p>
+            <p className="text-gray-500">Belum ada produk atau sedang memuat...</p>
           ) : (
             <div className="overflow-x-auto max-h-96 overflow-y-auto">
-              {" "}
               <table className="w-full border-collapse">
                 <thead className="sticky top-0 bg-gray-100 z-10">
                   <tr>
@@ -202,31 +200,15 @@ function ProdukAdmin({
                     <tr key={p._id} className="border-t">
                       <td className="p-2 border">{p.name}</td>
                       <td className="p-2 border">{p.category}</td>
-                      <td className="p-2 border">
-                        Rp {p.price.toLocaleString("id-ID")}
-                      </td>
+                      <td className="p-2 border">Rp {p.price.toLocaleString("id-ID")}</td>
                       <td className="p-2 border">{p.stock}</td>
                       <td className="p-2 border flex space-x-2">
-                        <button
-                          onClick={() => handleEdit(p)}
-                          className="text-blue-600 hover:underline flex items-center"
-                        >
-                          <img
-                            src="/icon/edit.png"
-                            alt="Edit"
-                            className="w-4 h-4 mr-1"
-                          />
+                        <button onClick={() => handleEdit(p)} className="text-blue-600 hover:underline flex items-center">
+                          <img src="/icon/edit.png" alt="Edit" className="w-4 h-4 mr-1"/>
                           Edit
                         </button>
-                        <button
-                          onClick={() => handleDelete(p._id, p.name)}
-                          className="text-red-600 hover:underline flex items-center"
-                        >
-                          <img
-                            src="/icon/delete.png"
-                            alt="Hapus"
-                            className="w-4 h-4 mr-1"
-                          />
+                        <button onClick={() => handleDelete(p._id, p.name)} className="text-red-600 hover:underline flex items-center">
+                          <img src="/icon/delete.png" alt="Hapus" className="w-4 h-4 mr-1"/>
                           Hapus
                         </button>
                       </td>
