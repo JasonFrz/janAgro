@@ -611,25 +611,7 @@ const ProfileSlide = ({
         <p className="text-gray-600">{user?.email}</p>
         <p className="text-sm text-gray-500">Member since {user?.joinDate}</p>
       </div>
-      <div className="bg-gray-50 rounded-lg p-6">
-        <h4 className="font-semibold mb-4 text-gray-900">
-          Account Information
-        </h4>
-        <div className="space-y-3">
-          <div className="flex justify-between items-center">
-            <span className="text-gray-600">Status</span>
-            <span className="text-green-600 font-medium">Active</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-gray-600">Membership Type</span>
-            <span className="font-medium">Premium</span>
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-gray-600">Points</span>
-            <span className="font-medium">1,250</span>
-          </div>
-        </div>
-      </div>
+    
       <div className="space-y-3">
         <button
           onClick={handleAccountSettingsClick}
@@ -644,27 +626,7 @@ const ProfileSlide = ({
           <LogOut size={16} /> <span>Logout</span>
         </button>
       </div>
-      <div className="pt-6 border-t">
-        <h4 className="font-semibold mb-3">Your Benefits:</h4>
-        <ul className="space-y-2 text-sm text-gray-600">
-          <li className="flex items-center space-x-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            <span>Priority customer support</span>
-          </li>
-          <li className="flex items-center space-x-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            <span>Exclusive offers and discounts</span>
-          </li>
-          <li className="flex items-center space-x-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            <span>Service history tracking</span>
-          </li>
-          <li className="flex items-center space-x-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            <span>Early access to new models</span>
-          </li>
-        </ul>
-      </div>
+    
     </div>
   );
 

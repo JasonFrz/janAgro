@@ -27,18 +27,12 @@ const About = () => {
       description:
         "Mendorong praktik pertanian ramah lingkungan untuk menjaga keseimbangan alam dan kesejahteraan petani.",
     },
-    {
-      title: "Kemitraan",
-      icon: "🤝",
-      description:
-        "Membangun hubungan jangka panjang dengan petani dan mitra usaha di seluruh Indonesia.",
-    },
+    
   ];
 
   return (
     <div className="min-h-screen bg-white pt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Header */}
         <div className="text-center py-20">
           <h1 className="text-6xl font-light text-black mb-6">
             Tentang <span className="font-bold">PT. Jan Agro Nusantara</span>
@@ -53,7 +47,6 @@ const About = () => {
           </p>
         </div>
 
-        {/* Journey */}
         <div className="py-20 bg-gray-50 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto">
             <h2 className="text-4xl font-light text-center text-black mb-4">
@@ -93,7 +86,6 @@ const About = () => {
           </div>
         </div>
 
-        {/* Values */}
         <div className="py-20">
           <h2 className="text-4xl font-light text-center text-black mb-4">
             Nilai <span className="font-bold">Perusahaan</span>
@@ -121,17 +113,17 @@ const About = () => {
         </div>
 
         {/* Mission */}
-        <div className="py-20 bg-black text-white -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
+        <div className="py-20 bg-whwite text-black -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-4xl font-light mb-6">
-              Visi & <span className="font-bold">Misi</span>
+               <span className="font-bold">Visi & Misi</span>
             </h2>
             <p className="text-xl leading-relaxed font-light mb-8">
               “Menjadi perusahaan pupuk organik terpercaya yang mendukung
               pertanian berkelanjutan dan meningkatkan kesejahteraan petani di
               seluruh Indonesia.”
             </p>
-            <p className="text-lg text-gray-300 leading-relaxed">
+            <p className="text-lg leading-relaxed">
               Kami berkomitmen untuk menyediakan produk berkualitas tinggi,
               ramah lingkungan, dan sesuai kebutuhan pasar modern.
             </p>
