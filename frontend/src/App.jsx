@@ -362,6 +362,7 @@ useEffect(() => {
       if (response.data.success) {
         // Kosongkan keranjang di frontend
         setCart([]);
+        fetchVouchers();
         // Tambahkan pesanan baru ke daftar pesanan di frontend
         setCheckouts(prevCheckouts => [response.data.data, ...prevCheckouts]);
         

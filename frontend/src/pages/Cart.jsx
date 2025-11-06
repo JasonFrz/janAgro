@@ -125,15 +125,33 @@ const Cart = ({
     if (error.includes("Nomor Telepon")) setError("");
   };
 
+// File: Cart.jsx
+
 const cartDetails = cart
-  .filter(item => item.productId) 
   .map((item) => {
+    let productData;
+
+    // Cek apakah productId adalah objek (sudah di-populate)
+    if (item.productId && typeof item.productId === 'object') {
+      productData = item.productId;
+    } 
+    // Jika bukan objek, berarti itu string ID. Cari di prop 'produk'.
+    else if (item.productId) {
+      productData = produk.find(p => p._id === item.productId);
+    }
+
+    // Jika setelah semua usaha produk tidak ditemukan, jangan render item ini.
+    if (!productData) {
+      return null;
+    }
+
+    // Gabungkan data produk yang ditemukan dengan kuantitas dari keranjang.
     return {
-      ...item.productId,
+      ...productData,
       quantity: item.quantity,
-      price: item.productId.price || 0, 
     };
-  });
+  })
+  .filter(Boolean); // <-- Ini akan menghapus semua item yang 'null'
 
   const subtotal = cartDetails.reduce(
     (sum, item) => sum + item.price * item.quantity,

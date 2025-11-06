@@ -1,16 +1,11 @@
-// File: routes/checkoutRoutes.js
 
 const express = require("express");
 const router = express.Router();
-const Checkout = require("../models/Checkout"); // Pastikan path ke model Checkout benar
-const Cart = require("../models/Carts"); // Kita butuh ini untuk mengosongkan keranjang
+const Checkout = require("../models/Checkout");
+const Cart = require("../models/Carts");
+const Voucher = require("../models/Voucher");
 const { authenticateToken } = require("../middleware/authenticate");
 
-/**
- * @route   POST /api/checkouts/create
- * @desc    Membuat pesanan baru dari keranjang
- * @access  Private
- */
 router.post("/create", authenticateToken, async (req, res) => {
   try {
     const userId = req.user.id;
@@ -27,19 +22,32 @@ router.post("/create", authenticateToken, async (req, res) => {
       metodePembayaran,
     } = req.body;
 
-    // Validasi sederhana
     if (!items || items.length === 0) {
       return res.status(400).json({ success: false, message: "Tidak ada item untuk di-checkout." });
     }
 
-    // Buat pesanan baru
+      if (kodeVoucher) {
+      console.log(`Processing checkout with voucher code: ${kodeVoucher}`); // <-- Tambahkan log ini untuk debug
+
+      const voucherToUpdate = await Voucher.findOne({ code: kodeVoucher });
+
+      if (voucherToUpdate && voucherToUpdate.isActive && voucherToUpdate.currentUses < voucherToUpdate.maxUses) {
+        console.log(`Voucher found: ${voucherToUpdate.code}. Incrementing usage.`); // <-- Tambahkan log ini
+        voucherToUpdate.currentUses += 1;
+        await voucherToUpdate.save();
+      } else {
+        console.log(`Voucher "${kodeVoucher}" is invalid or expired.`); // <-- Tambahkan log ini
+        return res.status(400).json({ success: false, message: "Voucher yang digunakan sudah tidak valid atau telah habis." });
+      }
+    }
+
     const newCheckout = new Checkout({
       userId,
       nama,
       alamat,
       noTelpPenerima,
-      items: items.map(item => ({ // Pastikan struktur item sesuai dengan skema
-        product: item._id, // Ambil _id dari item
+      items: items.map(item => ({ 
+        product: item._id,
         name: item.name,
         image: item.image,
         quantity: item.quantity,
@@ -47,7 +55,7 @@ router.post("/create", authenticateToken, async (req, res) => {
       })),
       subtotal,
       diskon,
-      kodeVoucher, // Ini seharusnya ID voucher, bukan kode. Perlu disesuaikan jika ingin menyimpan referensi.
+      kodeVoucher, 
       kurir,
       totalHarga,
       metodePembayaran,
@@ -55,7 +63,6 @@ router.post("/create", authenticateToken, async (req, res) => {
 
     await newCheckout.save();
 
-    // Kosongkan keranjang user setelah checkout berhasil
     await Cart.findOneAndUpdate({ userId }, { $set: { items: [] } });
 
     res.status(201).json({
@@ -70,11 +77,6 @@ router.post("/create", authenticateToken, async (req, res) => {
   }
 });
 
-/**
- * @route   GET /api/checkouts
- * @desc    Mendapatkan riwayat pesanan untuk pengguna yang login
- * @access  Private
- */
 router.get("/", authenticateToken, async (req, res) => {
     try {
         const userId = req.user.id;

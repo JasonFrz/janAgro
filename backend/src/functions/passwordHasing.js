@@ -1,17 +1,15 @@
 const bcrypt = require("bcryptjs");
 
-// Function to hash a password
 const hashPassword = async (password) => {
   try {
-    const salt = await bcrypt.genSalt(10); // Generate a salt
-    const hashedPassword = await bcrypt.hash(password, salt); // Hash the password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt); 
     return hashedPassword;
   } catch (error) {
     throw new Error("Error hashing password");
   }
 };
 
-// Function to compare a password with a hash
 const comparePassword = async (password, hashedPassword) => {
   try {
     // 'password' is the plain text from the user
