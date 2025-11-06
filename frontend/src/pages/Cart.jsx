@@ -38,7 +38,6 @@ const Notification = ({ message, type, onClose }) => {
   );
 };
 
-// Prop 'setPage' dihapus
 const Cart = ({
   cart,
   produk,

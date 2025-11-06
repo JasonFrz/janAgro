@@ -115,14 +115,7 @@ const SettingAdmin = ({
             <option value="dibatalkan">Dibatalkan</option>
             <option value="selesai">Selesai</option>
           </select>
-          {/* 3. Tombol diubah menjadi Link */}
-          <Link
-            to="/laporan"
-            className="bg-black text-white px-4 py-2 rounded-lg flex items-center hover:bg-gray-800 transition-colors duration-200 flex-shrink-0"
-          >
-            <FileText className="mr-2 h-5 w-5" />
-            Laporan
-          </Link>
+          
         </div>
       </div>
       <div className="space-y-4">

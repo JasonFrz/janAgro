@@ -2,7 +2,6 @@ import React, { useState, useMemo, useEffect } from "react";
 import axios from "axios";
 
 function DashboardAdmin({ vouchers = [], produk = [] }) {
-  // State untuk menyimpan data pengguna, status loading, dan error
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -10,7 +9,6 @@ function DashboardAdmin({ vouchers = [], produk = [] }) {
   const [produkSortAsc, setProdukSortAsc] = useState(true);
   const [userSortAsc, setUserSortAsc] = useState(true);
 
-  // useEffect untuk mengambil data pengguna saat komponen dimuat
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -29,7 +27,7 @@ function DashboardAdmin({ vouchers = [], produk = [] }) {
       }
     };
     fetchUsers();
-  }, []); // Array dependensi kosong memastikan ini hanya berjalan sekali saat komponen dimuat
+  }, []); 
 
   const getProdukStatus = (stock) => {
     if (stock === 0)
@@ -54,10 +52,13 @@ function DashboardAdmin({ vouchers = [], produk = [] }) {
     },
   ];
 
-  const sortedProduk = useMemo(() => {
+ const sortedProduk = useMemo(() => {
     return [...produk].sort((a, b) => {
-      if (produkSortAsc) return (a.name || "").localeCompare(b.name || "");
-      return (b.name || "").localeCompare(a.name || "");
+      if (produkSortAsc) {
+        return a.stock - b.stock;
+      } else {
+        return b.stock - a.stock;
+      }
     });
   }, [produk, produkSortAsc]);
 
@@ -120,7 +121,7 @@ function DashboardAdmin({ vouchers = [], produk = [] }) {
                   const status = getUserStatus(user.isBanned);
                   return (
                     <li
-                      key={user._id} // Menggunakan _id dari MongoDB
+                      key={user._id} 
                       className="flex items-center justify-between py-3"
                     >
                       <div>

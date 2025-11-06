@@ -25,6 +25,7 @@ function App() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isPemilik, setIsPemilik] = useState(false);
   const [cart, setCart] = useState([]);
+   const totalCartQuantity = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   const API_URL = import.meta.env.VITE_API_URL;
 
@@ -360,101 +361,146 @@ function App() {
     { id: 2, orderId: 1006, reason: "Tidak sengaja melakukan pemesanan." },
   ]);
 
-  const handleAddToCart = (productId) => {
-    // --- FIX ---
-    // If no productId is given, do nothing. This stops the crash.
+  const handleAddToCart = async (productId) => {
     if (!productId) {
-      console.error("handleAddToCart called with undefined productId");
+      console.error("handleAddToCart dipanggil dengan productId kosong");
       return;
     }
-    // --- END FIX ---
-
-    const productIdStr = productId.toString();
-
-    setCart((prevCart) => {
-      const existingItem = prevCart.find(
-        (item) => item.productId && item.productId.toString() === productIdStr
-      );
-
-      if (existingItem) {
-        return prevCart.map((item) =>
-          item.productId && item.productId.toString() === productIdStr
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-      } else {
-        console.log("Adding new item to cart:", productId);
-        return [...prevCart, { productId: productId, quantity: 1 }];
-      }
-    });
-    return "Produk ditambahkan ke keranjang!";
-  };
-
-  // Inside Shop.jsx
-useEffect(() => {
-  fetchProduk();
-}, []);
-
-const fetchProduk = async () => {
-  try {
-    const res = await axios.get("http://localhost:3000/api/products/get-all-products");
-    if (res.data.success) {
-      setProduk(res.data.data); // <-- this is now parent state
+    const token = localStorage.getItem("token");
+    if (!token) {
+      // Handle jika user belum login
+      alert("Silakan login untuk menambahkan produk ke keranjang.");
+      return;
     }
-  } catch (err) {
-    console.error("Gagal fetch produk:", err);
+
+    // File: App.jsx, di dalam fungsi handleAddToCart
+
+try {
+console.log("Mencoba menambahkan ke keranjang dengan URL:", `${API_URL}/api/cart`);
+  const response = await axios.post(
+    `${API_URL}/cart/add`, // <-- URL YANG DIPERBAIKI
+    { productId: productId, quantity: 1 },
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+
+  if (response.data.success) {
+    // Update state frontend dengan data terbaru dari server
+    setCart(response.data.data.items);
+    // Berikan pesan sukses yang lebih spesifik
+    return "Produk berhasil ditambahkan ke keranjang!";
+  } else {
+    // Handle kasus jika success=false dari server
+    return response.data.message || "Gagal menambahkan produk.";
   }
-};
-
-
-  const handleUpdateCartQuantity = (productId, newQuantity) => {
-    // --- FIX ---
-    if (!productId) {
-      console.error("handleUpdateCartQuantity called with undefined productId");
-      return;
-    }
-    // --- END FIX ---
-
-    const productIdStr = productId.toString();
-
-    setCart((prevCart) =>
-      prevCart.map((item) =>
-        item.productId && item.productId.toString() === productIdStr
-          ? { ...item, quantity: Math.max(0, newQuantity) }
-          : item
-      )
-    );
+} catch (error) {
+  console.error("Gagal menambahkan ke keranjang:", error.response?.data?.message || error.message);
+  // Ambil pesan error dari server jika ada, jika tidak, gunakan pesan default
+  return error.response?.data?.message || "Gagal menambahkan produk ke keranjang.";
+}
   };
 
-  const handleRemoveFromCart = (productId) => {
-    // --- FIX ---
-    if (!productId) {
-      console.error("handleRemoveFromCart called with undefined productId");
-      return;
+
+    // Inside Shop.jsx
+  useEffect(() => {
+    fetchProduk();
+  }, []);
+
+  const fetchProduk = async () => {
+    try {
+      const res = await axios.get("http://localhost:3000/api/products/get-all-products");
+      if (res.data.success) {
+        setProduk(res.data.data); // <-- this is now parent state
+      }
+    } catch (err) {
+      console.error("Gagal fetch produk:", err);
     }
-    // --- END FIX ---
-
-    const productIdStr = productId.toString();
-
-    setCart((prevCart) =>
-      prevCart.filter(
-        (item) => !item.productId || item.productId.toString() !== productIdStr
-      )
-    );
   };
 
-  const handleCheckout = (checkoutData) => {
-    // This would be an API call
-    console.log("Checkout:", checkoutData);
-    setCart([]);
-    navigate("/pesanan");
-    return {
-      success: true,
-      message: "Checkout berhasil! Terima kasih telah berbelanja.",
+
+  useEffect(() => {
+    const fetchCart = async () => {
+      const token = localStorage.getItem("token");
+      if (user && token) { 
+        try {
+          const response = await axios.get(`${API_URL}/api/cart`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (response.data.success) {
+            setCart(response.data.data.items || []);
+          }
+        } catch (error) {
+          console.error("Gagal mengambil data keranjang:", error);
+        }
+      } else {
+        setCart([]);
+      }
     };
+
+    fetchCart();
+  }, [user]);
+
+ 
+
+  const handleUpdateCartQuantity = async (productId, newQuantity) => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      if (newQuantity <= 0) {
+        await handleRemoveFromCart(productId);
+        return;
+      }
+      const response = await axios.put(
+        `${API_URL}/cart/update-quantity`,
+        { productId, quantity: newQuantity },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (response.data.success) {
+        setCart(response.data.data.items);
+      }
+    } catch (error) {
+      console.error("Gagal update kuantitas:", error.response?.data?.message || error.message);
+    }
   };
 
-  // --- handleLogin, handleRegister, and handleLogout logic moved to ProfileSlide.jsx ---
+  const handleRemoveFromCart = async (productId) => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      const response = await axios.delete(
+        `${API_URL}/cart/remove/${productId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (response.data.success) {
+        setCart(response.data.data.items);
+      }
+    } catch (error) {
+      console.error("Gagal menghapus item:", error.response?.data?.message || error.message);
+    }
+  };
+
+  const handleCheckout = async (checkoutData) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      return { success: false, message: "Autentikasi gagal." };
+    }
+    try {
+      // Panggil API untuk membuat pesanan
+      // await axios.post(`${API_URL}/api/orders/create`, checkoutData, { headers: { Authorization: `Bearer ${token}` } });
+      
+      // Setelah pesanan berhasil, kosongkan keranjang
+      await axios.delete(`${API_URL}/cart/clear`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setCart([]);
+      navigate("/pesanan");
+      return { success: true, message: "Checkout berhasil! Terima kasih." };
+    } catch (error) {
+      console.error("Gagal checkout:", error);
+      return { success: false, message: "Gagal memproses pesanan." };
+    }
+  };
 
   const handleRequestReturn = (returnData) => {
     setReturns([...returns, { ...returnData, id: Date.now() }]);
@@ -618,7 +664,6 @@ const handleProfileSave = async (userId, payload) => {
     }
   };
 
-  // [CREATE] Mengirim data produk baru ke server
   const handleAddProduk = async (newData) => {
     try {
       const response = await fetch(`${API_URL}/products/add-product`, {
@@ -782,7 +827,8 @@ const handleProfileSave = async (userId, payload) => {
     fetchProducts();
   }, []);
 
-  return (
+
+return (
     <div className="min-h-screen bg-white">
       <Navbar
         setShowProfile={setShowProfile}

@@ -105,7 +105,7 @@ function VoucherCeo({ vouchers, onAdd, onUpdate, onDelete }) {
                         className={`px-3 py-1 text-xs rounded-md font-bold border-2 ${
                           voucher.isActive && voucher.currentUses < voucher.maxUses
                             ? "bg-green-100 text-green-800 border-green-800"
-                            : "bg-gray-200 text-gray-800 border-gray-800"
+                            : "bg-red-500 text-gray-800 border-red-950"
                         }`}
                       >
                         {voucher.isActive && voucher.currentUses < voucher.maxUses

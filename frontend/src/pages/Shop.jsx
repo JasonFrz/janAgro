@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { Link } from "react-router-dom";
 import {
   Search,
@@ -24,29 +23,13 @@ const Notification = ({ message, type }) => {
   );
 };
 
-const Shop = ({ user, onAddToCart, cartCount }) => {
+// TERIMA 'produk' sebagai prop, BUKAN 'setProduk'
+const Shop = ({ user, onAddToCart, cartCount, produk }) => {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [notification, setNotification] = useState(null);
 
-
-  const [produk, setProduk] = useState([]);
-
-useEffect(() => {
-  fetchProduk();
-}, []);
-
-const fetchProduk = async () => {
-  try {
-    const res = await axios.get("http://localhost:3000/api/products/get-all-products");
-    if (res.data.success) {
-      setProduk(res.data.data);
-    }
-  } catch (err) {
-    console.error("Gagal fetch produk:", err);
-  }
-};
-
+  // Hapus state 'produk' dan useEffect untuk fetch dari sini
 
   useEffect(() => {
     if (notification) {
@@ -57,8 +40,9 @@ const fetchProduk = async () => {
     }
   }, [notification]);
 
-  const handleAddToCartClick = (productId) => {
-    const productToAdd = produk.find(p => p._id === productId);
+  // UBAH FUNGSI INI MENJADI ASYNC
+  const handleAddToCartClick = async (productId) => {
+    const productToAdd = produk.find((p) => p._id === productId);
     if (productToAdd && productToAdd.stock === 0) {
       setNotification({
         type: "error",
@@ -72,12 +56,19 @@ const fetchProduk = async () => {
         type: "error",
         message: "Silakan login terlebih dahulu.",
       });
-    } else {
-      const successMessage = onAddToCart(productId);
-      setNotification({ type: "success", message: successMessage });
-    }
+      return; // Tambahkan return di sini
+    } 
+    
+    // TUNGGU HASIL DARI onAddToCart DENGAN AWAIT
+    const resultMessage = await onAddToCart(productId);
+    
+    // Tentukan tipe notifikasi berdasarkan pesan yang kembali
+    const messageType = resultMessage.toLowerCase().includes("gagal") ? "error" : "success";
+
+    setNotification({ type: messageType, message: resultMessage });
   };
 
+  // Gunakan prop 'produk' yang diterima dari App.jsx
   const filteredProduk = produk.filter((item) => {
     const matchesCategory =
       selectedCategory === "all" ||
@@ -116,8 +107,45 @@ const fetchProduk = async () => {
       </div>
       <div className="min-h-screen bg-gray-50 pt-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="text-center mb-12"> <h1 className="text-5xl font-light text-black mb-4"> Jan Agro <span className="font-bold">Shop</span> </h1> <div className="w-24 h-[1px] bg-black mx-auto mb-6"></div> <p className="text-xl text-gray-600 font-light"> Discover our complete range of Fertilizers, Tools & Seeds </p> </div>
-          <div className="mb-8 flex flex-col md:flex-row gap-4 items-center justify-between"> <div className="relative flex-1 w-full md:max-w-md"> <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} /> <input type="text" placeholder="Search products..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-sm focus:ring-2 focus:ring-black focus:border-transparent transition-all" /> </div> <div className="flex gap-3 flex-wrap justify-center"> <button onClick={() => setSelectedCategory("all")} className={`px-4 py-2 rounded-sm border transition ${ selectedCategory === "all" ? "bg-black text-white border-black" : "bg-white text-gray-700 border-gray-300 hover:border-black" }`} > All </button> <button onClick={() => setSelectedCategory("Pupuk")} className={`px-4 py-2 rounded-sm border transition ${ selectedCategory === "Pupuk" ? "bg-black text-white border-black" : "bg-white text-gray-700 border-gray-300 hover:border-black" }`} > Pupuk </button> <button onClick={() => setSelectedCategory("Alat")} className={`px-4 py-2 rounded-sm border transition ${ selectedCategory === "Alat" ? "bg-black text-white border-black" : "bg-white text-gray-700 border-gray-300 hover:border-black" }`} > Alat </button> <button onClick={() => setSelectedCategory("Bibit")} className={`px-4 py-2 rounded-sm border transition ${ selectedCategory === "Bibit" ? "bg-black text-white border-black" : "bg-white text-gray-700 border-gray-300 hover:border-black" }`} > Bibit </button> </div> </div>
+          <div className="text-center mb-12">
+            <h1 className="text-5xl font-light text-black mb-4">
+              Jan Agro <span className="font-bold">Shop</span>
+            </h1>
+            <div className="w-24 h-[1px] bg-black mx-auto mb-6"></div>
+            <p className="text-xl text-gray-600 font-light">
+              Discover our complete range of Fertilizers, Tools & Seeds
+            </p>
+          </div>
+          <div className="mb-8 flex flex-col md:flex-row gap-4 items-center justify-between">
+            <div className="relative flex-1 w-full md:max-w-md">
+              <Search
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                size={20}
+              />
+              <input
+                type="text"
+                placeholder="Search products..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-sm focus:ring-2 focus:ring-black focus:border-transparent transition-all"
+              />
+            </div>
+            <div className="flex gap-3 flex-wrap justify-center">
+              {["all", "Pupuk", "Alat", "Bibit"].map((category) => (
+                <button
+                  key={category}
+                  onClick={() => setSelectedCategory(category)}
+                  className={`px-4 py-2 rounded-sm border transition ${
+                    selectedCategory === category
+                      ? "bg-black text-white border-black"
+                      : "bg-white text-gray-700 border-gray-300 hover:border-black"
+                  }`}
+                >
+                  {category.charAt(0).toUpperCase() + category.slice(1)}
+                </button>
+              ))}
+            </div>
+          </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredProduk.map((item) => (
               <div
@@ -126,13 +154,33 @@ const fetchProduk = async () => {
                   item.stock === 0 ? "grayscale" : ""
                 }`}
               >
-                <div className="relative h-56 bg-gray-100 flex items-center justify-center overflow-hidden text-6xl transform group-hover:scale-110 transition-transform duration-500"> {item.image || "🪴"} {item.stock === 0 && ( <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center"> <span className="text-white text-xl font-bold uppercase tracking-widest"> Out of Stock </span> </div> )} </div>
+                <div className="relative h-56 bg-gray-100 flex items-center justify-center overflow-hidden text-6xl transform group-hover:scale-110 transition-transform duration-500">
+                  {item.image || "🪴"}
+                  {item.stock === 0 && (
+                    <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                      <span className="text-white text-xl font-bold uppercase tracking-widest">
+                        Out of Stock
+                      </span>
+                    </div>
+                  )}
+                </div>
                 <div className="p-6">
-                  <div className="mb-4"> <h3 className="text-xl font-bold text-black mb-1 group-hover:text-gray-700 transition-colors"> {item.name} </h3> <p className="text-gray-600 text-sm uppercase tracking-wide"> {item.category} </p> </div>
+                  <div className="mb-4">
+                    <h3 className="text-xl font-bold text-black mb-1 group-hover:text-gray-700 transition-colors">
+                      {item.name}
+                    </h3>
+                    <p className="text-gray-600 text-sm uppercase tracking-wide">
+                      {item.category}
+                    </p>
+                  </div>
                   <p className="text-gray-700 text-sm mb-4 line-clamp-3">
                     {item.description}
                   </p>
-                  <div className="mb-6"> <p className="text-black font-semibold text-lg"> Rp {item.price.toLocaleString("id-ID")} </p> </div>
+                  <div className="mb-6">
+                    <p className="text-black font-semibold text-lg">
+                      Rp {item.price.toLocaleString("id-ID")}
+                    </p>
+                  </div>
                   <div className="flex space-x-3">
                     <Link
                       to={`/product/${item._id}`}
@@ -150,7 +198,7 @@ const fetchProduk = async () => {
                   </div>
                 </div>
               </div>
-            ))} 
+            ))}
           </div>
         </div>
       </div>
