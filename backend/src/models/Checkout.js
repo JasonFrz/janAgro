@@ -5,7 +5,7 @@ const CheckoutSchema = new mongoose.Schema(
     userId: { type: mongoose.Schema.ObjectId, ref: "User", required: true },
     nama: { type: String, ref: "User", required: true },
     alamat: { type: String, ref: "User", required: true },
-    noTelpPenerima: { type: Number, required: true },
+    noTelpPenerima: { type: String, required: true },
     items: [
       {
         product: {
@@ -21,7 +21,7 @@ const CheckoutSchema = new mongoose.Schema(
     ],
     subtotal: { type: Number, required: true },
     diskon: { type: Number, default: 0 },
-    kodeVoucher: { type: mongoose.Schema.ObjectId, ref: "Voucher" },
+    kodeVoucher: { type: String, default: null },
     kurir: {
       nama: { type: String, default: "jne" },
       biaya: { type: Number, required: true },

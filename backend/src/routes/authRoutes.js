@@ -143,11 +143,15 @@ router.post("/login", async (req, res) => {
 router.get("/profile", authenticateToken, async (req, res) => {
   try {
     // req.user didapat dari middleware authenticateToken
-    const user = await User.findById(req.user.id).select("-password");
+    const user = await User.findById(req.user.id).select("-password").lean();
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
     res.status(200).json({ user });
+     const userForFrontend = {
+      ...userFromDb,
+      noTelp: userFromDb.no_telp, // Buat properti baru 'noTelp' dari 'no_telp'
+    };
   } catch (error) {
     console.error(error);
     return res.status(500).json({ message: "Server error" });

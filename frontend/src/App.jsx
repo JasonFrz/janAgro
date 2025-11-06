@@ -25,6 +25,7 @@ function App() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isPemilik, setIsPemilik] = useState(false);
   const [cart, setCart] = useState([]);
+   const [checkouts, setCheckouts] = useState([]);
    const totalCartQuantity = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   const API_URL = import.meta.env.VITE_API_URL;
@@ -165,176 +166,7 @@ function App() {
       imageUrl: null,
     },
   ]);
-  const [checkouts, setCheckouts] = useState([
-    {
-      id: 1001,
-      userId: 1,
-      nama: "John Doe",
-      alamat: "Jl. Merdeka No. 1, Jakarta Pusat",
-      noTelpPenerima: "81234567890",
-      items: [
-        {
-          _id: 1,
-          name: "Organic Garden Booster",
-          image: "🌱",
-          price: 24.99,
-          quantity: 2,
-        },
-      ],
-      subtotal: 49.98,
-      diskon: 0,
-      kodeVoucher: null,
-      kurir: { biaya: 10000 },
-      totalHarga: 59980,
-      metodePembayaran: "Transfer Bank",
-      tanggal: "2025-08-10T10:30:00Z",
-      status: "selesai",
-    },
-    {
-      id: 1002,
-      userId: 2,
-      nama: "Jane Doe",
-      alamat: "Jl. Mawar No. 5, Bandung",
-      noTelpPenerima: "89876543210",
-      items: [
-        {
-          _id: 2,
-          name: "Sekop Taman Pro",
-          image: "🛠️",
-          price: 15.5,
-          quantity: 1,
-        },
-      ],
-      subtotal: 15.5,
-      diskon: 0,
-      kodeVoucher: null,
-      kurir: { biaya: 10000 },
-      totalHarga: 25500,
-      metodePembayaran: "COD",
-      tanggal: "2025-09-20T14:00:00Z",
-      status: "dikirim",
-    },
-    {
-      id: 1003,
-      userId: 1,
-      nama: "John Doe",
-      alamat: "Jl. Merdeka No. 1, Jakarta Pusat",
-      noTelpPenerima: "81234567890",
-      items: [
-        {
-          _id: 4,
-          name: "Pestisida Organik Neem",
-          image: "🌿",
-          price: 12.0,
-          quantity: 1,
-        },
-      ],
-      subtotal: 12.0,
-      diskon: 0,
-      kodeVoucher: null,
-      kurir: { biaya: 10000 },
-      totalHarga: 22000,
-      metodePembayaran: "Kartu Kredit",
-      tanggal: "2025-10-12T09:15:00Z",
-      status: "pembatalan diajukan",
-    },
-    {
-      id: 1004,
-      userId: 1,
-      nama: "John Doe",
-      alamat: "Jl. Merdeka No. 1, Jakarta Pusat",
-      noTelpPenerima: "81234567890",
-      items: [
-        {
-          _id: 3,
-          name: "Bibit Tomat Cherry",
-          image: "🍅",
-          price: 5.99,
-          quantity: 3,
-        },
-      ],
-      subtotal: 17.97,
-      diskon: 0,
-      kodeVoucher: null,
-      kurir: { biaya: 10000 },
-      totalHarga: 27970,
-      metodePembayaran: "Transfer Bank",
-      tanggal: "2025-10-01T11:00:00Z",
-      status: "sampai",
-    },
-    {
-      id: 1005,
-      userId: 2,
-      nama: "Jane Doe",
-      alamat: "Jl. Mawar No. 5, Bandung",
-      noTelpPenerima: "89876543210",
-      items: [
-        {
-          _id: 2,
-          name: "Sekop Taman Pro",
-          image: "🛠️",
-          price: 15.5,
-          quantity: 1,
-        },
-      ],
-      subtotal: 15.5,
-      diskon: 0,
-      kodeVoucher: null,
-      kurir: { biaya: 10000 },
-      totalHarga: 25500,
-      metodePembayaran: "COD",
-      tanggal: "2025-07-15T10:00:00Z",
-      status: "pengembalian ditolak",
-    },
-    {
-      id: 1006,
-      userId: 1,
-      nama: "John Doe",
-      alamat: "Jl. Merdeka No. 1, Jakarta Pusat",
-      noTelpPenerima: "81234567890",
-      items: [
-        {
-          _id: 2,
-          name: "Sekop Taman Pro",
-          image: "🛠️",
-          price: 15.5,
-          quantity: 1,
-        },
-      ],
-      subtotal: 15.5,
-      diskon: 0,
-      kodeVoucher: null,
-      kurir: { biaya: 10000 },
-      totalHarga: 25500,
-      metodePembayaran: "Transfer Bank",
-      tanggal: "2025-06-20T10:00:00Z",
-      status: "dibatalkan",
-    },
-    {
-      id: 1007,
-      userId: 1,
-      nama: "John Doe",
-      alamat: "Jl. Merdeka No. 1, Jakarta Pusat",
-      noTelpPenerima: "81234567890",
-      items: [
-        {
-          _id: 4,
-          name: "Pestisida Organik Neem",
-          image: "🌿",
-          price: 12.0,
-          quantity: 2,
-        },
-      ],
-      subtotal: 24.0,
-      diskon: 0,
-      kodeVoucher: null,
-      kurir: { biaya: 10000 },
-      totalHarga: 34000,
-      metodePembayaran: "Kartu Kredit",
-      tanggal: "2025-10-14T09:00:00Z",
-      status: "diproses",
-    },
-  ]);
+  
   const [returns, setReturns] = useState([
     {
       id: 1,
@@ -417,27 +249,37 @@ console.log("Mencoba menambahkan ke keranjang dengan URL:", `${API_URL}/api/cart
   };
 
 
-  useEffect(() => {
-    const fetchCart = async () => {
-      const token = localStorage.getItem("token");
-      if (user && token) { 
-        try {
-          const response = await axios.get(`${API_URL}/api/cart`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
-          if (response.data.success) {
-            setCart(response.data.data.items || []);
-          }
-        } catch (error) {
-          console.error("Gagal mengambil data keranjang:", error);
+// File: App.jsx
+
+useEffect(() => {
+  const fetchCart = async () => {
+    const token = localStorage.getItem("token");
+    if (user && token) {
+      console.log("FETCHING CART for user:", user.name); // <-- LOG 1: Cek apakah fungsi dipanggil
+      try {
+        const response = await axios.get(`${API_URL}/cart`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        // --- LOG KRUSIAL ---
+        console.log("RAW RESPONSE from /api/cart:", response); // <-- LOG 2: Lihat seluruh respons
+        
+        if (response.data.success) {
+          console.log("DATA to be set into cart state:", response.data.data.items); // <-- LOG 3: Lihat data item
+          setCart(response.data.data.items || []);
         }
-      } else {
+
+      } catch (error) {
+        // --- LOG PENTING JIKA GAGAL ---
+        console.error("Gagal mengambil data keranjang (fetchCart):", error.response || error.message); // <-- LOG 4: Lihat detail error
         setCart([]);
       }
-    };
-
-    fetchCart();
-  }, [user]);
+    } else {
+      setCart([]);
+    }
+  };
+  fetchCart();
+}, [user]); // Berjalan setiap kali state 'user' berubah
 
  
 
@@ -480,6 +322,30 @@ console.log("Mencoba menambahkan ke keranjang dengan URL:", `${API_URL}/api/cart
     }
   };
 
+ useEffect(() => {
+    const fetchCheckouts = async () => {
+      const token = localStorage.getItem("token");
+      if (user && token) {
+        try {
+          const response = await axios.get(`${API_URL}/checkouts`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          if (response.data.success) {
+            setCheckouts(response.data.data); // Set data pesanan
+          }
+        } catch (error) {
+          console.error("Gagal mengambil data pesanan:", error);
+        }
+      } else {
+        setCheckouts([]); // Kosongkan pesanan jika logout
+      }
+    };
+    
+    fetchCheckouts();
+  }, [user]); // Jalankan setiap kali user berubah (login/logout)
+
+
+  // --- MODIFIKASI FUNGSI handleCheckout ---
   const handleCheckout = async (checkoutData) => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -487,20 +353,31 @@ console.log("Mencoba menambahkan ke keranjang dengan URL:", `${API_URL}/api/cart
     }
     try {
       // Panggil API untuk membuat pesanan
-      // await axios.post(`${API_URL}/api/orders/create`, checkoutData, { headers: { Authorization: `Bearer ${token}` } });
-      
-      // Setelah pesanan berhasil, kosongkan keranjang
-      await axios.delete(`${API_URL}/cart/clear`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setCart([]);
-      navigate("/pesanan");
-      return { success: true, message: "Checkout berhasil! Terima kasih." };
+      const response = await axios.post(
+        `${API_URL}/checkouts/create`, 
+        checkoutData, 
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (response.data.success) {
+        // Kosongkan keranjang di frontend
+        setCart([]);
+        // Tambahkan pesanan baru ke daftar pesanan di frontend
+        setCheckouts(prevCheckouts => [response.data.data, ...prevCheckouts]);
+        
+        navigate("/pesanan");
+        return { success: true, message: "Checkout berhasil! Terima kasih." };
+      }
+
     } catch (error) {
       console.error("Gagal checkout:", error);
-      return { success: false, message: "Gagal memproses pesanan." };
+      return { 
+        success: false, 
+        message: error.response?.data?.message || "Gagal memproses pesanan." 
+      };
     }
   };
+
 
   const handleRequestReturn = (returnData) => {
     setReturns([...returns, { ...returnData, id: Date.now() }]);
