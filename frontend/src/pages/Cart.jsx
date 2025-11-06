@@ -125,10 +125,13 @@ const Cart = ({
     if (error.includes("Nomor Telepon")) setError("");
   };
 
-  const cartDetails = cart.map((item) => {
+const cartDetails = cart
+  .filter(item => item.productId) 
+  .map((item) => {
     return {
       ...item.productId,
       quantity: item.quantity,
+      price: item.productId.price || 0, 
     };
   });
 
