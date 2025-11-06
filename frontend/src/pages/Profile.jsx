@@ -5,14 +5,14 @@ import {
   Mail,
   Calendar,
   Edit,
-  Shield,
   AtSign,
   Phone,
   MapPin,
 } from "lucide-react";
+// Impor HANYA modal yang baru
 import EditProfileModal from "../components/EditProfileModal";
-import ChangePasswordModal from "../components/ChangePasswordModal";
 
+// Fungsi helper ini sudah bagus, kita pertahankan
 const formatPhoneNumber = (phone) => {
   if (!phone) return "-";
   const digits = phone.replace(/\D/g, "");
@@ -31,15 +31,15 @@ const formatPhoneNumber = (phone) => {
   return formatted;
 };
 
+// Kita akan menyederhanakan props yang diterima
 const Profile = ({
   user,
   onAvatarChange,
-  onProfileUpdate,
-  onPasswordChange,
+  onProfileSave, // Menggantikan onProfileUpdate dan onPasswordChange
 }) => {
   const [preview, setPreview] = useState(user?.avatar || null);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  // Cukup satu state untuk mengontrol modal
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const fileInputRef = useRef(null);
 
   const handleFileChange = (event) => {
@@ -49,6 +49,7 @@ const Profile = ({
       reader.onloadend = () => {
         const newAvatarUrl = reader.result;
         setPreview(newAvatarUrl);
+        // Memanggil fungsi untuk update avatar yang mungkin ada di App.jsx
         onAvatarChange(newAvatarUrl);
       };
       reader.readAsDataURL(file);
@@ -62,27 +63,27 @@ const Profile = ({
   if (!user) {
     return (
       <div className="pt-24 text-center">
-        Please log in to view your profile.
+        Silakan masuk untuk melihat profil Anda.
       </div>
     );
   }
 
+  // Fungsi untuk menangani penyimpanan dari modal
+  const handleSaveFromModal = async (userId, payload) => {
+    const result = await onProfileSave(userId, payload);
+    // Modal akan menampilkan pesan sukses/error sendiri,
+    // dan menutup otomatis jika sukses.
+    return result;
+  };
+
   return (
     <>
-      {isEditModalOpen && (
+      {/* Hanya satu modal yang dirender */}
+      {isModalOpen && (
         <EditProfileModal
           user={user}
-          onClose={() => setIsEditModalOpen(false)}
-          onSave={(updatedData) => {
-            onProfileUpdate(updatedData);
-            setIsEditModalOpen(false);
-          }}
-        />
-      )}
-      {isPasswordModalOpen && (
-        <ChangePasswordModal
-          onClose={() => setIsPasswordModalOpen(false)}
-          onSave={onPasswordChange}
+          onClose={() => setIsModalOpen(false)}
+          onSave={handleSaveFromModal}
         />
       )}
 
@@ -91,12 +92,10 @@ const Profile = ({
           <div className="bg-white p-8 md:p-12 rounded-lg border border-gray-200 shadow-sm">
             <div className="text-center mb-10">
               <h1 className="text-4xl font-bold text-black">
-                {" "}
-                Account Settings{" "}
+                Pengaturan Akun
               </h1>
               <p className="text-gray-500 mt-2">
-                {" "}
-                Manage your profile and account details.{" "}
+                Kelola detail profil dan akun Anda.
               </p>
             </div>
             <div className="flex flex-col items-center space-y-4 mb-12">
@@ -131,64 +130,43 @@ const Profile = ({
             </div>
             <div className="border-t border-gray-200 pt-8">
               <h3 className="text-xl font-semibold text-black mb-6">
-                {" "}
-                Profile Information{" "}
+                Informasi Profil
               </h3>
               <div className="space-y-4">
+                {/* Tampilan informasi profil tetap sama */}
                 <div className="flex items-center p-4 bg-gray-50 rounded-lg">
-                  {" "}
-                  <User
-                    className="text-gray-400 mr-4 flex-shrink-0"
-                    size={20}
-                  />{" "}
+                  <User className="text-gray-400 mr-4 flex-shrink-0" size={20} />
                   <div className="flex-grow">
-                    {" "}
-                    <p className="text-sm text-gray-500">Full Name</p>{" "}
-                    <p className="text-black font-medium">{user.name}</p>{" "}
-                  </div>{" "}
+                    <p className="text-sm text-gray-500">Nama Lengkap</p>
+                    <p className="text-black font-medium">{user.name}</p>
+                  </div>
                 </div>
                 <div className="flex items-center p-4 bg-gray-50 rounded-lg">
-                  {" "}
-                  <AtSign
-                    className="text-gray-400 mr-4 flex-shrink-0"
-                    size={20}
-                  />{" "}
+                  <AtSign className="text-gray-400 mr-4 flex-shrink-0" size={20} />
                   <div className="flex-grow">
-                    {" "}
-                    <p className="text-sm text-gray-500">Username</p>{" "}
-                    <p className="text-black font-medium">{user.username}</p>{" "}
-                  </div>{" "}
+                    <p className="text-sm text-gray-500">Username</p>
+                    <p className="text-black font-medium">{user.username}</p>
+                  </div>
                 </div>
                 <div className="flex items-center p-4 bg-gray-50 rounded-lg">
-                  {" "}
-                  <Mail
-                    className="text-gray-400 mr-4 flex-shrink-0"
-                    size={20}
-                  />{" "}
+                  <Mail className="text-gray-400 mr-4 flex-shrink-0" size={20} />
                   <div className="flex-grow">
-                    {" "}
-                    <p className="text-sm text-gray-500">Email Address</p>{" "}
-                    <p className="text-black font-medium">{user.email}</p>{" "}
-                  </div>{" "}
+                    <p className="text-sm text-gray-500">Alamat Email</p>
+                    <p className="text-black font-medium">{user.email}</p>
+                  </div>
                 </div>
                 <div className="flex items-center p-4 bg-gray-50 rounded-lg">
-                  <Phone
-                    className="text-gray-400 mr-4 flex-shrink-0"
-                    size={20}
-                  />
+                  <Phone className="text-gray-400 mr-4 flex-shrink-0" size={20} />
                   <div className="flex-grow">
-                    {" "}
-                    <p className="text-sm text-gray-500">Nomor Telepon</p>{" "}
+                    <p className="text-sm text-gray-500">Nomor Telepon</p>
                     <p className="text-black font-medium">
-                      {formatPhoneNumber(user.noTelp)}
-                    </p>{" "}
+                      {/* Pastikan fieldnya `no_telp` atau `noTelp` sesuai data user */}
+                      {formatPhoneNumber(user.no_telp || user.noTelp)}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-start p-4 bg-gray-50 rounded-lg">
-                  <MapPin
-                    className="text-gray-400 mr-4 flex-shrink-0 mt-1"
-                    size={20}
-                  />
+                  <MapPin className="text-gray-400 mr-4 flex-shrink-0 mt-1" size={20} />
                   <div className="flex-grow">
                     <p className="text-sm text-gray-500">Alamat</p>
                     <p className="text-black font-medium whitespace-pre-line">
@@ -197,33 +175,22 @@ const Profile = ({
                   </div>
                 </div>
                 <div className="flex items-center p-4 bg-gray-50 rounded-lg">
-                  {" "}
-                  <Calendar
-                    className="text-gray-400 mr-4 flex-shrink-0"
-                    size={20}
-                  />{" "}
+                  <Calendar className="text-gray-400 mr-4 flex-shrink-0" size={20} />
                   <div className="flex-grow">
-                    {" "}
-                    <p className="text-sm text-gray-500">Member Since</p>{" "}
-                    <p className="text-black font-medium">{user.joinDate}</p>{" "}
-                  </div>{" "}
+                    <p className="text-sm text-gray-500">Bergabung Sejak</p>
+                    {/* Pastikan properti joinDate ada di objek user */}
+                    <p className="text-black font-medium">{user.joinDate || new Date(user.createdAt).toLocaleDateString("id-ID")}</p>
+                  </div>
                 </div>
               </div>
             </div>
-            <div className="border-t border-gray-200 mt-8 pt-8 flex flex-col sm:flex-row sm:space-x-4 space-y-3 sm:space-y-0">
+            {/* Tombol digabung menjadi satu */}
+            <div className="border-t border-gray-200 mt-8 pt-8">
               <button
-                onClick={() => setIsEditModalOpen(true)}
+                onClick={() => setIsModalOpen(true)}
                 className="w-full flex items-center justify-center space-x-2 bg-black text-white py-3 px-4 rounded-md font-medium hover:bg-gray-800 transition-colors"
               >
-                {" "}
-                <Edit size={16} /> <span>Edit Profile</span>{" "}
-              </button>
-              <button
-                onClick={() => setIsPasswordModalOpen(true)}
-                className="w-full flex items-center justify-center space-x-2 border border-gray-300 text-gray-700 py-3 px-4 rounded-md font-medium hover:bg-gray-50 transition-colors"
-              >
-                {" "}
-                <Shield size={16} /> <span>Change Password</span>{" "}
+                <Edit size={16} /> <span>Edit Profil & Keamanan</span>
               </button>
             </div>
           </div>

@@ -492,16 +492,31 @@ const fetchProduk = async () => {
       );
     }
   };
-  const handleProfileUpdate = (updatedData) => {
-    if (!user) return;
-    const updatedUser = { ...user, ...updatedData };
-    setUser(updatedUser);
-    if (updatedUser.id === adminUser.id) {
-      setAdminUser(updatedUser);
-    } else {
-      setUsers((prev) =>
-        prev.map((u) => (u.id === updatedUser.id ? updatedUser : u))
+const handleProfileSave = async (userId, payload) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      return { success: false, message: "Autentikasi gagal. Silakan masuk lagi." };
+    }
+
+    try {
+      // Endpoint ini adalah contoh, sesuaikan dengan backend Anda
+      const response = await axios.put(
+        `${API_URL}/users/update-profile/${userId}`,
+        payload,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
+
+      if (response.data.success) {
+        setUser(response.data.user); // Perbarui state user dengan data terbaru dari server
+        return { success: true, message: "Profil berhasil diperbarui!" };
+      }
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || "Terjadi kesalahan pada server.",
+      };
     }
   };
   const handlePasswordChange = (currentPassword, newPassword) => {
@@ -855,19 +870,18 @@ const fetchProduk = async () => {
           />
           <Route path="/about" element={<About />} />
           <Route path="/location" element={<Location />} />
-          <Route
+           <Route
             path="/profile"
             element={
               user ? (
                 <Profile
                   user={user}
-                  // onAvatarChange={handleAvatarChange}
-                  // onProfileUpdate={handleProfileUpdate}
-                  // onPasswordChange={handlePasswordChange}
-                  API_URL={API_URL}
+                  onAvatarChange={handleAvatarChange}
+                  onProfileSave={handleProfileSave} // Prop baru
                 />
               ) : (
-                <Home API_URL={API_URL} /> // Redirect to Home if no user
+                // Redirect ke Home atau tampilkan halaman login jika tidak ada user
+                <Home API_URL={API_URL} />
               )
             }
           />

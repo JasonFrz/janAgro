@@ -11,6 +11,7 @@ import DashboardCeo from "../ceo/DashboardCeo";
 import ProdukCeo from "../ceo/ProdukCeo";
 import PesananCeo from "../ceo/PesananCeo";
 import VoucherCeo from "../ceo/VoucherCeo";
+import UserCeo from "../ceo/UserCeo";
 import { Link } from "react-router-dom"; // for Laporan link
 
 function Ceo({
@@ -76,6 +77,8 @@ function Ceo({
             onDelete={onDeleteVoucher}
           />
         );
+         case "users": // Tambahkan case baru untuk pengguna
+        return <UserCeo />;
       case "pesanan":
         return (
           <PesananCeo
@@ -114,6 +117,12 @@ function Ceo({
           >
             Dashboard
           </NavButton>
+           <NavButton
+            tabName="users"
+            icon={<Users className="mr-3 h-6 w-6" />}
+          >
+            Users
+          </NavButton>
           <NavButton
             tabName="produk"
             icon={<Package className="mr-3 h-6 w-6" />}
@@ -132,6 +141,7 @@ function Ceo({
           >
             Orders
           </NavButton>
+          
 
           {/* Link to LaporanPesanan page */}
           <Link
