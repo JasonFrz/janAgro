@@ -14,9 +14,11 @@ app.use(express.json());
 const authRoutes = require("./src/routes/authRoutes");
 const productsRoutes = require("./src/routes/productsRoutes");
 const voucherRoutes = require("./src/routes/voucherRoutes");
+const adminRoutes = require("./src/routes/adminRoutes");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productsRoutes);
 app.use("/api/vouchers", voucherRoutes); 
+app.use("/api/admin", adminRoutes);
 
 app.listen(port, () => console.log(`Example app listening on port ${port}!`));

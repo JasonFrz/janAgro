@@ -17,6 +17,7 @@ import Review from "./pages/Review";
 import LaporanPesanan from "./laporan/LaporanPesanan";
 import PengembalianBarang from "./pages/PengembalianBarang";
 import "./index.css";
+import axios from "axios";
 
 function App() {
   const [showProfile, setShowProfile] = useState(false);
@@ -388,6 +389,23 @@ function App() {
     });
     return "Produk ditambahkan ke keranjang!";
   };
+
+  // Inside Shop.jsx
+useEffect(() => {
+  fetchProduk();
+}, []);
+
+const fetchProduk = async () => {
+  try {
+    const res = await axios.get("http://localhost:3000/api/products/get-all-products");
+    if (res.data.success) {
+      setProduk(res.data.data); // <-- this is now parent state
+    }
+  } catch (err) {
+    console.error("Gagal fetch produk:", err);
+  }
+};
+
 
   const handleUpdateCartQuantity = (productId, newQuantity) => {
     // --- FIX ---
@@ -765,6 +783,7 @@ function App() {
             element={
               <Shop
                 produk={produk}
+                setProduk={setProduk}
                 user={user}
                 onAddToCart={handleAddToCart}
                 cartCount={cart.length}

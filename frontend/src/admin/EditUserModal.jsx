@@ -21,14 +21,15 @@ const EditUserModal = ({ user, onClose, onSave }) => {
     }
   };
 
-  const handleSave = () => {
-    const dataToSave = { ...formData };
-    if (!dataToSave.password) {
-      delete dataToSave.password;
-    }
-    onSave(user.id, dataToSave);
-    onClose();
-  };
+const handleSave = async () => {
+  console.log("Saving user:", user._id, formData); // 👈 Add this
+  const dataToSave = { ...formData };
+  if (!dataToSave.password) delete dataToSave.password;
+
+  await onSave(user._id, dataToSave);
+  onClose();
+};
+
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">

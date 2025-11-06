@@ -32,20 +32,20 @@ const Shop = ({ user, onAddToCart, cartCount }) => {
 
   const [produk, setProduk] = useState([]);
 
-  useEffect(() => {
-    fetchProduk();
-  }, []);
+useEffect(() => {
+  fetchProduk();
+}, []);
 
-  const fetchProduk = async () => {
-    try {
-      const res = await axios.get("http://localhost:3000/api/products/get-all-products");
-        if (res.data.success) {
-          setProduk(res.data.data);
-        }
-    } catch (err) {
-      console.error("Gagal fetch produk:", err);
+const fetchProduk = async () => {
+  try {
+    const res = await axios.get("http://localhost:3000/api/products/get-all-products");
+    if (res.data.success) {
+      setProduk(res.data.data);
     }
-  };
+  } catch (err) {
+    console.error("Gagal fetch produk:", err);
+  }
+};
 
 
   useEffect(() => {
@@ -150,7 +150,7 @@ const Shop = ({ user, onAddToCart, cartCount }) => {
                   </div>
                 </div>
               </div>
-            ))}
+            ))} 
           </div>
         </div>
       </div>

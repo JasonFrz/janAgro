@@ -19,13 +19,12 @@ function Admin({
   checkouts,
   returns,
   cancellations,
-  onUpdateUser,
-  onDeleteUser,
-  onToggleBanUser,
+  handleDelete,
+  handleToggleBan,
+  handleUpdate,
   onAddVoucher,
   onUpdateVoucher,
   onDeleteVoucher,
-  // Props baru untuk CRUD produk
   onAddProduk,
   onUpdateProduk,
   onDeleteProduk,
@@ -45,12 +44,13 @@ function Admin({
         );
       case "users":
         return (
-          <UserAdmin
-            users={users}
-            onUpdate={onUpdateUser}
-            onDelete={onDeleteUser}
-            onToggleBan={onToggleBanUser}
-          />
+      <UserAdmin
+        users={users}
+        onUpdate={handleUpdate}
+        onDelete={handleDelete}
+        onToggleBan={handleToggleBan}
+      />
+
         );
       case "produk":
         // Teruskan props ke komponen ProdukAdmin

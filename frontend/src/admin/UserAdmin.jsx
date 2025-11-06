@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 import { Edit, Trash2, UserX, UserCheck } from "lucide-react";
 import ConfirmationModal from "./ConfirmationModal";
 import EditUserModal from "./EditUserModal";
@@ -21,7 +22,10 @@ const formatPhoneNumber = (phone) => {
   return formatted;
 };
 
-function UserAdmin({ users, onUpdate, onDelete, onToggleBan }) {
+function UserAdmin() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [editingUser, setEditingUser] = useState(null);
   const [confirmation, setConfirmation] = useState({
     isOpen: false,
@@ -29,8 +33,67 @@ function UserAdmin({ users, onUpdate, onDelete, onToggleBan }) {
     user: null,
   });
 
-  const activeUsers = users.filter((u) => !u.isBanned);
-  const bannedUsers = users.filter((u) => u.isBanned);
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const res = await axios.get("http://localhost:3000/api/admin/get-all-users");
+        if (res.data.success) {
+          setUsers(res.data.data);
+        } else {
+          setError("Failed to fetch users");
+        }
+      } catch (err) {
+        console.error(err);
+        setError("Server error fetching users");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchUsers();
+  }, []);
+
+const handleUpdate = async (id, updatedData) => {
+  try {
+    const res = await axios.put(
+      `http://localhost:3000/api/admin/update-user/${id}`,
+      updatedData
+    );
+    if (res.data.success) {
+      setUsers((prev) =>
+        prev.map((u) => (u._id === id ? res.data.data : u))
+      );
+    } else {
+      console.error("Update failed:", res.data.message);
+    }
+  } catch (err) {
+    console.error("Error updating user:", err);
+  }
+};
+
+
+  const handleDelete = async (id) => {
+    try {
+      await axios.delete(`http://localhost:3000/api/admin/delete-user/${id}`);
+      setUsers((prev) => prev.filter((u) => u._id !== id));
+    } catch (err) {
+      console.error("Error deleting user:", err);
+    }
+  };
+
+  const handleToggleBan = async (id) => {
+    try {
+      const res = await axios.put(
+        `http://localhost:3000/api/admin/toggle-ban/${id}`
+      );
+      if (res.data.success) {
+        setUsers((prev) =>
+          prev.map((u) => (u._id === id ? res.data.data : u))
+        );
+      }
+    } catch (err) {
+      console.error("Error toggling ban:", err);
+    }
+  };
 
   const openConfirmation = (action, user) => {
     setConfirmation({ isOpen: true, action, user });
@@ -40,13 +103,17 @@ function UserAdmin({ users, onUpdate, onDelete, onToggleBan }) {
   };
   const handleConfirm = () => {
     const { action, user } = confirmation;
-    if (action === "delete") {
-      onDelete(user.id);
-    } else if (action === "ban" || action === "unban") {
-      onToggleBan(user.id);
-    }
+    if (action === "delete") handleDelete(user._id);
+    else if (action === "ban" || action === "unban") handleToggleBan(user._id);
     closeConfirmation();
   };
+
+  // ✅ Loading & error
+  if (loading) return <div className="text-gray-500 italic">Loading users...</div>;
+  if (error) return <div className="text-red-500">{error}</div>;
+
+  const activeUsers = users.filter((u) => !u.isBanned);
+  const bannedUsers = users.filter((u) => u.isBanned);
 
   const UserTable = ({ title, userList, isBannedList = false }) => (
     <div>
@@ -79,7 +146,7 @@ function UserAdmin({ users, onUpdate, onDelete, onToggleBan }) {
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {userList.map((user) => (
-                <tr key={user.id}>
+                <tr key={user._id}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-black">
                       {user.name}
@@ -91,7 +158,7 @@ function UserAdmin({ users, onUpdate, onDelete, onToggleBan }) {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-600">{user.email}</div>
                     <div className="text-sm text-gray-500">
-                      {formatPhoneNumber(user.noTelp)}
+                      {formatPhoneNumber(user.no_telp)}
                     </div>
                   </td>
                   <td
@@ -101,7 +168,7 @@ function UserAdmin({ users, onUpdate, onDelete, onToggleBan }) {
                     {user.alamat || "-"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
-                    {user.joinDate}
+                    {new Date(user.createdAt).toLocaleDateString("id-ID")}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
                     <button
@@ -161,17 +228,19 @@ function UserAdmin({ users, onUpdate, onDelete, onToggleBan }) {
       btnColor: "bg-green-500 hover:bg-green-600",
     },
   };
+
   const details = confirmationDetails[confirmation.action] || {};
+
   return (
     <>
-      {" "}
       {editingUser && (
         <EditUserModal
-          user={editingUser}
-          onClose={() => setEditingUser(null)}
-          onSave={onUpdate}
-        />
-      )}{" "}
+  user={editingUser}
+  onClose={() => setEditingUser(null)}
+  onSave={handleUpdate}
+/>
+
+      )}
       <ConfirmationModal
         isOpen={confirmation.isOpen}
         onClose={closeConfirmation}
@@ -180,17 +249,16 @@ function UserAdmin({ users, onUpdate, onDelete, onToggleBan }) {
         message={details.message}
         confirmButtonText={details.btnText}
         confirmButtonColor={details.btnColor}
-      />{" "}
+      />
       <div className="bg-white shadow rounded-lg p-6 space-y-8">
-        {" "}
-        <h2 className="text-xl font-semibold">Users Management</h2>{" "}
-        <UserTable title="Active Users" userList={activeUsers} />{" "}
+        <h2 className="text-xl font-semibold">Users Management</h2>
+        <UserTable title="Active Users" userList={activeUsers} />
         <UserTable
           title="Banned Users"
           userList={bannedUsers}
           isBannedList={true}
-        />{" "}
-      </div>{" "}
+        />
+      </div>
     </>
   );
 }
