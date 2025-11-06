@@ -7,6 +7,7 @@ import Home from "./pages/Home";
 import Shop from "./pages/Shop";
 import About from "./pages/About";
 import Admin from "./pages/Admin";
+import Ceo from "./pages/Ceo";
 import Location from "./pages/Location";
 import Profile from "./pages/Profile";
 import ProductDetail from "./pages/ProductDetail";
@@ -21,6 +22,7 @@ function App() {
   const [showProfile, setShowProfile] = useState(false);
   const [user, setUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isPemilik, setIsPemilik] = useState(false);
   const [cart, setCart] = useState([]);
 
   const API_URL = import.meta.env.VITE_API_URL;
@@ -28,33 +30,40 @@ function App() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Fetch user profile
+    
     const fetchUserProfile = async () => {
       const token = localStorage.getItem("token");
       if (token) {
         try {
           const response = await fetch(`${API_URL}/auth/profile`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
+            headers: { Authorization: `Bearer ${token}` },
           });
 
           if (response.ok) {
+            
             const data = await response.json();
             setUser(data.user);
-            if (data.user.role === "admin") {
+            if (data.user.role === "Admin") {
               setIsAdmin(true);
+            }
+            if (data.user.role === "Pemilik") {
+              setIsPemilik(true);
             }
           } else {
             localStorage.removeItem("token");
+            setIsAdmin(false); // Pastikan state kembali false saat token invalid
+            setIsPemilik(false);
           }
         } catch (error) {
           console.error("Error fetching profile:", error);
           localStorage.removeItem("token");
+          setIsAdmin(false);
+          setIsPemilik(false);
         }
       }
     };
 
+    
     // Fetch products
     // --- (Inside App.jsx's useEffect) ---
 
@@ -84,6 +93,18 @@ function App() {
     fetchUserProfile();
     fetchProducts();
   }, []);
+
+
+    useEffect(() => {
+    if (user && user.role) {
+      const role = user.role.toLowerCase();
+      setIsAdmin(role === "admin");
+      setIsPemilik(role === "pemilik");
+    } else {
+      setIsAdmin(false);
+      setIsPemilik(false);
+    }
+  }, [user]);
   // You would also add functions here to fetch reviews, checkouts, etc.
 
   const [users, setUsers] = useState([]);
@@ -490,9 +511,6 @@ function App() {
     setUsers(
       users.map((u) => (u.id === userId ? { ...u, isBanned: !u.isBanned } : u))
     );
-  
-  
-             
 
   const handleConfirmOrderFinished = (orderId) => {
     setCheckouts(
@@ -500,7 +518,7 @@ function App() {
         order.id === orderId ? { ...order, status: "selesai" } : order
       )
     );
-  };            
+  };
   const handleApproveReturn = (orderId) => {
     setCheckouts(
       checkouts.map((order) =>
@@ -733,7 +751,12 @@ function App() {
 
   return (
     <div className="min-h-screen bg-white">
-      <Navbar setShowProfile={setShowProfile} user={user} isAdmin={isAdmin} />
+      <Navbar
+        setShowProfile={setShowProfile}
+        user={user}
+        isAdmin={isAdmin}
+        isPemilik={isPemilik}
+      />
       <main>
         <Routes>
           <Route path="/" element={<Home API_URL={API_URL} />} />
@@ -856,9 +879,37 @@ function App() {
             }
           />
           <Route
+            path="/ceo"
+            element={
+              isPemilik ? (
+                <Ceo
+                  users={users}
+                  vouchers={vouchers}
+                  produk={produk}
+                  checkouts={checkouts}
+                  returns={returns}
+                  cancellations={cancellations}
+                  onAddVoucher={handleAddVoucher}
+                  onUpdateVoucher={handleUpdateVoucher}
+                  onDeleteVoucher={handleDeleteVoucher}
+                  onAddProduk={handleAddProduk}
+                  onUpdateProduk={handleUpdateProduk}
+                  onDeleteProduk={handleDeleteProduk}
+                  onUpdateOrderStatus={handleUpdateOrderStatus}
+                  onApproveReturn={handleApproveReturn}
+                  onRejectReturn={handleRejectReturn}
+                  onApproveCancellation={handleApproveCancellation}
+                  onRejectCancellation={handleRejectCancellation}
+                />
+              ) : (
+                <Home API_URL={API_URL} /> // Redirect jika bukan pemilik
+              )
+            }
+          />
+          <Route
             path="/laporan"
             element={
-              isAdmin ? (
+              isAdmin || isPemilik ? (
                 <LaporanPesanan checkouts={checkouts} />
               ) : (
                 <Home API_URL={API_URL} />

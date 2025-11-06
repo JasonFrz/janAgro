@@ -19,27 +19,26 @@ const ProfileSlide = ({
   isOpen,
   onClose,
   user,
-  // --- Props from App.jsx ---
-  setUser,
-  setIsAdmin,
+  // --- Props yang disederhanakan ---
+  setUser, // Hanya butuh setUser untuk mengkomunikasikan status login ke App.jsx
   setShowProfile,
   API_URL,
 }) => {
   const [currentView, setCurrentView] = useState("main");
   const [formData, setFormData] = useState({
-    identifier: "", // For login (email or username)
+    identifier: "",
     password: "",
     name: "",
     username: "",
     email: "",
-    noTelp: "", // Matched to frontend form state
+    noTelp: "",
     confirmPassword: "",
   });
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errorMessage, setErrorMessage] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
-  const [isLoading, setIsLoading] = useState(false); // Loading state
+  const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
 
@@ -68,27 +67,29 @@ const ProfileSlide = ({
     }
   };
 
-  // --- Joi Schemas (Frontend) ---
   const loginSchema = Joi.object({
-    identifier: Joi.string().required().messages({
-      "string.empty": "Email atau username wajib diisi",
-    }),
-    password: Joi.string().required().messages({
-      "string.empty": "Password wajib diisi",
-    }),
+    identifier: Joi.string()
+      .required()
+      .messages({ "string.empty": "Email atau username wajib diisi" }),
+    password: Joi.string()
+      .required()
+      .messages({ "string.empty": "Password wajib diisi" }),
   });
 
   const registerSchema = Joi.object({
-    username: Joi.string().required().messages({
-      "string.empty": "Username wajib diisi",
-    }),
-    name: Joi.string().required().messages({
-      "string.empty": "Nama lengkap wajib diisi",
-    }),
-    email: Joi.string().email({ tlds: { allow: false } }).required().messages({
-      "string.empty": "Email wajib diisi",
-      "string.email": "Format email tidak valid",
-    }),
+    username: Joi.string()
+      .required()
+      .messages({ "string.empty": "Username wajib diisi" }),
+    name: Joi.string()
+      .required()
+      .messages({ "string.empty": "Nama lengkap wajib diisi" }),
+    email: Joi.string()
+      .email({ tlds: { allow: false } })
+      .required()
+      .messages({
+        "string.empty": "Email wajib diisi",
+        "string.email": "Format email tidak valid",
+      }),
     noTelp: Joi.string()
       .pattern(/^[0-9]{8,15}$/)
       .required()
@@ -96,10 +97,13 @@ const ProfileSlide = ({
         "string.empty": "Nomor telepon wajib diisi",
         "string.pattern.base": "Nomor telepon harus antara 8 hingga 15 digit",
       }),
-    password: Joi.string().min(6).required().messages({
-      "string.empty": "Password wajib diisi",
-      "string.min": "Password minimal 6 karakter",
-    }),
+    password: Joi.string()
+      .min(6)
+      .required()
+      .messages({
+        "string.empty": "Password wajib diisi",
+        "string.min": "Password minimal 6 karakter",
+      }),
     confirmPassword: Joi.any()
       .valid(Joi.ref("password"))
       .required()
@@ -109,13 +113,11 @@ const ProfileSlide = ({
       }),
   });
 
-  // --- handleLogin (sends 'identifier') ---
   const handleLogin = async (e) => {
     e.preventDefault();
     setErrorMessage(null);
     setSuccessMessage(null);
 
-    // 1. Frontend Validation
     const { error } = loginSchema.validate({
       identifier: formData.identifier,
       password: formData.password,
@@ -127,7 +129,6 @@ const ProfileSlide = ({
 
     setIsLoading(true);
     try {
-      // 2. API Call
       const response = await fetch(`${API_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -138,19 +139,19 @@ const ProfileSlide = ({
       });
 
       const data = await response.json();
-
       if (!response.ok) {
         throw new Error(data.message || "Login failed");
       }
 
-      // 3. Handle Success
       localStorage.setItem("token", data.token);
-      setUser(data.user);
-      setIsAdmin(data.user.role === "admin");
+      setUser(data.user); // Ini akan memicu useEffect di App.jsx
 
-      if (data.user.role === "admin") {
+      if (data.user.role === "Pemilik") {
+        navigate("/ceo");
+      } else if (data.user.role === "Admin") {
         navigate("/admin");
       }
+
       setShowProfile(false);
     } catch (err) {
       setErrorMessage(err.message);
@@ -159,16 +160,14 @@ const ProfileSlide = ({
     }
   };
 
-  // --- handleRegister ---
-    const handleRegister = async (e) => {
+  const handleRegister = async (e) => {
     e.preventDefault();
     setErrorMessage(null);
     setSuccessMessage(null);
 
-    // 1. Frontend Validation
     const { error } = registerSchema.validate(formData, {
       abortEarly: true,
-      allowUnknown: true, // <-- ADD THIS LINE
+      allowUnknown: true,
     });
     if (error) {
       setErrorMessage(error.details[0].message);
@@ -177,7 +176,6 @@ const ProfileSlide = ({
 
     setIsLoading(true);
     try {
-      // 2. API Call
       const response = await fetch(`${API_URL}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -186,17 +184,15 @@ const ProfileSlide = ({
           username: formData.username,
           email: formData.email,
           password: formData.password,
-          no_telp: formData.noTelp, // Map frontend 'noTelp' to backend 'no_telp'
+          no_telp: formData.noTelp,
         }),
       });
 
       const data = await response.json();
-
       if (!response.ok) {
         throw new Error(data.message || "Registration failed");
       }
 
-      // 3. Handle Success
       setSuccessMessage(data.message + " Silakan login.");
       changeView("login");
       setFormData({
@@ -215,16 +211,13 @@ const ProfileSlide = ({
     }
   };
 
-  // --- handleLogout ---
   const handleLogout = () => {
     localStorage.removeItem("token");
-    setUser(null);
-    setIsAdmin(false);
+    setUser(null); // Ini akan mereset isAdmin dan isPemilik di App.jsx secara otomatis
     navigate("/");
     changeView("main");
   };
 
-  // --- Helper Functions ---
   const resetView = () => {
     setCurrentView(user ? "profile" : "main");
     setFormData({
@@ -266,7 +259,6 @@ const ProfileSlide = ({
     );
   };
 
-  // --- Render Functions (with 'isLoading' added) ---
   const renderRegisterView = () => (
     <div className="space-y-6">
       <div className="text-center">
@@ -592,7 +584,7 @@ const ProfileSlide = ({
       </div>
     </div>
   );
-  
+
   const renderProfileView = () => (
     <div className="space-y-6">
       <div className="text-center">
@@ -611,7 +603,6 @@ const ProfileSlide = ({
         <p className="text-gray-600">{user?.email}</p>
         <p className="text-sm text-gray-500">Member since {user?.joinDate}</p>
       </div>
-    
       <div className="space-y-3">
         <button
           onClick={handleAccountSettingsClick}
@@ -626,11 +617,9 @@ const ProfileSlide = ({
           <LogOut size={16} /> <span>Logout</span>
         </button>
       </div>
-    
     </div>
   );
 
-  // --- Main Return ---
   return (
     <div
       className={`fixed inset-0 z-50 transition-all duration-300 ${
@@ -638,7 +627,7 @@ const ProfileSlide = ({
       }`}
     >
       <div
-        className={`absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-30Example app listening on port 300 ${
+        className={`absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${
           isOpen ? "opacity-100" : "opacity-0"
         }`}
         onClick={handleClose}

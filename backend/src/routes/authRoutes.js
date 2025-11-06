@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const Users = require("../models/User");
+const User = require("../models/User"); // Menggunakan 'User' sesuai konvensi
+const Product = require("../models/Product"); // Asumsi Anda memiliki model ini
 const jwt = require("jsonwebtoken");
 const {
   hashPassword,
@@ -11,46 +12,20 @@ const {
   loginSchema,
 } = require("../schema/schemaLoginRegister");
 
-// --- Token Verification Middleware ---
-const verifyToken = (req, res, next) => {
-  const authHeader = req.headers["authorization"];
-  const token = authHeader && authHeader.split(" ")[1]; // Bearer TOKEN
+// Impor middleware yang akan kita gunakan
+const { authenticateToken, isPemilik } = require("../middleware/authenticate");
 
-  if (token == null) {
-    return res.status(401).json({ message: "No token provided" });
-  }
+// =================================================================
+// ==                  RUTE PUBLIK (Login & Register)             ==
+// =================================================================
 
-  jwt.verify(
-    process.env.JWT_SECRET || "your-fallback-secret-key",
-    (err, user) => {
-      if (err) {
-        return res.status(403).json({ message: "Token is not valid" });
-      }
-      req.user = user;
-      next();
-    }
-  );
-};
-
-// --- GET Profile Route (Protected) ---
-router.get("/profile", verifyToken, async (req, res) => {
-  try {
-    const user = await Users.findById(req.user.id).select("-password");
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-    res.status(200).json({ user });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: "Server error" });
-  }
-});
-
-// --- POST Register Route ---
+/**
+ * @route   POST /api/auth/register
+ * @desc    Mendaftarkan pengguna baru
+ * @access  Public
+ */
 router.post("/register", async (req, res) => {
   try {
-    // 1. Validate against schema
-    // We only pass fields the schema expects
     const { error } = registerSchema.validate({
       name: req.body.name,
       username: req.body.username,
@@ -58,39 +33,30 @@ router.post("/register", async (req, res) => {
       no_telp: req.body.no_telp,
       password: req.body.password,
     });
-    
     if (error) {
       return res.status(400).json({ message: error.details[0].message });
     }
 
-    // 2. Check for existing user/email
-    const findExistingUser = await Users.findOne({
-      username: req.body.username,
-    });
+    const findExistingUser = await User.findOne({ username: req.body.username });
     if (findExistingUser) {
       return res.status(400).json({ message: "Username sudah digunakan" });
     }
 
-    const findExistingEmail = await Users.findOne({
-      email: req.body.email,
-    });
+    const findExistingEmail = await User.findOne({ email: req.body.email });
     if (findExistingEmail) {
       return res.status(400).json({ message: "Email sudah digunakan" });
     }
 
-    // 3. Hash password and create user
     const hashedPassword = await hashPassword(req.body.password);
-    const newUser = new Users({
+    const newUser = new User({
       username: req.body.username,
       name: req.body.name,
       email: req.body.email,
       no_telp: req.body.no_telp,
       password: hashedPassword,
-      // 'role' will be set by the schema's default ("user")
     });
 
-    // 4. Save user and send response
-    await Users.create(newUser);
+    await newUser.save();
     return res.status(201).json({
       message: "User berhasil didaftarkan",
       data: {
@@ -102,53 +68,51 @@ router.post("/register", async (req, res) => {
       },
     });
   } catch (error) {
-    console.error(error); // Log the error to your terminal
+    console.error(error);
     return res.status(500).json({ message: "Server error" });
   }
 });
 
-// --- POST Login Route (Corrected) ---
+/**
+ * @route   POST /api/auth/login
+ * @desc    Login pengguna
+ * @access  Public
+ */
 router.post("/login", async (req, res) => {
   try {
-    // 1. Validate the request body
     const { error } = loginSchema.validate(req.body);
     if (error) {
       return res.status(400).json({ message: error.details[0].message });
     }
 
-    // 2. Destructure 'identifier' and 'password'
     const { identifier, password } = req.body;
-
-    // 3. Find user by email OR username
-    const user = await Users.findOne({
+    const user = await User.findOne({
       $or: [{ email: identifier }, { username: identifier }],
     });
-
     if (!user) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    // 4. Compare password
     const isMatch = await comparePassword(password, user.password);
     if (!isMatch) {
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    // 5. Check if banned
     if (user.isBanned) {
       return res.status(403).json({ message: "Akun ini telah ditangguhkan." });
     }
 
-    // 6. Create JWT
-    const payload = {
-      id: user._id,
-      username: user.username,
-      role: user.role,
-    };
-    const secret = process.env.JWT_SECRET || "your-fallback-secret-key";
+    const payload = { id: user._id, username: user.username, role: user.role };
+    
+    // PENTING: Gunakan secret yang sama dengan yang diverifikasi oleh middleware
+    const secret = process.env.JWT_ACCESS_SECRET;
+    if (!secret) {
+        console.error("FATAL ERROR: JWT_ACCESS_SECRET is not defined in .env file.");
+        return res.status(500).json({ message: "Server configuration error." });
+    }
+
     const token = jwt.sign(payload, secret, { expiresIn: "1h" });
 
-    // 7. Send successful response
     return res.status(200).json({
       message: "Login successful",
       token: token,
@@ -161,9 +125,111 @@ router.post("/login", async (req, res) => {
       },
     });
   } catch (error) {
-    console.error(error); // This will show the crash error in your terminal
+    console.error(error);
     return res.status(500).json({ message: "Server error" });
   }
+});
+
+
+// =================================================================
+// ==        RUTE TERPROTEKSI UMUM (Untuk Semua User Login)       ==
+// =================================================================
+
+/**
+ * @route   GET /api/auth/profile
+ * @desc    Mendapatkan profil pengguna yang sedang login
+ * @access  Private (Semua peran: User, Admin, Pemilik)
+ */
+router.get("/profile", authenticateToken, async (req, res) => {
+  try {
+    // req.user didapat dari middleware authenticateToken
+    const user = await User.findById(req.user.id).select("-password");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.status(200).json({ user });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({ message: "Server error" });
+  }
+});
+
+
+// =================================================================
+// ==         RUTE TERPROTEKSI KHUSUS (Hanya Untuk Pemilik)       ==
+// =================================================================
+
+/**
+ * @route   GET /api/auth/pemilik/dashboard-stats
+ * @desc    Mendapatkan statistik ringkasan untuk dashboard Pemilik
+ * @access  Private (Hanya Pemilik)
+ */
+router.get("/pemilik/dashboard-stats", [authenticateToken, isPemilik], async (req, res) => {
+    try {
+      const [totalUsers, totalProducts, totalOrders, revenueData] = await Promise.all([
+        User.countDocuments(),
+        Product.countDocuments(),
+        Order.countDocuments(),
+        Order.aggregate([
+          { $match: { status: { $in: ["selesai", "sampai"] } } },
+          { $group: { _id: null, totalRevenue: { $sum: "$totalHarga" } } },
+        ]),
+      ]);
+      const totalRevenue = revenueData.length > 0 ? revenueData[0].totalRevenue : 0;
+      res.status(200).json({
+        message: "Data statistik berhasil diambil",
+        data: { totalUsers, totalProducts, totalOrders, totalRevenue },
+      });
+    } catch (error) {
+      console.error("Error fetching dashboard stats:", error);
+      res.status(500).json({ message: "Terjadi kesalahan pada server" });
+    }
+});
+
+/**
+ * @route   GET /api/auth/pemilik/users
+ * @desc    Mendapatkan semua data pengguna
+ * @access  Private (Hanya Pemilik)
+ */
+router.get("/pemilik/users", [authenticateToken, isPemilik], async (req, res) => {
+    try {
+      const users = await User.find().select("-password");
+      res.status(200).json({
+        message: "Data semua pengguna berhasil diambil",
+        data: users,
+      });
+    } catch (error) {
+      console.error("Error fetching all users:", error);
+      res.status(500).json({ message: "Terjadi kesalahan pada server" });
+    }
+});
+
+/**
+ * @route   PUT /api/auth/pemilik/users/:id/ban
+ * @desc    Melakukan ban atau unban pada seorang pengguna
+ * @access  Private (Hanya Pemilik)
+ */
+router.put("/pemilik/users/:id/ban", [authenticateToken, isPemilik], async (req, res) => {
+    try {
+      const userToUpdate = await User.findById(req.params.id);
+      if (!userToUpdate) {
+        return res.status(404).json({ message: "Pengguna tidak ditemukan" });
+      }
+      if (req.user.id === userToUpdate._id.toString()) {
+          return res.status(403).json({ message: "Anda tidak dapat menangguhkan akun Anda sendiri." });
+      }
+      userToUpdate.isBanned = !userToUpdate.isBanned;
+      await userToUpdate.save();
+      const userResponse = userToUpdate.toObject();
+      delete userResponse.password;
+      res.status(200).json({
+        message: `Pengguna '${userToUpdate.username}' telah berhasil ${userToUpdate.isBanned ? "ditangguhkan" : "diaktifkan kembali"}`,
+        data: userResponse,
+      });
+    } catch (error) {
+      console.error("Error toggling user ban status:", error);
+      res.status(500).json({ message: "Terjadi kesalahan pada server" });
+    }
 });
 
 module.exports = router;
