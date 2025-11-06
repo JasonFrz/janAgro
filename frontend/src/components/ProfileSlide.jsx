@@ -431,8 +431,11 @@ const ProfileSlide = ({
     </div>
   );
 
-  const renderMainView = () => (
+// Di dalam ProfileSlide.jsx
+
+const renderMainView = () => (
     <div className="space-y-6">
+      {/* Bagian atas (info, keuntungan, tombol) tetap sama */}
       <div className="text-center">
         <div className="w-20 h-20 bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center">
           <User size={40} className="text-gray-600" />
@@ -478,27 +481,36 @@ const ProfileSlide = ({
           Daftar
         </button>
       </div>
-      <div className="pt-6 border-t">
-        <h4 className="font-semibold mb-3">Keuntungan Member:</h4>
-        <ul className="space-y-2 text-sm text-gray-600">
-          <li className="flex items-center space-x-2">
-            <div className="w-2 h-2 bg-black rounded-full"></div>
-            <span>Akses layanan digital eksklusif</span>
-          </li>
-          <li className="flex items-center space-x-2">
-            <div className="w-2 h-2 bg-black rounded-full"></div>
-            <span>Notifikasi service dan perawatan</span>
-          </li>
-          <li className="flex items-center space-x-2">
-            <div className="w-2 h-2 bg-black rounded-full"></div>
-            <span>Penawaran khusus dan promosi</span>
-          </li>
-          <li className="flex items-center space-x-2">
-            <div className="w-2 h-2 bg-black rounded-full"></div>
-            <span>Riwayat kendaraan dan service</span>
-          </li>
-        </ul>
+
+      {/* === UI ANIMASI BARU DITAMBAHKAN DI SINI === */}
+      <div className="mt-8 pt-6 border-t border-gray-200 text-center">
+        <div className="flex justify-center items-end h-32">
+          <svg width="100" height="100" viewBox="0 0 100 100">
+            {/* Tanah */}
+            <path d="M 0 95 H 100" stroke="#4a3b2d" strokeWidth="4" />
+            
+            {/* Batang Tanaman */}
+            <path className="plant-stem" d="M 50 95 V 20 C 50 10, 60 10, 60 20" fill="none" stroke="#34D399" strokeWidth="4" strokeLinecap="round" />
+            
+            {/* Daun-daun */}
+            <g className="plant-leaf leaf-1">
+                <circle cx="42" cy="55" r="10" fill="#34D399" />
+            </g>
+             <g className="plant-leaf leaf-2">
+                <circle cx="58" cy="45" r="12" fill="#34D399" />
+            </g>
+             <g className="plant-leaf leaf-3">
+                <circle cx="40" cy="35" r="10" fill="#34D399" />
+            </g>
+             <g className="plant-leaf leaf-4">
+                 <path d="M 60 20 C 65 10, 75 10, 80 20 Z" fill="#34D399" />
+            </g>
+          </svg>
+        </div>
+        <p className="text-gray-600 text-sm mt-2">Inovasi untuk pertanian berkelanjutan.</p>
       </div>
+      {/* === AKHIR DARI UI ANIMASI BARU === */}
+      
     </div>
   );
 
