@@ -1,8 +1,7 @@
 import React, { useState, useRef } from "react";
-import { useNavigate } from "react-router-dom"; // 1. Impor useNavigate
+import { useNavigate } from "react-router-dom";
 import { Star, ArrowLeft, Camera, Image as ImageIcon } from "lucide-react";
 
-// 2. Prop 'setPage' dihapus
 const Review = ({ product, onAddReview }) => {
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
@@ -11,9 +10,8 @@ const Review = ({ product, onAddReview }) => {
   const [error, setError] = useState("");
   const fileInputRef = useRef(null);
 
-  const navigate = useNavigate(); // 3. Inisialisasi useNavigate
+  const navigate = useNavigate(); 
 
-  // Fungsi lain tetap sama
   const handleFileChange = (event) => {
     const file = event.target.files[0];
     if (file && file.type.startsWith("image/")) {
@@ -46,20 +44,19 @@ const Review = ({ product, onAddReview }) => {
       imageUrl: imagePreview,
     });
     alert("Terima kasih atas ulasan Anda!");
-    navigate("/pesanan"); // 4. Menggunakan navigate
+    navigate("/pesanan"); 
   };
 
   return (
     <div className="min-h-screen bg-white pt-24">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <button
-          onClick={() => navigate("/pesanan")} // 5. Menggunakan navigate
+          onClick={() => navigate("/pesanan")}
           className="flex items-center gap-2 text-gray-600 hover:text-black mb-8 transition"
         >
           <ArrowLeft size={20} />
           Kembali ke Pesanan
         </button>
-        {/* Sisa JSX tidak diubah */}
         <div className="bg-white p-8 rounded-lg border border-gray-200">
           <h1 className="text-3xl font-bold text-black mb-2">Beri Ulasan</h1>
           <p className="text-gray-500 mb-6">

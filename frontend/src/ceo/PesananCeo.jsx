@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { Check, X, ArrowRight, Search, ChevronDown } from "lucide-react";
 
-// Komponen untuk badge status yang konsisten
 const StatusBadge = ({ status }) => {
   const statusStyles = {
     diproses: "bg-blue-100 text-blue-800 border-blue-800",
@@ -93,7 +92,6 @@ function PesananCeo({
     <div className="space-y-8">
       <h2 className="text-3xl font-black">Order & Request Management</h2>
 
-      {/* Action Required Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <ActionCard title="Return Requests" count={pendingReturns.length}>
           {pendingReturns.map(order => (
@@ -107,7 +105,6 @@ function PesananCeo({
         </ActionCard>
       </div>
 
-      {/* All Orders Table Section */}
       <div className="bg-white text-black shadow-lg rounded-lg p-6 border-2 border-black">
         <div className="flex flex-col sm:flex-row justify-between items-center mb-6 pb-4 border-b-2 border-black">
           <h2 className="text-2xl font-bold mb-4 sm:mb-0">Comprehensive Order Log</h2>

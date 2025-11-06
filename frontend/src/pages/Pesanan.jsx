@@ -10,8 +10,6 @@ import {
   AlertCircle,
   XCircle,
 } from "lucide-react";
-
-// Komponen Modal untuk konfirmasi selesai pesanan
 const ConfirmationModal = ({ order, onConfirm, onCancel }) => {
   if (!order) return null;
   return (
@@ -40,8 +38,6 @@ const ConfirmationModal = ({ order, onConfirm, onCancel }) => {
     </div>
   );
 };
-
-// Komponen Modal untuk mengajukan pembatalan
 const CancellationModal = ({ order, onCancel, onSubmit }) => {
   const [reason, setReason] = useState("");
   if (!order) return null;
@@ -79,8 +75,6 @@ const CancellationModal = ({ order, onCancel, onSubmit }) => {
     </div>
   );
 };
-
-// Fungsi helper untuk format nomor telepon
 const formatPhoneNumber = (phone) => {
   if (!phone) return "-";
   const digits = String(phone).replace(/\D/g, "");
@@ -95,8 +89,6 @@ const formatPhoneNumber = (phone) => {
   }
   return formatted;
 };
-
-// Komponen untuk menampilkan langkah-langkah pelacakan pesanan
 const TrackerStep = ({ icon, label, isActive, isCompleted }) => {
   return (
     <div className="flex flex-col items-center text-center w-24 z-10">
@@ -124,8 +116,6 @@ const TrackerStep = ({ icon, label, isActive, isCompleted }) => {
     </div>
   );
 };
-
-// Komponen Utama Halaman Pesanan
 const Pesanan = ({
   checkouts,
   user,

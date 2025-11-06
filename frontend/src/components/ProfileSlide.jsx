@@ -19,8 +19,7 @@ const ProfileSlide = ({
   isOpen,
   onClose,
   user,
-  // --- Props yang disederhanakan ---
-  setUser, // Hanya butuh setUser untuk mengkomunikasikan status login ke App.jsx
+  setUser, 
   setShowProfile,
   API_URL,
 }) => {
@@ -138,7 +137,7 @@ const ProfileSlide = ({
       }
 
       localStorage.setItem("token", data.token);
-      setUser(data.user); // Ini akan memicu useEffect di App.jsx
+      setUser(data.user); 
 
       if (data.user.role === "Pemilik") {
         navigate("/ceo");
@@ -207,7 +206,7 @@ const ProfileSlide = ({
 
   const handleLogout = () => {
     localStorage.removeItem("token");
-    setUser(null); // Ini akan mereset isAdmin dan isPemilik di App.jsx secara otomatis
+    setUser(null); 
     navigate("/");
     changeView("main");
   };

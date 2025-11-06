@@ -1,12 +1,9 @@
-// src/ceo/UserCeo.jsx
-
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { Edit, Trash2, UserX, UserCheck } from "lucide-react";
-import ConfirmationModal from "./ConfirmationModalCeo"; // Pastikan path ini benar
-import EditUserModalCeo from "./EditUserModalCeo";   // Komponen modal baru
+import ConfirmationModal from "./ConfirmationModalCeo"; 
+import EditUserModalCeo from "./EditUserModalCeo";   
 
-// Fungsi helper untuk memformat nomor telepon
 const formatPhoneNumber = (phone) => {
   if (!phone) return "-";
   const digits = phone.replace(/\D/g, "");
@@ -38,7 +35,6 @@ function UserCeo() {
 
   const API_URL = import.meta.env.VITE_API_URL;
 
-  // Mengambil data pengguna saat komponen dimuat
   useEffect(() => {
     const fetchUsers = async () => {
       try {
@@ -58,7 +54,6 @@ function UserCeo() {
     fetchUsers();
   }, [API_URL]);
 
-  // Handler untuk memperbarui pengguna
   const handleUpdate = async (id, updatedData) => {
     try {
       const res = await axios.put(
@@ -77,7 +72,6 @@ function UserCeo() {
     }
   };
 
-  // Handler untuk menghapus pengguna
   const handleDelete = async (id) => {
     try {
       await axios.delete(`${API_URL}/admin/delete-user/${id}`);
@@ -87,7 +81,6 @@ function UserCeo() {
     }
   };
 
-  // Handler untuk ban/unban pengguna
   const handleToggleBan = async (id) => {
     try {
       const res = await axios.put(`${API_URL}/admin/toggle-ban/${id}`);
@@ -101,7 +94,6 @@ function UserCeo() {
     }
   };
 
-  // Fungsi untuk membuka modal konfirmasi
   const openConfirmation = (action, user) => {
     setConfirmation({ isOpen: true, action, user });
   };
@@ -115,14 +107,12 @@ function UserCeo() {
     closeConfirmation();
   };
 
-  // Tampilan loading & error
   if (loading) return <div className="text-gray-500 italic">Memuat pengguna...</div>;
   if (error) return <div className="text-red-500">{error}</div>;
 
   const activeUsers = users.filter((u) => !u.isBanned);
   const bannedUsers = users.filter((u) => u.isBanned);
 
-  // Komponen Tabel Pengguna yang dapat digunakan kembali
   const UserTable = ({ title, userList, isBannedList = false }) => (
     <div>
       <h3 className="text-lg font-bold mb-3">

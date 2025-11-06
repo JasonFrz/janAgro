@@ -53,7 +53,6 @@ function Admin({
 
         );
       case "produk":
-        // Teruskan props ke komponen ProdukAdmin
         return (
           <ProdukAdmin
             produk={produk}

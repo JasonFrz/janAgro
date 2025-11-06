@@ -2,11 +2,9 @@ const express = require("express");
 const app = express();
 const port = 3000;
 const cors = require("cors");
-const { connectDatabase } = require("./src/database/database"); // <-- Import this
+const { connectDatabase } = require("./src/database/database"); 
 
-// Connect to MongoDB
-connectDatabase(); // <-- Call this
-
+connectDatabase(); 
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());

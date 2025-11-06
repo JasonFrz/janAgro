@@ -23,13 +23,10 @@ const Notification = ({ message, type }) => {
   );
 };
 
-// TERIMA 'produk' sebagai prop, BUKAN 'setProduk'
 const Shop = ({ user, onAddToCart, cartCount, produk }) => {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [notification, setNotification] = useState(null);
-
-  // Hapus state 'produk' dan useEffect untuk fetch dari sini
 
   useEffect(() => {
     if (notification) {
@@ -39,8 +36,6 @@ const Shop = ({ user, onAddToCart, cartCount, produk }) => {
       return () => clearTimeout(timer);
     }
   }, [notification]);
-
-  // UBAH FUNGSI INI MENJADI ASYNC
   const handleAddToCartClick = async (productId) => {
     const productToAdd = produk.find((p) => p._id === productId);
     if (productToAdd && productToAdd.stock === 0) {
@@ -56,19 +51,13 @@ const Shop = ({ user, onAddToCart, cartCount, produk }) => {
         type: "error",
         message: "Silakan login terlebih dahulu.",
       });
-      return; // Tambahkan return di sini
+      return;
     } 
-    
-    // TUNGGU HASIL DARI onAddToCart DENGAN AWAIT
     const resultMessage = await onAddToCart(productId);
-    
-    // Tentukan tipe notifikasi berdasarkan pesan yang kembali
     const messageType = resultMessage.toLowerCase().includes("gagal") ? "error" : "success";
 
     setNotification({ type: messageType, message: resultMessage });
   };
-
-  // Gunakan prop 'produk' yang diterima dari App.jsx
   const filteredProduk = produk.filter((item) => {
     const matchesCategory =
       selectedCategory === "all" ||

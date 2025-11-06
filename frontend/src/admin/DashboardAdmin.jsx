@@ -107,7 +107,6 @@ function DashboardAdmin({ vouchers = [], produk = [] }) {
               </button>
             </h2>
           </div>
-          {/* Menampilkan status loading, error, atau daftar pengguna */}
           {loading ? (
             <p className="text-gray-500">Memuat pengguna...</p>
           ) : error ? (

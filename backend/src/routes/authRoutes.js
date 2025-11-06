@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
-const User = require("../models/User"); // Menggunakan 'User' sesuai konvensi
-const Product = require("../models/Product"); // Asumsi Anda memiliki model ini
+const User = require("../models/User"); 
+const Product = require("../models/Product"); 
 const jwt = require("jsonwebtoken");
 const {
   hashPassword,
@@ -12,18 +12,8 @@ const {
   loginSchema,
 } = require("../schema/schemaLoginRegister");
 
-// Impor middleware yang akan kita gunakan
 const { authenticateToken, isPemilik } = require("../middleware/authenticate");
 
-// =================================================================
-// ==                  RUTE PUBLIK (Login & Register)             ==
-// =================================================================
-
-/**
- * @route   POST /api/auth/register
- * @desc    Mendaftarkan pengguna baru
- * @access  Public
- */
 router.post("/register", async (req, res) => {
   try {
     const { error } = registerSchema.validate({
@@ -73,11 +63,6 @@ router.post("/register", async (req, res) => {
   }
 });
 
-/**
- * @route   POST /api/auth/login
- * @desc    Login pengguna
- * @access  Public
- */
 router.post("/login", async (req, res) => {
   try {
     const { error } = loginSchema.validate(req.body);
@@ -104,7 +89,6 @@ router.post("/login", async (req, res) => {
 
     const payload = { id: user._id, username: user.username, role: user.role };
     
-    // PENTING: Gunakan secret yang sama dengan yang diverifikasi oleh middleware
     const secret = process.env.JWT_ACCESS_SECRET;
     if (!secret) {
         console.error("FATAL ERROR: JWT_ACCESS_SECRET is not defined in .env file.");
@@ -130,19 +114,8 @@ router.post("/login", async (req, res) => {
   }
 });
 
-
-// =================================================================
-// ==        RUTE TERPROTEKSI UMUM (Untuk Semua User Login)       ==
-// =================================================================
-
-/**
- * @route   GET /api/auth/profile
- * @desc    Mendapatkan profil pengguna yang sedang login
- * @access  Private (Semua peran: User, Admin, Pemilik)
- */
 router.get("/profile", authenticateToken, async (req, res) => {
   try {
-    // req.user didapat dari middleware authenticateToken
     const user = await User.findById(req.user.id).select("-password").lean();
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -150,7 +123,7 @@ router.get("/profile", authenticateToken, async (req, res) => {
     res.status(200).json({ user });
      const userForFrontend = {
       ...userFromDb,
-      noTelp: userFromDb.no_telp, // Buat properti baru 'noTelp' dari 'no_telp'
+      noTelp: userFromDb.no_telp,
     };
   } catch (error) {
     console.error(error);
@@ -158,16 +131,6 @@ router.get("/profile", authenticateToken, async (req, res) => {
   }
 });
 
-
-// =================================================================
-// ==         RUTE TERPROTEKSI KHUSUS (Hanya Untuk Pemilik)       ==
-// =================================================================
-
-/**
- * @route   GET /api/auth/pemilik/dashboard-stats
- * @desc    Mendapatkan statistik ringkasan untuk dashboard Pemilik
- * @access  Private (Hanya Pemilik)
- */
 router.get("/pemilik/dashboard-stats", [authenticateToken, isPemilik], async (req, res) => {
     try {
       const [totalUsers, totalProducts, totalOrders, revenueData] = await Promise.all([
@@ -190,11 +153,6 @@ router.get("/pemilik/dashboard-stats", [authenticateToken, isPemilik], async (re
     }
 });
 
-/**
- * @route   GET /api/auth/pemilik/users
- * @desc    Mendapatkan semua data pengguna
- * @access  Private (Hanya Pemilik)
- */
 router.get("/pemilik/users", [authenticateToken, isPemilik], async (req, res) => {
     try {
       const users = await User.find().select("-password");
@@ -208,11 +166,6 @@ router.get("/pemilik/users", [authenticateToken, isPemilik], async (req, res) =>
     }
 });
 
-/**
- * @route   PUT /api/auth/pemilik/users/:id/ban
- * @desc    Melakukan ban atau unban pada seorang pengguna
- * @access  Private (Hanya Pemilik)
- */
 router.put("/pemilik/users/:id/ban", [authenticateToken, isPemilik], async (req, res) => {
     try {
       const userToUpdate = await User.findById(req.params.id);

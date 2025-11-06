@@ -107,7 +107,7 @@ const Cart = ({
         setUseProfilePhone(isChecked);
         setCustomerPhone(
           isChecked && user
-            ? user.no_telp // <-- Gunakan underscore
+            ? user.no_telp 
               ? user.no_telp.replace(/\D/g, "")
               : ""
             : ""
@@ -124,34 +124,24 @@ const Cart = ({
     }
     if (error.includes("Nomor Telepon")) setError("");
   };
-
-// File: Cart.jsx
-
 const cartDetails = cart
   .map((item) => {
     let productData;
-
-    // Cek apakah productId adalah objek (sudah di-populate)
     if (item.productId && typeof item.productId === 'object') {
       productData = item.productId;
     } 
-    // Jika bukan objek, berarti itu string ID. Cari di prop 'produk'.
     else if (item.productId) {
       productData = produk.find(p => p._id === item.productId);
     }
-
-    // Jika setelah semua usaha produk tidak ditemukan, jangan render item ini.
     if (!productData) {
       return null;
     }
-
-    // Gabungkan data produk yang ditemukan dengan kuantitas dari keranjang.
     return {
       ...productData,
       quantity: item.quantity,
     };
   })
-  .filter(Boolean); // <-- Ini akan menghapus semua item yang 'null'
+  .filter(Boolean);
 
   const subtotal = cartDetails.reduce(
     (sum, item) => sum + item.price * item.quantity,

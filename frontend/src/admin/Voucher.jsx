@@ -22,13 +22,13 @@ function Voucher({ vouchers, onAdd, onUpdate, onDelete }) {
     setIsConfirmOpen(true);
   };
   const handleDelete = () => {
-    onDelete(voucherToDelete._id); // <-- Gunakan _id
+    onDelete(voucherToDelete._id); 
     setIsConfirmOpen(false);
     setVoucherToDelete(null);
   };
   const handleSaveVoucher = (voucherData) => {
     if (editingVoucher) {
-      onUpdate(editingVoucher._id, voucherData); // <-- Gunakan _id
+      onUpdate(editingVoucher._id, voucherData); 
     } else {
       onAdd(voucherData);
     }

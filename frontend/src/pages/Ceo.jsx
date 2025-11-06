@@ -5,14 +5,14 @@ import {
   Package,
   ShoppingCart,
   Ticket,
-  FileText, // Icon for Reports
+  FileText, 
 } from "lucide-react";
 import DashboardCeo from "../ceo/DashboardCeo";
 import ProdukCeo from "../ceo/ProdukCeo";
 import PesananCeo from "../ceo/PesananCeo";
 import VoucherCeo from "../ceo/VoucherCeo";
 import UserCeo from "../ceo/UserCeo";
-import { Link } from "react-router-dom"; // for Laporan link
+import { Link } from "react-router-dom"; 
 
 function Ceo({
   users,
@@ -141,9 +141,7 @@ function Ceo({
           >
             Orders
           </NavButton>
-          
-
-          {/* Link to LaporanPesanan page */}
+        
           <Link
             to="/laporan"
             className="flex items-center w-full px-4 py-3 rounded-lg font-bold transition-all duration-200 border-2 bg-white text-black border-transparent hover:border-black hover:bg-gray-100"

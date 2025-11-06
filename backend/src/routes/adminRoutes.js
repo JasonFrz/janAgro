@@ -43,7 +43,6 @@ router.delete("/delete-user/:id", async (req, res) => {
   }
 });
 
-// ✅ TOGGLE ban/unban user
 router.put("/toggle-ban/:id", async (req, res) => {
   try {
     const { id } = req.params;

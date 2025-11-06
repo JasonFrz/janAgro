@@ -40,7 +40,6 @@ export default function ShopPage() {
 
   const handleCheckout = async (checkoutData) => {
     console.log("Checkout data:", checkoutData);
-    // Here you can call your backend
     return { success: true };
   };
 
@@ -51,7 +50,7 @@ export default function ShopPage() {
         onAddToCart={handleAddToCart}
         cartCount={cart.reduce((sum, item) => sum + item.quantity, 0)}
         produk={produk}
-        setProduk={setProduk} // allow Shop to set products after fetching
+        setProduk={setProduk} 
       />
       <Cart
         cart={cart}

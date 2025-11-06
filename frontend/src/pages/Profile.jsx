@@ -9,10 +9,7 @@ import {
   Phone,
   MapPin,
 } from "lucide-react";
-// Impor HANYA modal yang baru
 import EditProfileModal from "../components/EditProfileModal";
-
-// Fungsi helper ini sudah bagus, kita pertahankan
 const formatPhoneNumber = (phone) => {
   if (!phone) return "-";
   const digits = phone.replace(/\D/g, "");
@@ -30,15 +27,12 @@ const formatPhoneNumber = (phone) => {
   }
   return formatted;
 };
-
-// Kita akan menyederhanakan props yang diterima
 const Profile = ({
   user,
   onAvatarChange,
-  onProfileSave, // Menggantikan onProfileUpdate dan onPasswordChange
+  onProfileSave, 
 }) => {
   const [preview, setPreview] = useState(user?.avatar || null);
-  // Cukup satu state untuk mengontrol modal
   const [isModalOpen, setIsModalOpen] = useState(false);
   const fileInputRef = useRef(null);
 
@@ -49,7 +43,6 @@ const Profile = ({
       reader.onloadend = () => {
         const newAvatarUrl = reader.result;
         setPreview(newAvatarUrl);
-        // Memanggil fungsi untuk update avatar yang mungkin ada di App.jsx
         onAvatarChange(newAvatarUrl);
       };
       reader.readAsDataURL(file);
@@ -68,17 +61,13 @@ const Profile = ({
     );
   }
 
-  // Fungsi untuk menangani penyimpanan dari modal
   const handleSaveFromModal = async (userId, payload) => {
     const result = await onProfileSave(userId, payload);
-    // Modal akan menampilkan pesan sukses/error sendiri,
-    // dan menutup otomatis jika sukses.
     return result;
   };
 
   return (
     <>
-      {/* Hanya satu modal yang dirender */}
       {isModalOpen && (
         <EditProfileModal
           user={user}
@@ -133,7 +122,6 @@ const Profile = ({
                 Informasi Profil
               </h3>
               <div className="space-y-4">
-                {/* Tampilan informasi profil tetap sama */}
                 <div className="flex items-center p-4 bg-gray-50 rounded-lg">
                   <User className="text-gray-400 mr-4 flex-shrink-0" size={20} />
                   <div className="flex-grow">
@@ -160,7 +148,6 @@ const Profile = ({
                   <div className="flex-grow">
                     <p className="text-sm text-gray-500">Nomor Telepon</p>
                     <p className="text-black font-medium">
-                      {/* Pastikan fieldnya `no_telp` atau `noTelp` sesuai data user */}
                       {formatPhoneNumber(user.no_telp || user.noTelp)}
                     </p>
                   </div>
@@ -178,13 +165,11 @@ const Profile = ({
                   <Calendar className="text-gray-400 mr-4 flex-shrink-0" size={20} />
                   <div className="flex-grow">
                     <p className="text-sm text-gray-500">Bergabung Sejak</p>
-                    {/* Pastikan properti joinDate ada di objek user */}
                     <p className="text-black font-medium">{user.joinDate || new Date(user.createdAt).toLocaleDateString("id-ID")}</p>
                   </div>
                 </div>
               </div>
             </div>
-            {/* Tombol digabung menjadi satu */}
             <div className="border-t border-gray-200 mt-8 pt-8">
               <button
                 onClick={() => setIsModalOpen(true)}

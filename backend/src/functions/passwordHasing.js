@@ -12,8 +12,6 @@ const hashPassword = async (password) => {
 
 const comparePassword = async (password, hashedPassword) => {
   try {
-    // 'password' is the plain text from the user
-    // 'hashedPassword' is the hash from the database
     const isMatch = await bcrypt.compare(password, hashedPassword);
     return isMatch;
   } catch (error) {

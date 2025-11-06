@@ -200,39 +200,29 @@ function App() {
     }
     const token = localStorage.getItem("token");
     if (!token) {
-      // Handle jika user belum login
       alert("Silakan login untuk menambahkan produk ke keranjang.");
       return;
     }
 
-    // File: App.jsx, di dalam fungsi handleAddToCart
-
 try {
 console.log("Mencoba menambahkan ke keranjang dengan URL:", `${API_URL}/api/cart`);
   const response = await axios.post(
-    `${API_URL}/cart/add`, // <-- URL YANG DIPERBAIKI
+    `${API_URL}/cart/add`, 
     { productId: productId, quantity: 1 },
     { headers: { Authorization: `Bearer ${token}` } }
   );
 
   if (response.data.success) {
-    // Update state frontend dengan data terbaru dari server
     setCart(response.data.data.items);
-    // Berikan pesan sukses yang lebih spesifik
     return "Produk berhasil ditambahkan ke keranjang!";
   } else {
-    // Handle kasus jika success=false dari server
     return response.data.message || "Gagal menambahkan produk.";
   }
 } catch (error) {
   console.error("Gagal menambahkan ke keranjang:", error.response?.data?.message || error.message);
-  // Ambil pesan error dari server jika ada, jika tidak, gunakan pesan default
   return error.response?.data?.message || "Gagal menambahkan produk ke keranjang.";
 }
   };
-
-
-    // Inside Shop.jsx
   useEffect(() => {
     fetchProduk();
   }, []);
@@ -241,36 +231,29 @@ console.log("Mencoba menambahkan ke keranjang dengan URL:", `${API_URL}/api/cart
     try {
       const res = await axios.get("http://localhost:3000/api/products/get-all-products");
       if (res.data.success) {
-        setProduk(res.data.data); // <-- this is now parent state
+        setProduk(res.data.data);
       }
     } catch (err) {
       console.error("Gagal fetch produk:", err);
     }
   };
-
-
-// File: App.jsx
-
 useEffect(() => {
   const fetchCart = async () => {
     const token = localStorage.getItem("token");
     if (user && token) {
-      console.log("FETCHING CART for user:", user.name); // <-- LOG 1: Cek apakah fungsi dipanggil
+      console.log("FETCHING CART for user:", user.name);
       try {
         const response = await axios.get(`${API_URL}/cart`, {
           headers: { Authorization: `Bearer ${token}` },
-        });
-
-        // --- LOG KRUSIAL ---
-        console.log("RAW RESPONSE from /api/cart:", response); // <-- LOG 2: Lihat seluruh respons
+        });-
+        console.log("RAW RESPONSE from /api/cart:", response); 
         
         if (response.data.success) {
-          console.log("DATA to be set into cart state:", response.data.data.items); // <-- LOG 3: Lihat data item
+          console.log("DATA to be set into cart state:", response.data.data.items); 
           setCart(response.data.data.items || []);
         }
 
       } catch (error) {
-        // --- LOG PENTING JIKA GAGAL ---
         console.error("Gagal mengambil data keranjang (fetchCart):", error.response || error.message); // <-- LOG 4: Lihat detail error
         setCart([]);
       }
@@ -279,7 +262,7 @@ useEffect(() => {
     }
   };
   fetchCart();
-}, [user]); // Berjalan setiap kali state 'user' berubah
+}, [user]); 
 
  
 
@@ -331,28 +314,24 @@ useEffect(() => {
             headers: { Authorization: `Bearer ${token}` },
           });
           if (response.data.success) {
-            setCheckouts(response.data.data); // Set data pesanan
+            setCheckouts(response.data.data); 
           }
         } catch (error) {
           console.error("Gagal mengambil data pesanan:", error);
         }
       } else {
-        setCheckouts([]); // Kosongkan pesanan jika logout
+        setCheckouts([]);
       }
     };
     
     fetchCheckouts();
-  }, [user]); // Jalankan setiap kali user berubah (login/logout)
-
-
-  // --- MODIFIKASI FUNGSI handleCheckout ---
+  }, [user]);
   const handleCheckout = async (checkoutData) => {
     const token = localStorage.getItem("token");
     if (!token) {
       return { success: false, message: "Autentikasi gagal." };
     }
     try {
-      // Panggil API untuk membuat pesanan
       const response = await axios.post(
         `${API_URL}/checkouts/create`, 
         checkoutData, 
@@ -360,10 +339,8 @@ useEffect(() => {
       );
 
       if (response.data.success) {
-        // Kosongkan keranjang di frontend
         setCart([]);
         fetchVouchers();
-        // Tambahkan pesanan baru ke daftar pesanan di frontend
         setCheckouts(prevCheckouts => [response.data.data, ...prevCheckouts]);
         
         navigate("/pesanan");
@@ -423,7 +400,6 @@ const handleProfileSave = async (userId, payload) => {
     }
 
     try {
-      // Endpoint ini adalah contoh, sesuaikan dengan backend Anda
       const response = await axios.put(
         `${API_URL}/users/update-profile/${userId}`,
         payload,
@@ -433,7 +409,7 @@ const handleProfileSave = async (userId, payload) => {
       );
 
       if (response.data.success) {
-        setUser(response.data.user); // Perbarui state user dengan data terbaru dari server
+        setUser(response.data.user);
         return { success: true, message: "Profil berhasil diperbarui!" };
       }
     } catch (error) {
@@ -523,9 +499,6 @@ const handleProfileSave = async (userId, payload) => {
       )
     );
   };
-
-  // const [allProducts, setAllProducts] = useState([]);
-
   const fetchProducts = async () => {
     try {
       const response = await fetch(`${API_URL}/products/get-all-products`);
@@ -548,7 +521,6 @@ const handleProfileSave = async (userId, payload) => {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          // 'Authorization': `Bearer ${localStorage.getItem('token')}` // Jika perlu
         },
         body: JSON.stringify(newData),
       });
@@ -566,7 +538,6 @@ const handleProfileSave = async (userId, payload) => {
     }
   };
 
-  // [UPDATE] Mengirim data produk yang diperbarui ke server
   const handleUpdateProduk = async (produkId, updatedData) => {
     try {
       const response = await fetch(
@@ -575,7 +546,6 @@ const handleProfileSave = async (userId, payload) => {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
-            // 'Authorization': `Bearer ${localStorage.getItem('token')}` // Jika perlu
           },
           body: JSON.stringify(updatedData),
         }
@@ -594,7 +564,6 @@ const handleProfileSave = async (userId, payload) => {
     }
   };
 
-  // [DELETE] Menghapus produk dari server
   const handleDeleteProduk = async (produkId) => {
     try {
       const response = await fetch(
@@ -602,7 +571,6 @@ const handleProfileSave = async (userId, payload) => {
         {
           method: "DELETE",
           headers: {
-            // 'Authorization': `Bearer ${localStorage.getItem('token')}` // Jika perlu
           },
         }
       );
@@ -643,7 +611,7 @@ const handleProfileSave = async (userId, payload) => {
       });
       const result = await response.json();
       if (response.ok) {
-        setVouchers([result.data, ...vouchers]); // Tambahkan di awal array
+        setVouchers([result.data, ...vouchers]); 
         alert(result.message);
       } else {
         alert(result.message || "Gagal menambahkan voucher.");
@@ -677,7 +645,6 @@ const handleProfileSave = async (userId, payload) => {
     }
   };
 
-  // [DELETE] Menghapus voucher
   const handleDeleteVoucher = async (voucherId) => {
     try {
       const response = await fetch(
@@ -698,9 +665,7 @@ const handleProfileSave = async (userId, payload) => {
     }
   };
 
-  // useEffect untuk memuat data saat komponen pertama kali dirender
   useEffect(() => {
-    // fetchUserProfile(); // Panggil fungsi untuk mengambil data user
     fetchVouchers();
     fetchProducts();
   }, []);
@@ -736,7 +701,6 @@ return (
               <ProductDetailWrapper
                 produk={produk}
                 reviews={reviews}
-                // users={users} // This data is not available yet
                 user={user}
                 onAddToCart={handleAddToCart}
                 cartCount={cart.length}
@@ -766,8 +730,6 @@ return (
                 checkouts={checkouts}
                 user={user}
                 reviews={reviews}
-                // onConfirmFinished={handleConfirmOrderFinished}
-                // onRequestCancellation={handleRequestCancellation}
                 API_URL={API_URL}
               />
             }
@@ -777,7 +739,6 @@ return (
             element={
               <ReviewWrapper
                 produk={produk}
-                // onAddReview={handleAddReview}
                 API_URL={API_URL}
               />
             }
@@ -787,7 +748,6 @@ return (
             element={
               <PengembalianBarangWrapper
                 checkouts={checkouts}
-                // onSubmitReturn={handleRequestReturn}
                 API_URL={API_URL}
               />
             }
@@ -801,10 +761,9 @@ return (
                 <Profile
                   user={user}
                   onAvatarChange={handleAvatarChange}
-                  onProfileSave={handleProfileSave} // Prop baru
+                  onProfileSave={handleProfileSave} 
                 />
               ) : (
-                // Redirect ke Home atau tampilkan halaman login jika tidak ada user
                 <Home API_URL={API_URL} />
               )
             }
@@ -814,24 +773,19 @@ return (
             element={
               isAdmin ? (
                 <Admin
-                  // users={users}
                   vouchers={vouchers}
                   onAddVoucher={handleAddVoucher}
                   onUpdateVoucher={handleUpdateVoucher}
                   onDeleteVoucher={handleDeleteVoucher}
                   produk={produk}
                   checkouts={checkouts}
-                  // returns={returns}
-                  // cancellations={cancellations}
-                  // ... (pass other admin props & handlers) ..
-                  // .
                   onAddProduk={handleAddProduk}
                   onUpdateProduk={handleUpdateProduk}
                   onDeleteProduk={handleDeleteProduk}
                   API_URL={API_URL}
                 />
               ) : (
-                <Home API_URL={API_URL} /> // Redirect to Home if not admin
+                <Home API_URL={API_URL} /> 
               )
             }
           />
@@ -859,7 +813,7 @@ return (
                   onRejectCancellation={handleRejectCancellation}
                 />
               ) : (
-                <Home API_URL={API_URL} /> // Redirect jika bukan pemilik
+                <Home API_URL={API_URL} /> 
               )
             }
           />
@@ -901,15 +855,10 @@ const ProductDetailWrapper = ({
   API_URL,
 }) => {
   const { id } = useParams();
-  // Find product from the fetched list
   const selectedProduct = produk.find((p) => p._id === id);
-
-  // You might need to add a check here if 'produk' is still loading
   if (produk.length === 0) {
-    return <div>Loading product...</div>; // Or a loading spinner
+    return <div>Loading product...</div>;
   }
-
-  // Handle if product not found (e.g., bad ID)
   if (!selectedProduct) {
     return <div>Product not found.</div>;
   }

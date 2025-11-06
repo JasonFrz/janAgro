@@ -42,21 +42,17 @@ function DashboardCeo({ users = [], vouchers = [], produk = [], checkouts = [] }
       .slice(0, 5)
       .map(c => ({ ...c, type: 'order' }));
       
-    // Placeholder for other activities if needed in future
-    // For now, we only show recent orders
     return recentCheckouts;
   }, [checkouts]);
 
 
   return (
     <div className="space-y-8">
-      {/* Header */}
       <div>
         <h1 className="text-4xl font-black">CEO Dashboard</h1>
         <p className="text-gray-600 text-lg">High-level overview of JanAgro's performance.</p>
       </div>
 
-      {/* Main Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard 
           icon={<BarChart2 size={24} />} 
@@ -87,7 +83,6 @@ function DashboardCeo({ users = [], vouchers = [], produk = [], checkouts = [] }
         />
       </div>
 
-      {/* Recent Activities & Inventory Overview */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 bg-white border-2 border-black rounded-lg p-6 shadow-xl">
           <h2 className="text-xl font-bold mb-4 pb-2 border-b-2 border-black">Recent Activities</h2>

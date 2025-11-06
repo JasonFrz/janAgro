@@ -1,6 +1,5 @@
 const Joi = require("joi");
 
-// --- Schema for Register ---
 const registerSchema = Joi.object({
   name: Joi.string().required().messages({
     "string.empty": "Nama lengkap wajib diisi",
@@ -23,11 +22,8 @@ const registerSchema = Joi.object({
     "string.empty": "Password wajib diisi",
     "string.min": "Password minimal 6 karakter",
   }),
-  // This assumes 'confirmPassword' is only checked on the frontend
-  // and not sent to the backend. If you send it, add it here.
 });
 
-// --- Schema for Login ---
 const loginSchema = Joi.object({
   identifier: Joi.string().required().messages({
     "string.empty": "Email atau username wajib diisi",

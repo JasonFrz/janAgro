@@ -6,9 +6,9 @@ const UserSchema = new mongoose.Schema(
     username: { type: String, required: true },
     password: { type: String, required: true },
     email: { type: String, required: true },
-    alamat: { type: String, required: false }, // <-- Changed: no longer required
+    alamat: { type: String, required: false }, 
     no_telp: { type: String, required: true },
-    role: { type: String, required: true, default: "user" }, // <-- Changed: added default
+    role: { type: String, required: true, default: "user" },
     cart: [
       {
         products: {

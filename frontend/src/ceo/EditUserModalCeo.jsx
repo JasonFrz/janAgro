@@ -1,5 +1,3 @@
-// src/ceo/EditUserModalCeo.jsx
-
 import React, { useState } from "react";
 import { X, User, Mail, AtSign, Lock, Phone, MapPin } from "lucide-react";
 
@@ -15,7 +13,6 @@ const EditUserModalCeo = ({ user, onClose, onSave }) => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    // Hanya izinkan angka untuk nomor telepon
     if (name === "noTelp") {
       const numericValue = value.replace(/\D/g, "");
       setFormData({ ...formData, [name]: numericValue });
@@ -26,12 +23,10 @@ const EditUserModalCeo = ({ user, onClose, onSave }) => {
 
   const handleSave = async () => {
     const dataToSave = { ...formData };
-    // Jangan kirim kata sandi kosong ke backend
     if (!dataToSave.password) {
       delete dataToSave.password;
     }
 
-    // Ubah 'noTelp' kembali menjadi 'no_telp' agar sesuai dengan skema database
     dataToSave.no_telp = dataToSave.noTelp;
     delete dataToSave.noTelp;
 
@@ -55,7 +50,6 @@ const EditUserModalCeo = ({ user, onClose, onSave }) => {
         </div>
 
         <div className="space-y-4">
-          {/* Username */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
             <div className="relative">
@@ -63,7 +57,6 @@ const EditUserModalCeo = ({ user, onClose, onSave }) => {
               <input type="text" name="username" value={formData.username} onChange={handleInputChange} className="w-full pl-10 pr-4 py-3 border rounded-md focus:ring-2 focus:ring-black" />
             </div>
           </div>
-          {/* Full Name */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
             <div className="relative">
@@ -71,7 +64,6 @@ const EditUserModalCeo = ({ user, onClose, onSave }) => {
               <input type="text" name="name" value={formData.name} onChange={handleInputChange} className="w-full pl-10 pr-4 py-3 border rounded-md focus:ring-2 focus:ring-black" />
             </div>
           </div>
-          {/* Email */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
             <div className="relative">
@@ -79,7 +71,6 @@ const EditUserModalCeo = ({ user, onClose, onSave }) => {
               <input type="email" name="email" value={formData.email} onChange={handleInputChange} className="w-full pl-10 pr-4 py-3 border rounded-md focus:ring-2 focus:ring-black" />
             </div>
           </div>
-          {/* Nomor Telepon */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Nomor Telepon</label>
             <div className="relative">
@@ -87,7 +78,6 @@ const EditUserModalCeo = ({ user, onClose, onSave }) => {
               <input type="tel" name="noTelp" value={formData.noTelp} onChange={handleInputChange} className="w-full pl-10 pr-4 py-3 border rounded-md focus:ring-2 focus:ring-black" />
             </div>
           </div>
-          {/* Alamat */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Alamat</label>
             <div className="relative">
@@ -95,7 +85,6 @@ const EditUserModalCeo = ({ user, onClose, onSave }) => {
               <textarea name="alamat" value={formData.alamat} onChange={handleInputChange} className="w-full pl-10 pr-4 py-3 border rounded-md focus:ring-2 focus:ring-black" rows="3"></textarea>
             </div>
           </div>
-          {/* New Password */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Kata Sandi Baru</label>
             <div className="relative">

@@ -12,39 +12,32 @@ import {
 } from "lucide-react";
 
 const EditProfileModal = ({ user, onClose, onSave }) => {
-  // State untuk data profil
   const [formData, setFormData] = useState({
     name: user.name || "",
     username: user.username || "",
     email: user.email || "",
-    no_telp: user.no_telp || "", // Sesuaikan dengan nama field di backend
+    no_telp: user.no_telp || "", 
     alamat: user.alamat || "",
   });
 
-  // State untuk perubahan password
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
     newPassword: "",
     confirmNewPassword: "",
   });
 
-  // State untuk pesan error dan sukses
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Handler untuk perubahan input data profil
   const handleProfileChange = (e) => {
     const { name, value } = e.target;
     if (name === "no_telp") {
-      // Hanya izinkan angka untuk nomor telepon
       const numericValue = value.replace(/\D/g, "");
       setFormData({ ...formData, [name]: numericValue });
     } else {
       setFormData({ ...formData, [name]: value });
     }
   };
-
-  // Handler untuk perubahan input password
   const handlePasswordChange = (e) => {
     const { name, value } = e.target;
     setPasswordData({ ...passwordData, [name]: value });
@@ -53,8 +46,6 @@ const EditProfileModal = ({ user, onClose, onSave }) => {
   const handleSaveChanges = async () => {
     setError("");
     setSuccess("");
-
-    // Validasi #1: Password saat ini wajib diisi untuk menyimpan perubahan apa pun.
     if (!passwordData.currentPassword) {
       setError("Password Anda saat ini diperlukan untuk menyimpan perubahan.");
       return;
@@ -64,15 +55,11 @@ const EditProfileModal = ({ user, onClose, onSave }) => {
       profileData: formData,
       currentPassword: passwordData.currentPassword,
     };
-
-    // Validasi #2: Jika pengguna mencoba mengubah password
     if (passwordData.newPassword) {
       if (passwordData.newPassword !== passwordData.confirmNewPassword) {
         setError("Konfirmasi password baru tidak cocok.");
         return;
       }
-
-      // Validasi #3: Aturan panjang password berdasarkan peran (role)
       if (
         user.role.toLowerCase() === "pengguna" &&
         passwordData.newPassword.length < 6
@@ -80,19 +67,15 @@ const EditProfileModal = ({ user, onClose, onSave }) => {
         setError("Password baru harus memiliki minimal 6 karakter.");
         return;
       }
-      // Untuk 'Admin' dan 'Pemilik', pemeriksaan panjang karakter dilewati.
 
       payload.newPassword = passwordData.newPassword;
     }
-
-    // Panggil fungsi onSave dari parent dengan membawa payload
-    // Fungsi ini yang akan melakukan panggilan API ke backend
     const result = await onSave(user._id, payload);
 
     if (result && result.success) {
       setSuccess(result.message);
       setTimeout(() => {
-        onClose(); // Tutup modal setelah berhasil
+        onClose(); 
       }, 2000);
     } else {
       setError(result.message || "Gagal menyimpan perubahan. Coba lagi.");
@@ -113,7 +96,6 @@ const EditProfileModal = ({ user, onClose, onSave }) => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-          {/* Kolom Kiri: Informasi Profil */}
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
@@ -137,8 +119,6 @@ const EditProfileModal = ({ user, onClose, onSave }) => {
               </div>
             </div>
           </div>
-
-          {/* Kolom Kanan: Kontak & Alamat */}
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Nomor Telepon</label>
@@ -156,8 +136,6 @@ const EditProfileModal = ({ user, onClose, onSave }) => {
             </div>
           </div>
         </div>
-
-        {/* Bagian Ganti Password & Konfirmasi */}
         <div className="mt-6 pt-6 border-t">
           <h3 className="text-lg font-bold text-black mb-4">Ganti Password (Opsional)</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
@@ -190,8 +168,6 @@ const EditProfileModal = ({ user, onClose, onSave }) => {
             <input type="password" name="currentPassword" value={passwordData.currentPassword} onChange={handlePasswordChange} className="w-full pl-10 pr-4 py-3 border rounded-md focus:ring-2 focus:ring-black" placeholder="Password saat ini" />
           </div>
         </div>
-
-        {/* Pesan Error & Sukses */}
         {error && (
           <div className="mt-4 flex items-center space-x-2 text-red-700 p-3 bg-red-50 rounded-lg">
             <AlertCircle size={20} />
@@ -204,8 +180,6 @@ const EditProfileModal = ({ user, onClose, onSave }) => {
             <span className="text-sm font-medium">{success}</span>
           </div>
         )}
-
-        {/* Tombol Aksi */}
         <div className="flex space-x-4 pt-6 mt-6 border-t">
           <button
             onClick={onClose}
@@ -215,7 +189,7 @@ const EditProfileModal = ({ user, onClose, onSave }) => {
           </button>
           <button
             onClick={handleSaveChanges}
-            disabled={!!success} // Nonaktifkan tombol setelah sukses
+            disabled={!!success} 
             className="w-full bg-black text-white py-3 rounded-md hover:bg-gray-800 font-bold disabled:bg-gray-400"
           >
             Simpan Perubahan

@@ -2,7 +2,6 @@ const express = require("express");
 const router = express.Router();
 const Voucher = require("../models/Voucher");
 
-// CREATE - Menambah voucher baru
 router.post("/add-voucher", async (req, res) => {
   try {
     const newVoucher = new Voucher(req.body);
@@ -13,7 +12,6 @@ router.post("/add-voucher", async (req, res) => {
       message: "Voucher berhasil ditambahkan",
     });
   } catch (error) {
-    // Tangani error jika kode voucher duplikat
     if (error.code === 11000) {
       return res.status(400).json({ success: false, message: "Kode voucher sudah ada." });
     }
@@ -21,10 +19,9 @@ router.post("/add-voucher", async (req, res) => {
   }
 });
 
-// READ - Mendapatkan semua voucher
 router.get("/get-all-vouchers", async (req, res) => {
   try {
-    const allVouchers = await Voucher.find().sort({ createdAt: -1 }); // Urutkan dari yang terbaru
+    const allVouchers = await Voucher.find().sort({ createdAt: -1 });
     res.json({
       success: true,
       data: allVouchers,
@@ -34,7 +31,6 @@ router.get("/get-all-vouchers", async (req, res) => {
   }
 });
 
-// UPDATE - Memperbarui voucher berdasarkan ID
 router.put("/update-voucher/:id", async (req, res) => {
   try {
     const updatedVoucher = await Voucher.findByIdAndUpdate(
@@ -58,7 +54,6 @@ router.put("/update-voucher/:id", async (req, res) => {
   }
 });
 
-// DELETE - Menghapus voucher berdasarkan ID
 router.delete("/delete-voucher/:id", async (req, res) => {
   try {
     const deletedVoucher = await Voucher.findByIdAndDelete(req.params.id);

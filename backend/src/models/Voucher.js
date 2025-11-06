@@ -5,8 +5,8 @@ const VoucherSchema = new mongoose.Schema(
     code: {
       type: String,
       required: true,
-      unique: true, // Setiap kode voucher harus unik
-      uppercase: true, // Simpan dalam huruf besar
+      unique: true, 
+      uppercase: true,
     },
     discountPercentage: {
       type: Number,

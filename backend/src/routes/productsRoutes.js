@@ -2,7 +2,6 @@ const express = require("express");
 const router = express.Router();
 const Product = require("../models/Product");
 
-// CREATE - Menambah produk baru
 router.post("/add-product", async (req, res) => {
   try {
     const newProduct = new Product(req.body);
@@ -18,7 +17,6 @@ router.post("/add-product", async (req, res) => {
   }
 });
 
-// READ - Mendapatkan semua produk
 router.get("/get-all-products", async (req, res) => {
   try {
     const getAllProducts = await Product.find();
@@ -32,13 +30,12 @@ router.get("/get-all-products", async (req, res) => {
   }
 });
 
-// UPDATE - Memperbarui produk berdasarkan ID
 router.put("/update-product/:id", async (req, res) => {
   try {
     const updatedProduct = await Product.findByIdAndUpdate(
       req.params.id,
       { $set: req.body },
-      { new: true } // Opsi ini mengembalikan dokumen yang sudah diperbarui
+      { new: true } 
     );
     if (!updatedProduct) {
       return res.status(404).json({ success: false, message: "Produk tidak ditemukan" });
@@ -54,7 +51,6 @@ router.put("/update-product/:id", async (req, res) => {
   }
 });
 
-// DELETE - Menghapus produk berdasarkan ID
 router.delete("/delete-product/:id", async (req, res) => {
   try {
     const deletedProduct = await Product.findByIdAndDelete(req.params.id);
