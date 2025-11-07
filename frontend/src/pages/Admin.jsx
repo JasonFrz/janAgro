@@ -124,7 +124,7 @@ function Admin({
             }`}
           >
             {" "}
-            <Package className="mr-2 h-5 w-5" /> Produk{" "}
+            <Package className="mr-2 h-5 w-5" /> Product{" "}
           </button>
           <button
             onClick={() => setActiveTab("vouchers")}
@@ -146,7 +146,7 @@ function Admin({
             }`}
           >
             {" "}
-            <ShoppingCart className="mr-2 h-5 w-5" /> Pesanan{" "}
+            <ShoppingCart className="mr-2 h-5 w-5" /> Orders{" "}
           </button>
         </nav>
       </aside>

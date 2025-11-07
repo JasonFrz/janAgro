@@ -119,26 +119,26 @@ function UserCeo() {
         {title} ({userList.length})
       </h3>
       {userList.length === 0 ? (
-        <p className="text-gray-500 italic">Tidak ada pengguna dalam kategori ini.</p>
+        <p className="text-gray-500 italic">No user in this category.</p>
       ) : (
         <div className="overflow-x-auto border-2 border-black rounded-lg">
           <table className="min-w-full divide-y-2 divide-gray-300">
             <thead className="bg-gray-50">
               <tr>
                 <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
-                  Pengguna
+                  User
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
-                  Kontak
+                  Contact
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
-                  Alamat
+                  Address
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
-                  Bergabung
+                  Joined
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">
-                  Aksi
+                  Action
                 </th>
               </tr>
             </thead>
@@ -252,7 +252,7 @@ function UserCeo() {
         confirmButtonColor={details.btnColor}
       />
       <div className="bg-white border-2 border-black rounded-lg p-6 space-y-8 shadow-xl">
-        <h2 className="text-2xl font-black pb-4 border-b-2 border-black">Manajemen Pengguna</h2>
+        <h2 className="text-2xl font-black pb-4 border-b-2 border-black">User Management</h2>
         <UserTable title="Pengguna Aktif" userList={activeUsers} />
         <UserTable
           title="Pengguna Diblokir"

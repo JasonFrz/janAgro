@@ -73,9 +73,9 @@ function ProdukCeo({
               <label className="block text-sm font-bold mb-1">Category</label>
               <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="w-full p-3 border-2 border-black rounded bg-white" required>
                 <option value="" disabled>Select Category</option>
-                <option value="Pupuk">Pupuk</option>
-                <option value="Alat">Alat</option>
-                <option value="Bibit">Bibit</option>
+                <option value="Pupuk">Fertilizer</option>
+                <option value="Alat">Tools</option>
+                <option value="Bibit">Seed</option>
               </select>
             </div>
             <div>

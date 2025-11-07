@@ -95,7 +95,7 @@ const SettingAdmin = ({
         <div>
           <h2 className="text-2xl font-bold mb-2">Order Management</h2>
           <p className="text-gray-500">
-            Kelola dan perbarui status pesanan pelanggan.
+            Manage and Update customer order status
           </p>
         </div>
         <div className="flex items-center gap-4">
@@ -104,16 +104,16 @@ const SettingAdmin = ({
             onChange={(e) => setFilterStatus(e.target.value)}
             className="bg-white border border-gray-300 rounded-md py-2 px-3 text-black focus:outline-none focus:ring-1 focus:ring-black"
           >
-            <option value="all">Semua Status</option>
-            <option value="diproses">Diproses</option>
-            <option value="pembatalan diajukan">Pengajuan Pembatalan</option>
-            <option value="dikirim">Dikirim</option>
-            <option value="sampai">Sampai</option>
-            <option value="pengembalian">Pengajuan Pengembalian</option>
-            <option value="pengembalian berhasil">Pengembalian Berhasil</option>
-            <option value="pengembalian ditolak">Pengembalian Ditolak</option>
-            <option value="dibatalkan">Dibatalkan</option>
-            <option value="selesai">Selesai</option>
+            <option value="all">All Status</option>
+            <option value="diproses">Processed</option>
+            <option value="pembatalan diajukan">Cancellation Submitted</option>
+            <option value="dikirim">Sent</option>
+            <option value="sampai">Arrived</option>
+            <option value="pengembalian">Cancellation Submission</option>
+            <option value="pengembalian berhasil">Return Accepted</option>
+            <option value="pengembalian ditolak">Return Rejected</option>
+            <option value="dibatalkan">Cancelled</option>
+            <option value="selesai">Done</option>
           </select>
           
         </div>
@@ -191,7 +191,7 @@ const SettingAdmin = ({
                               {" "}
                               <h4 className="font-bold text-purple-800 mb-3 flex items-center gap-2">
                                 {" "}
-                                <ShoppingCart size={18} /> Pengajuan Pembatalan{" "}
+                                <ShoppingCart size={18} /> Cancellation Submission{" "}
                               </h4>{" "}
                               <div className="text-sm text-purple-700 space-y-3">
                                 {" "}
@@ -234,14 +234,13 @@ const SettingAdmin = ({
                             {" "}
                             <h4 className="font-bold text-yellow-800 mb-3 flex items-center gap-2">
                               {" "}
-                              <AlertCircle size={18} /> Detail Pengajuan
-                              Pengembalian{" "}
+                              <AlertCircle size={18} /> Return submission details{" "}
                             </h4>{" "}
                             <div className="text-sm text-yellow-700 space-y-3">
                               {" "}
                               <div>
                                 {" "}
-                                <p className="font-semibold">Alasan:</p>{" "}
+                                <p className="font-semibold">Reason:</p>{" "}
                                 <p className="whitespace-pre-wrap italic">
                                   {" "}
                                   "{returnRequest.reason}"{" "}
@@ -250,7 +249,7 @@ const SettingAdmin = ({
                               <div>
                                 {" "}
                                 <p className="font-semibold">
-                                  Bukti Video:
+                                  Proof in-Video:
                                 </p>{" "}
                                 <div className="flex flex-wrap gap-2 mt-1">
                                   {" "}
@@ -265,7 +264,7 @@ const SettingAdmin = ({
                               <div>
                                 {" "}
                                 <p className="font-semibold">
-                                  Bukti Foto:
+                                  Photo Proof:
                                 </p>{" "}
                                 <div className="flex flex-wrap gap-2 mt-1">
                                   {" "}
@@ -286,14 +285,14 @@ const SettingAdmin = ({
                                   className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-red-600 text-white rounded-md text-sm font-semibold hover:bg-red-700"
                                 >
                                   {" "}
-                                  <X size={16} /> Tolak{" "}
+                                  <X size={16} /> Reject{" "}
                                 </button>{" "}
                                 <button
                                   onClick={() => onApproveReturn(order.id)}
                                   className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-green-600 text-white rounded-md text-sm font-semibold hover:bg-green-700"
                                 >
                                   {" "}
-                                  <Check size={16} /> Setujui{" "}
+                                  <Check size={16} /> Accept{" "}
                                 </button>{" "}
                               </div>
                             )}{" "}
@@ -455,7 +454,7 @@ const SettingAdmin = ({
             </h3>{" "}
             <p className="text-gray-500 mt-2">
               {" "}
-              Tidak ada pesanan yang cocok dengan filter yang dipilih.{" "}
+              No matching orders found..{" "}
             </p>{" "}
           </div>
         )}

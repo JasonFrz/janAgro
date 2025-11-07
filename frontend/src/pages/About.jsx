@@ -2,32 +2,51 @@ import React from "react";
 
 const About = () => {
   const milestones = [
-    { year: "1995–1998", event: "Diberi kepercayaan untuk mensuplai kebutuhan petani di Indonesia Timur dalam program KUT dan Corporate Farming.", icon: "🌾" },
-    { year: "1997", event: "PT. Jan Agro Nusantara didirikan di Makassar sebagai distributor pupuk organik untuk pertanian dan tambak.", icon: "🏭" },
-    { year: "2004", event: "Perusahaan pindah ke Surabaya untuk memperluas jangkauan pemasaran ke seluruh Indonesia.", icon: "🚚" },
-    { year: "2004–Sekarang", event: "Berfokus pada segmen perkebunan, khususnya kelapa sawit. Kantor pemasaran kini berada di Pekanbaru, Riau.", icon: "🌴" },
+    {
+      year: "1995–1998",
+      event:
+        "Trusted to supply the needs of farmers in Eastern Indonesia through the KUT and Corporate Farming programs.",
+      icon: "🌾",
+    },
+    {
+      year: "1997",
+      event:
+        "PT. Jan Agro Nusantara was founded in Makassar as a distributor of organic fertilizers for agriculture and aquaculture.",
+      icon: "🏭",
+    },
+    {
+      year: "2004",
+      event:
+        "The company moved to Surabaya to expand its marketing reach throughout Indonesia.",
+      icon: "🚚",
+    },
+    {
+      year: "2004–Present",
+      event:
+        "Focusing on the plantation segment, particularly palm oil. The marketing office is now located in Pekanbaru, Riau.",
+      icon: "🌴",
+    },
   ];
 
   const values = [
     {
-      title: "Kualitas",
+      title: "Quality",
       icon: "✅",
       description:
-        "Menjaga mutu produk agar hasil pertanian dan perkebunan semakin optimal dan berkelanjutan.",
+        "Maintaining product quality to ensure optimal and sustainable agricultural and plantation yields.",
     },
     {
-      title: "Inovasi",
+      title: "Innovation",
       icon: "💡",
       description:
-        "Terus berinovasi dalam pengembangan pupuk organik dan solusi pertanian modern.",
+        "Continuously innovating in the development of organic fertilizers and modern agricultural solutions.",
     },
     {
-      title: "Keberlanjutan",
+      title: "Sustainability",
       icon: "🌱",
       description:
-        "Mendorong praktik pertanian ramah lingkungan untuk menjaga keseimbangan alam dan kesejahteraan petani.",
+        "Promoting environmentally friendly agricultural practices to preserve nature’s balance and improve farmer welfare.",
     },
-    
   ];
 
   return (
@@ -35,22 +54,23 @@ const About = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center py-20">
           <h1 className="text-6xl font-light text-black mb-6">
-            Tentang <span className="font-bold">PT. Jan Agro Nusantara</span>
+            About <span className="font-bold">PT. Jan Agro Nusantara</span>
           </h1>
           <div className="w-24 h-[1px] bg-black mx-auto mb-8"></div>
           <p className="text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed font-light">
-            PT. Jan Agro Nusantara didirikan pada tahun 1997 di Makassar sebagai
-            distributor pupuk organik untuk pertanian dan tambak. Seiring
-            perkembangan waktu, perusahaan terus tumbuh, memperluas jangkauan
-            pemasaran, dan berfokus pada segmen perkebunan, khususnya kelapa
-            sawit. Kini, kantor pemasaran kami berpusat di Pekanbaru, Riau.
+            PT. Jan Agro Nusantara was founded in 1997 in Makassar as a
+            distributor of organic fertilizers for agriculture and aquaculture.
+            Over time, the company has continued to grow, expanding its
+            marketing reach and focusing on the plantation segment,
+            particularly palm oil. Today, our marketing office is based in
+            Pekanbaru, Riau.
           </p>
         </div>
 
         <div className="py-20 bg-gray-50 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto">
             <h2 className="text-4xl font-light text-center text-black mb-4">
-              Perjalanan <span className="font-bold">Kami</span>
+              Our <span className="font-bold">Journey</span>
             </h2>
             <div className="w-24 h-[1px] bg-black mx-auto mb-12"></div>
 
@@ -88,7 +108,7 @@ const About = () => {
 
         <div className="py-20">
           <h2 className="text-4xl font-light text-center text-black mb-4">
-            Nilai <span className="font-bold">Perusahaan</span>
+            Company <span className="font-bold">Values</span>
           </h2>
           <div className="w-24 h-[1px] bg-black mx-auto mb-12"></div>
 
@@ -113,19 +133,19 @@ const About = () => {
         </div>
 
         {/* Mission */}
-        <div className="py-20 bg-whwite text-black -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
+        <div className="py-20 bg-white text-black -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto text-center">
             <h2 className="text-4xl font-light mb-6">
-               <span className="font-bold">Visi & Misi</span>
+              <span className="font-bold">Vision & Mission</span>
             </h2>
             <p className="text-xl leading-relaxed font-light mb-8">
-              “Menjadi perusahaan pupuk organik terpercaya yang mendukung
-              pertanian berkelanjutan dan meningkatkan kesejahteraan petani di
-              seluruh Indonesia.”
+              “To become a trusted organic fertilizer company that supports
+              sustainable agriculture and improves the welfare of farmers
+              throughout Indonesia.”
             </p>
             <p className="text-lg leading-relaxed">
-              Kami berkomitmen untuk menyediakan produk berkualitas tinggi,
-              ramah lingkungan, dan sesuai kebutuhan pasar modern.
+              We are committed to providing high-quality, environmentally
+              friendly products that meet the needs of the modern market.
             </p>
           </div>
         </div>

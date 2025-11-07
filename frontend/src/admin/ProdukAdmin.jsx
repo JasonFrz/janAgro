@@ -50,7 +50,7 @@ function ProdukAdmin({
 
   const handleDelete = (id, name) => {
     const confirmDelete = window.confirm(
-      `Apakah Anda yakin ingin menghapus produk "${name}"?`
+      `Are you sure you want to delete this "${name}"?`
     );
     if (confirmDelete) {
       onDelete(id);
@@ -87,7 +87,7 @@ function ProdukAdmin({
           <form onSubmit={handleSubmit} className="space-y-4">
             <input
               type="text"
-              placeholder="Nama Produk"
+              placeholder="Product Name"
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
               className="w-full p-2 border rounded"
@@ -100,13 +100,13 @@ function ProdukAdmin({
               required
             >
               <option value="" disabled>Pilih Kategori Produk</option>
-              <option value="Pupuk">Pupuk</option>
-              <option value="Alat">Alat</option>
-              <option value="Bibit">Bibit</option>
+              <option value="Fertilizer">Pupuk</option>
+              <option value="Tools">Alat</option>
+              <option value="Seed">Bibit</option>
             </select>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Gambar Produk</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Product Image</label>
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 flex items-center justify-center border rounded-md bg-gray-100 text-4xl">
                   {form.image ? form.image : "?"}
@@ -116,13 +116,13 @@ function ProdukAdmin({
                   onClick={() => setIsGalleryOpen(true)}
                   className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
                 >
-                  Pilih dari Galeri
+                  Choose From Gallery
                 </button>
               </div>
             </div>
             
             <textarea
-              placeholder="Deskripsi Singkat Produk"
+              placeholder="Product Description"
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
               className="w-full p-2 border rounded"
@@ -130,7 +130,7 @@ function ProdukAdmin({
             />
             
             <textarea
-              placeholder="Detail Lengkap Produk (Wajib diisi)"
+              placeholder="Product Details (Required)"
               value={form.detail}
               onChange={(e) => setForm({ ...form, detail: e.target.value })}
               className="w-full p-2 border rounded"
@@ -140,7 +140,7 @@ function ProdukAdmin({
 
             <input
               type="number"
-              placeholder="Harga"
+              placeholder="Price"
               value={form.price}
               onChange={(e) => setForm({ ...form, price: Math.max(0, Number(e.target.value))})}
               className="w-full p-2 border rounded"
@@ -148,7 +148,7 @@ function ProdukAdmin({
             />
             <input
               type="number"
-              placeholder="Stok"
+              placeholder="Stock"
               value={form.stock}
               onChange={(e) => setForm({ ...form, stock: Math.max(0, Number(e.target.value))})}
               className="w-full p-2 border rounded"
@@ -163,7 +163,7 @@ function ProdukAdmin({
                 }`}
               >
                 <Plus className="mr-2 h-4 w-4" />
-                {editingId ? "Update Produk" : "Tambah Produk"}
+                {editingId ? "Update Product" : "Add Product"}
               </button>
               {editingId && (
                 <button
@@ -180,19 +180,19 @@ function ProdukAdmin({
         </div>
 
         <div className="bg-white shadow rounded-lg p-6">
-          <h2 className="text-xl font-semibold mb-4">Daftar Produk</h2>
+          <h2 className="text-xl font-semibold mb-4">Product List</h2>
           {produk.length === 0 ? (
-            <p className="text-gray-500">Belum ada produk atau sedang memuat...</p>
+            <p className="text-gray-500">Loading Product...</p>
           ) : (
             <div className="overflow-x-auto max-h-96 overflow-y-auto">
               <table className="w-full border-collapse">
                 <thead className="sticky top-0 bg-gray-100 z-10">
                   <tr>
-                    <th className="p-2 border">Nama</th>
-                    <th className="p-2 border">Kategori</th>
-                    <th className="p-2 border">Harga</th>
-                    <th className="p-2 border">Stok</th>
-                    <th className="p-2 border">Aksi</th>
+                    <th className="p-2 border">Name</th>
+                    <th className="p-2 border">Category</th>
+                    <th className="p-2 border">Price</th>
+                    <th className="p-2 border">Stock</th>
+                    <th className="p-2 border">Action</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -209,7 +209,7 @@ function ProdukAdmin({
                         </button>
                         <button onClick={() => handleDelete(p._id, p.name)} className="text-red-600 hover:underline flex items-center">
                           <img src="/icon/delete.png" alt="Hapus" className="w-4 h-4 mr-1"/>
-                          Hapus
+                          Delete
                         </button>
                       </td>
                     </tr>
@@ -225,7 +225,7 @@ function ProdukAdmin({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">Pilih Gambar dari Galeri</h3>
+              <h3 className="text-lg font-semibold">Select Image From Gallery</h3>
               <button onClick={() => setIsGalleryOpen(false)} className="text-gray-500 hover:text-gray-800">
                 <X size={24} />
               </button>

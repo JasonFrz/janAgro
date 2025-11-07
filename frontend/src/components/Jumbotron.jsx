@@ -42,23 +42,23 @@ const Jumbotron = () => {
         </div>
 
         <p className="text-lg md:text-xl text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed font-light">
-          PT. Jan Agro Nusantara berkomitmen mendukung petani Indonesia melalui
-          produk pupuk organik berkualitas dan pendampingan profesional. 
-          Bersama kami, wujudkan pertanian berkelanjutan dan hasil panen yang lebih baik.
+          PT. Jan Agro Nusantara is committed to supporting Indonesian farmers through
+          quality organic fertilizer products and professional support.
+          Together with us, realize sustainable agriculture and better harvests.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-6 justify-center">
           <Link to="/shop">
             <button className="group w-full sm:w-auto px-10 py-4 bg-white text-black rounded-sm font-medium transition-all duration-500 transform hover:scale-105 hover:shadow-2xl uppercase tracking-wider text-sm">
               <span className="group-hover:tracking-widest transition-all duration-300">
-                Lihat Produk
+                View Product
               </span>
             </button>
           </Link>
           <Link to="/location">
             <button className="group w-full sm:w-auto px-10 py-4 border border-white text-white rounded-sm font-medium transition-all duration-500 hover:bg-white hover:text-black uppercase tracking-wider text-sm">
               <span className="group-hover:tracking-widest transition-all duration-300">
-                Hubungi Kami
+                Contact Us
               </span>
             </button>
           </Link>

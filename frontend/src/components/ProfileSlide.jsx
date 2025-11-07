@@ -434,10 +434,10 @@ const ProfileSlide = ({
           <User size={40} className="text-gray-600" />
         </div>
         <h3 className="text-lg font-semibold text-gray-900">
-          Selamat datang di Jan Agro
+          Welcome to Jan Agro
         </h3>
         <p className="text-gray-600 mt-2">
-          Silakan mendaftar dan manfaatkan keuntungannya:
+          Please register and see its benefits
         </p>
       </div>
       <div className="bg-gray-50 p-4 rounded-lg">
@@ -456,7 +456,7 @@ const ProfileSlide = ({
             </svg>
           </div>
           <p className="text-sm text-gray-700">
-            Optimisasi tanaman Anda dengan kami.
+            Optimize your plants with us
           </p>
         </div>
       </div>
@@ -471,7 +471,7 @@ const ProfileSlide = ({
           onClick={() => changeView("register")}
           className="w-full border border-gray-300 text-gray-700 py-3 px-4 rounded-md font-medium hover:bg-gray-50 transition-colors"
         >
-          Daftar
+          Register
         </button>
       </div>
 
@@ -504,7 +504,7 @@ const ProfileSlide = ({
           </svg>
         </div>
         <p className="text-gray-600 text-sm mt-2">
-          Inovasi untuk pertanian berkelanjutan.
+          Innovation for sustainable agriculture.
         </p>
       </div>
     </div>
@@ -514,7 +514,7 @@ const ProfileSlide = ({
     <div className="space-y-6">
       <div className="text-center">
         <h3 className="text-2xl font-bold text-gray-900">Login</h3>
-        <p className="text-gray-600 mt-2">Masuk ke akun Anda</p>
+        <p className="text-gray-600 mt-2">Go to your Account</p>
       </div>
       <form onSubmit={handleLogin} className="space-y-4">
         <ErrorMessage message={errorMessage} />
@@ -579,7 +579,7 @@ const ProfileSlide = ({
           onClick={() => changeView("register")}
           className="text-sm text-gray-600 hover:text-black"
         >
-          Belum punya akun? <span className="font-medium">Daftar sekarang</span>
+         Don't have an account? <span className="font-medium">Register Now</span>
         </button>
       </div>
       <div className="text-center">
@@ -587,7 +587,7 @@ const ProfileSlide = ({
           onClick={() => changeView("main")}
           className="text-sm text-gray-500 hover:text-gray-700"
         >
-          ← Kembali
+          ← Back
         </button>
       </div>
 

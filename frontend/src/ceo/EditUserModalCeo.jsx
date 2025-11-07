@@ -39,7 +39,7 @@ const EditUserModalCeo = ({ user, onClose, onSave }) => {
       <div className="bg-white rounded-lg shadow-xl w-full max-w-lg mx-4 p-8 transform transition-all max-h-[90vh] overflow-y-auto border-2 border-black">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-black">
-            Edit Pengguna: {user.username}
+            Edit User: {user.username}
           </h2>
           <button
             onClick={onClose}
@@ -72,21 +72,21 @@ const EditUserModalCeo = ({ user, onClose, onSave }) => {
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Nomor Telepon</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
             <div className="relative">
               <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
               <input type="tel" name="noTelp" value={formData.noTelp} onChange={handleInputChange} className="w-full pl-10 pr-4 py-3 border rounded-md focus:ring-2 focus:ring-black" />
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Alamat</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
             <div className="relative">
               <MapPin className="absolute left-3 top-4 text-gray-400" size={16} />
               <textarea name="alamat" value={formData.alamat} onChange={handleInputChange} className="w-full pl-10 pr-4 py-3 border rounded-md focus:ring-2 focus:ring-black" rows="3"></textarea>
             </div>
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Kata Sandi Baru</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
               <input type="password" name="password" value={formData.password} onChange={handleInputChange} className="w-full pl-10 pr-4 py-3 border rounded-md focus:ring-2 focus:ring-black" placeholder="Biarkan kosong untuk tidak mengubah" />
@@ -97,13 +97,13 @@ const EditUserModalCeo = ({ user, onClose, onSave }) => {
               onClick={onClose}
               className="w-full border-2 border-black text-black font-bold py-3 rounded-md hover:bg-gray-100"
             >
-              Batal
+              Cancel
             </button>
             <button
               onClick={handleSave}
               className="w-full bg-black text-white font-bold py-3 rounded-md hover:bg-gray-800"
             >
-              Simpan Perubahan
+              Save Changes
             </button>
           </div>
         </div>

@@ -39,17 +39,17 @@ const VoucherModalCeo = ({ isOpen, onClose, onSave, voucher }) => {
       !formData.discountPercentage ||
       !formData.maxUses
     ) {
-      setError("Semua kolom wajib diisi.");
+      setError("All field is required to fill.");
       return;
     }
     const discount = parseInt(formData.discountPercentage, 10);
     const max = parseInt(formData.maxUses, 10);
     if (isNaN(discount) || discount <= 0 || discount > 100) {
-      setError("Diskon harus berupa angka antara 1 dan 100.");
+      setError("Discount must be in between 1-100.");
       return;
     }
     if (isNaN(max) || max <= 0) {
-      setError("Penggunaan maksimal harus berupa angka yang lebih dari 0.");
+      setError("Maximum usage must be more than 0.");
       return;
     }
     onSave(formData);

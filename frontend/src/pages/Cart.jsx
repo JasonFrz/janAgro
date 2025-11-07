@@ -88,7 +88,7 @@ const Cart = ({
       case "address":
         if (isChecked && user && !user.alamat) {
           setError(
-            "Alamat profil Anda kosong. Harap isi di halaman profil atau manual."
+            "Your profile address is empty. Please fill it in on the profile page or manually."
           );
           setUseProfileAddress(false);
           return;
@@ -99,7 +99,7 @@ const Cart = ({
       case "phone":
         if (isChecked && user && !user.no_telp) {
           setError(
-            "No. Telepon profil Anda kosong. Harap isi di halaman profil atau manual."
+            "Your profile phone number is empty. Please fill it in on the profile page or manually."
           );
           setUseProfilePhone(false);
           return;
@@ -107,7 +107,7 @@ const Cart = ({
         setUseProfilePhone(isChecked);
         setCustomerPhone(
           isChecked && user
-            ? user.no_telp 
+            ? user.no_telp
               ? user.no_telp.replace(/\D/g, "")
               : ""
             : ""
@@ -122,26 +122,25 @@ const Cart = ({
     if (numericValue.length <= 15) {
       setCustomerPhone(numericValue);
     }
-    if (error.includes("Nomor Telepon")) setError("");
+    if (error.includes("Phone Number")) setError("");
   };
-const cartDetails = cart
-  .map((item) => {
-    let productData;
-    if (item.productId && typeof item.productId === 'object') {
-      productData = item.productId;
-    } 
-    else if (item.productId) {
-      productData = produk.find(p => p._id === item.productId);
-    }
-    if (!productData) {
-      return null;
-    }
-    return {
-      ...productData,
-      quantity: item.quantity,
-    };
-  })
-  .filter(Boolean);
+  const cartDetails = cart
+    .map((item) => {
+      let productData;
+      if (item.productId && typeof item.productId === "object") {
+        productData = item.productId;
+      } else if (item.productId) {
+        productData = produk.find((p) => p._id === item.productId);
+      }
+      if (!productData) {
+        return null;
+      }
+      return {
+        ...productData,
+        quantity: item.quantity,
+      };
+    })
+    .filter(Boolean);
 
   const subtotal = cartDetails.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -165,12 +164,12 @@ const cartDetails = cart
     if (foundVoucher) {
       setAppliedVoucher(foundVoucher);
       setNotification({
-        message: `Voucher ${foundVoucher.code} berhasil diterapkan!`,
+        message: `Voucher ${foundVoucher.code} applied successfully!`,
         type: "success",
       });
     } else {
       setAppliedVoucher(null);
-      setError("Kode voucher tidak valid, tidak aktif, atau sudah habis.");
+      setError("Invalid, inactive, or expired voucher code.");
     }
   };
 
@@ -184,23 +183,23 @@ const cartDetails = cart
     onCloseNotification();
 
     if (!user) {
-      setError("Silakan login untuk melanjutkan checkout.");
+      setError("Please log in to continue checkout.");
       return;
     }
     if (!customerName || !customerAddress || !customerPhone) {
-      setError("Harap lengkapi semua detail pengiriman.");
+      setError("Please complete all shipping details.");
       return;
     }
     if (customerPhone.length < 8 || customerPhone.length > 15) {
-      setError("Nomor Telepon harus antara 8 hingga 15 digit.");
+      setError("Phone number must be between 8 and 15 digits.");
       return;
     }
     if (!paymentMethod) {
-      setError("Silakan pilih metode pembayaran.");
+      setError("Please select a payment method.");
       return;
     }
     if (totalQuantity === 0) {
-      setError("Keranjang Anda kosong.");
+      setError("Your cart is empty.");
       return;
     }
 
@@ -213,7 +212,7 @@ const cartDetails = cart
       subtotal,
       diskon: discountAmount,
       kodeVoucher: appliedVoucher ? appliedVoucher.code : null,
-      kurir: { nama: "Kurir JanAgro", biaya: kurirFee },
+      kurir: { nama: "JanAgro Courier", biaya: kurirFee },
       totalHarga,
       metodePembayaran: paymentMethod,
     };
@@ -222,21 +221,21 @@ const cartDetails = cart
       const checkoutResult = await onCheckout(checkoutData);
       if (checkoutResult.success) {
         setNotification({
-          message: "Pesanan berhasil dibuat! Terima kasih.",
+          message: "Order successfully created! Thank you.",
           type: "success",
         });
       } else {
-        setError(checkoutResult.message || "Terjadi kesalahan saat checkout.");
+        setError(checkoutResult.message || "An error occurred during checkout.");
         setNotification({
-          message: checkoutResult.message || "Checkout gagal.",
+          message: checkoutResult.message || "Checkout failed.",
           type: "error",
         });
       }
     } catch (err) {
       console.error("Checkout error:", err);
-      setError("Terjadi kesalahan sistem atau jaringan.");
+      setError("A system or network error occurred.");
       setNotification({
-        message: "Terjadi kesalahan saat memproses pesanan Anda.",
+        message: "An error occurred while processing your order.",
         type: "error",
       });
     }
@@ -256,13 +255,13 @@ const cartDetails = cart
           to="/shop"
           className="flex items-center gap-2 text-gray-600 hover:text-black mb-8 transition"
         >
-          <ArrowLeft size={20} /> Lanjut Belanja
+          <ArrowLeft size={20} /> Continue Shopping
         </Link>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           <div className="lg:col-span-2 space-y-8">
             <div className="bg-white p-6 rounded-sm border">
               <h2 className="text-xl font-bold mb-4">
-                Detail Pesanan ({totalQuantity} item)
+                Order Details ({totalQuantity} items)
               </h2>
               {cartDetails.length > 0 ? (
                 <div className="space-y-4">
@@ -289,9 +288,7 @@ const cartDetails = cart
                         >
                           -
                         </button>
-                        <span className="px-2 font-medium">
-                          {item.quantity}
-                        </span>
+                        <span className="px-2 font-medium">{item.quantity}</span>
                         <button
                           onClick={() =>
                             onUpdateQuantity(item._id, item.quantity + 1)
@@ -302,8 +299,7 @@ const cartDetails = cart
                         </button>
                       </div>
                       <p className="font-semibold w-28 text-right">
-                        Rp{" "}
-                        {(item.price * item.quantity).toLocaleString("id-ID")}
+                        Rp {(item.price * item.quantity).toLocaleString("id-ID")}
                       </p>
                       <button
                         onClick={() => onRemove(item._id)}
@@ -317,17 +313,17 @@ const cartDetails = cart
               ) : (
                 <div className="text-center py-10">
                   <h3 className="text-xl font-semibold text-black">
-                    Keranjang Anda Kosong
+                    Your Cart is Empty
                   </h3>
                   <p className="text-gray-500 mt-2">
-                    Tambahkan produk dari halaman toko untuk memulai.
+                    Add products from the shop page to get started.
                   </p>
                 </div>
               )}
             </div>
 
             <div className="bg-white p-6 rounded-sm border">
-              <h2 className="text-xl font-bold mb-4">Detail Pengiriman</h2>
+              <h2 className="text-xl font-bold mb-4">Shipping Details</h2>
               {user && (
                 <div className="space-y-2 mb-4 p-3 bg-gray-50 rounded-md border">
                   <label className="flex items-center gap-2 cursor-pointer text-sm">
@@ -339,7 +335,7 @@ const cartDetails = cart
                       }
                       className="form-checkbox"
                     />
-                    Gunakan nama profil
+                    Use profile name
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer text-sm">
                     <input
@@ -350,7 +346,7 @@ const cartDetails = cart
                       }
                       className="form-checkbox"
                     />
-                    Gunakan alamat profil
+                    Use profile address
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer text-sm">
                     <input
@@ -361,14 +357,14 @@ const cartDetails = cart
                       }
                       className="form-checkbox"
                     />
-                    Gunakan no. telp profil
+                    Use profile phone number
                   </label>
                 </div>
               )}
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Nama Penerima
+                    Recipient Name
                   </label>
                   <input
                     type="text"
@@ -380,7 +376,7 @@ const cartDetails = cart
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Alamat Lengkap
+                    Full Address
                   </label>
                   <textarea
                     value={customerAddress}
@@ -392,7 +388,7 @@ const cartDetails = cart
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Nomor Telepon Penerima
+                    Recipient Phone Number
                   </label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
@@ -414,12 +410,12 @@ const cartDetails = cart
           <div className="lg:col-span-1">
             <div className="bg-white p-6 rounded-sm border sticky top-24 space-y-6">
               <h2 className="text-xl font-bold text-center mb-4">
-                Ringkasan Belanja
+                Shopping Summary
               </h2>
               <div className="flex items-center gap-2">
                 <input
                   type="text"
-                  placeholder="Masukkan Kode Voucher"
+                  placeholder="Enter Voucher Code"
                   value={voucherCode}
                   onChange={(e) => {
                     setVoucherCode(e.target.value);
@@ -432,7 +428,7 @@ const cartDetails = cart
                   onClick={handleApplyVoucher}
                   className="bg-gray-200 text-black p-3 rounded-sm font-medium hover:bg-gray-300"
                 >
-                  Terapkan
+                  Apply
                 </button>
               </div>
               <div className="space-y-2 border-t pt-4">
@@ -444,30 +440,30 @@ const cartDetails = cart
                 </div>
                 {appliedVoucher && (
                   <div className="flex justify-between text-green-600">
-                    <span>Diskon ({appliedVoucher.discountPercentage}%)</span>
+                    <span>Discount ({appliedVoucher.discountPercentage}%)</span>
                     <span className="font-medium">
                       - Rp {discountAmount.toLocaleString("id-ID")}
                     </span>
                   </div>
                 )}
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Biaya Kurir</span>
+                  <span className="text-gray-600">Courier Fee</span>
                   <span className="font-medium">
                     Rp {kurirFee.toLocaleString("id-ID")}
                   </span>
                 </div>
                 <div className="flex justify-between text-lg font-bold border-t pt-2 mt-2">
-                  <span>Total Harga</span>
+                  <span>Total Price</span>
                   <span>Rp {totalHarga.toLocaleString("id-ID")}</span>
                 </div>
               </div>
               <div>
-                <h3 className="text-lg font-bold mb-2">Metode Pembayaran</h3>
+                <h3 className="text-lg font-bold mb-2">Payment Method</h3>
                 <div className="space-y-2">
                   {[
-                    { label: "COD (Bayar di Tempat)", value: "COD" }, // Nilai yang dikirim: "COD"
-                    { label: "Transfer Bank", value: "Transfer Bank" },
-                    { label: "Kartu Kredit", value: "Kartu Kredit" },
+                    { label: "COD (Cash on Delivery)", value: "COD" },
+                    { label: "Bank Transfer", value: "Transfer Bank" },
+                    { label: "Credit Card", value: "Kartu Kredit" },
                   ].map((method) => (
                     <label
                       key={method.value}
@@ -480,7 +476,7 @@ const cartDetails = cart
                         checked={paymentMethod === method.value}
                         onChange={(e) => {
                           setPaymentMethod(e.target.value);
-                          if (error.includes("metode pembayaran")) setError("");
+                          if (error.includes("payment method")) setError("");
                         }}
                         className="mr-3"
                       />
