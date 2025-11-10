@@ -19,7 +19,7 @@ export default function ShopPage() {
     } else {
       setCart((prev) => [...prev, { productId, quantity: 1 }]);
     }
-    return "Produk berhasil ditambahkan ke keranjang!";
+    return "Product added to cart successfully!";
   };
 
   const handleUpdateQuantity = (productId, quantity) => {

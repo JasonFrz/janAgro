@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom"; 
+import { Link } from "react-router-dom";
 import {
   Star,
   ArrowLeft,
@@ -63,7 +63,7 @@ const ProductDetail = ({
     if (!user) {
       setNotification({
         type: "error",
-        message: "Silakan login terlebih dahulu.",
+        message: "Please log in first.",
       });
     } else {
       const successMessage = onAddToCart(productId);
@@ -88,7 +88,7 @@ const ProductDetail = ({
         <Link
           to="/cart"
           className="relative bg-white p-4 rounded-full shadow-lg border transition-transform hover:scale-110"
-          aria-label="Buka Keranjang"
+          aria-label="Open Cart"
         >
           <ShoppingCart size={24} className="text-black" />
           {cartCount > 0 && (
@@ -101,7 +101,7 @@ const ProductDetail = ({
           <Link
             to="/pesanan"
             className="relative bg-white p-4 rounded-full shadow-lg border transition-transform hover:scale-110"
-            aria-label="Lacak Pesanan"
+            aria-label="Track Order"
           >
             <Truck size={24} className="text-black" />
           </Link>
@@ -113,7 +113,7 @@ const ProductDetail = ({
             to="/shop"
             className="flex items-center gap-2 text-gray-600 hover:text-black mb-8 transition"
           >
-            <ArrowLeft size={20} /> Kembali ke Toko
+            <ArrowLeft size={20} /> Back to Shop
           </Link>
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
             <div className="lg:col-span-2 flex items-center justify-center bg-gray-100 rounded-sm text-8xl h-96">
@@ -140,7 +140,7 @@ const ProductDetail = ({
               {product.stock > 0 && product.stock <= 10 && (
                 <p className="text-sm mb-6 font-semibold text-yellow-600">
                   {" "}
-                  Stok Terbatas: Tinggal {product.stock} buah!{" "}
+                  Limited Stock: Only {product.stock} left!{" "}
                 </p>
               )}
               <button
@@ -154,12 +154,12 @@ const ProductDetail = ({
             </div>
           </div>
           <div className="mt-16 border-t pt-12">
-            <h2 className="text-3xl font-bold mb-4">Ulasan Produk</h2>
+            <h2 className="text-3xl font-bold mb-4">Product Reviews</h2>
             <div className="flex flex-col md:flex-row gap-4 mb-8 p-4 border rounded-sm">
               <div className="flex-1">
                 <label className="block text-sm font-medium mb-2">
                   {" "}
-                  Filter Berdasarkan Rating{" "}
+                  Filter by Rating{" "}
                 </label>
                 <div className="flex gap-2 flex-wrap">
                   {[0, 5, 4, 3, 2, 1].map((star) => (
@@ -173,7 +173,7 @@ const ProductDetail = ({
                       }`}
                     >
                       {" "}
-                      {star === 0 ? "Semua" : `★ ${star}`}{" "}
+                      {star === 0 ? "All" : `★ ${star}`}{" "}
                     </button>
                   ))}
                 </div>
@@ -181,7 +181,7 @@ const ProductDetail = ({
               <div className="flex-1">
                 <label className="block text-sm font-medium mb-2">
                   {" "}
-                  Filter Berdasarkan Media{" "}
+                  Filter by Media{" "}
                 </label>
                 <div className="flex gap-2 flex-wrap">
                   <button
@@ -193,7 +193,7 @@ const ProductDetail = ({
                     }`}
                   >
                     {" "}
-                    Semua{" "}
+                    All{" "}
                   </button>
                   <button
                     onClick={() => setMediaFilter("dengan-media")}
@@ -204,7 +204,7 @@ const ProductDetail = ({
                     }`}
                   >
                     {" "}
-                    Dengan Media{" "}
+                    With Media{" "}
                   </button>
                   <button
                     onClick={() => setMediaFilter("tanpa-media")}
@@ -215,7 +215,7 @@ const ProductDetail = ({
                     }`}
                   >
                     {" "}
-                    Tanpa Media{" "}
+                    Without Media{" "}
                   </button>
                 </div>
               </div>
@@ -254,7 +254,7 @@ const ProductDetail = ({
                             {" "}
                             <img
                               src={review.imageUrl}
-                              alt="Ulasan produk"
+                              alt="Product review"
                               className="max-w-xs rounded-md border"
                             />{" "}
                           </div>
@@ -267,7 +267,7 @@ const ProductDetail = ({
             ) : (
               <p className="text-gray-500 bg-gray-50 p-6 rounded-sm">
                 {" "}
-                Tidak ada ulasan yang sesuai dengan filter Anda.{" "}
+                No reviews match your filters.{" "}
               </p>
             )}
           </div>

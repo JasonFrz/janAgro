@@ -139,14 +139,14 @@ const Profile = ({
                 <div className="flex items-center p-4 bg-gray-50 rounded-lg">
                   <Mail className="text-gray-400 mr-4 flex-shrink-0" size={20} />
                   <div className="flex-grow">
-                    <p className="text-sm text-gray-500">Alamat Email</p>
+                    <p className="text-sm text-gray-500">Address</p>
                     <p className="text-black font-medium">{user.email}</p>
                   </div>
                 </div>
                 <div className="flex items-center p-4 bg-gray-50 rounded-lg">
                   <Phone className="text-gray-400 mr-4 flex-shrink-0" size={20} />
                   <div className="flex-grow">
-                    <p className="text-sm text-gray-500">Nomor Telepon</p>
+                    <p className="text-sm text-gray-500">Phone Number</p>
                     <p className="text-black font-medium">
                       {formatPhoneNumber(user.no_telp || user.noTelp)}
                     </p>
@@ -155,7 +155,7 @@ const Profile = ({
                 <div className="flex items-start p-4 bg-gray-50 rounded-lg">
                   <MapPin className="text-gray-400 mr-4 flex-shrink-0 mt-1" size={20} />
                   <div className="flex-grow">
-                    <p className="text-sm text-gray-500">Alamat</p>
+                    <p className="text-sm text-gray-500">Address</p>
                     <p className="text-black font-medium whitespace-pre-line">
                       {user.alamat || "Alamat belum diatur"}
                     </p>
@@ -164,7 +164,7 @@ const Profile = ({
                 <div className="flex items-center p-4 bg-gray-50 rounded-lg">
                   <Calendar className="text-gray-400 mr-4 flex-shrink-0" size={20} />
                   <div className="flex-grow">
-                    <p className="text-sm text-gray-500">Bergabung Sejak</p>
+                    <p className="text-sm text-gray-500">Joined Since</p>
                     <p className="text-black font-medium">{user.joinDate || new Date(user.createdAt).toLocaleDateString("id-ID")}</p>
                   </div>
                 </div>
@@ -175,7 +175,7 @@ const Profile = ({
                 onClick={() => setIsModalOpen(true)}
                 className="w-full flex items-center justify-center space-x-2 bg-black text-white py-3 px-4 rounded-md font-medium hover:bg-gray-800 transition-colors"
               >
-                <Edit size={16} /> <span>Edit Profil & Keamanan</span>
+                <Edit size={16} /> <span>Edit Profile and Security</span>
               </button>
             </div>
           </div>

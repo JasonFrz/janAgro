@@ -10,7 +10,7 @@ const Review = ({ product, onAddReview }) => {
   const [error, setError] = useState("");
   const fileInputRef = useRef(null);
 
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
 
   const handleFileChange = (event) => {
     const file = event.target.files[0];
@@ -34,7 +34,7 @@ const Review = ({ product, onAddReview }) => {
 
   const handleSubmit = () => {
     if (rating === 0) {
-      setError("Rating bintang wajib diisi.");
+      setError("Star rating is required.");
       return;
     }
     onAddReview({
@@ -43,8 +43,8 @@ const Review = ({ product, onAddReview }) => {
       comment,
       imageUrl: imagePreview,
     });
-    alert("Terima kasih atas ulasan Anda!");
-    navigate("/pesanan"); 
+    alert("Thank you for your review!");
+    navigate("/pesanan");
   };
 
   return (
@@ -55,13 +55,13 @@ const Review = ({ product, onAddReview }) => {
           className="flex items-center gap-2 text-gray-600 hover:text-black mb-8 transition"
         >
           <ArrowLeft size={20} />
-          Kembali ke Pesanan
+          Back to Orders
         </button>
         <div className="bg-white p-8 rounded-lg border border-gray-200">
-          <h1 className="text-3xl font-bold text-black mb-2">Beri Ulasan</h1>
+          <h1 className="text-3xl font-bold text-black mb-2">Write a Review</h1>
           <p className="text-gray-500 mb-6">
             {" "}
-            Bagikan pendapat Anda tentang produk ini.{" "}
+            Share your opinion about this product.{" "}
           </p>
           <div className="flex gap-4 items-center border-b pb-6 mb-6">
             <div className="w-20 h-20 bg-gray-100 rounded-md flex items-center justify-center text-4xl flex-shrink-0">
@@ -77,7 +77,7 @@ const Review = ({ product, onAddReview }) => {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 {" "}
-                Kualitas Produk (Wajib){" "}
+                Product Quality (Required){" "}
               </label>
               <div className="flex items-center gap-1">
                 {[1, 2, 3, 4, 5].map((star) => (
@@ -102,20 +102,20 @@ const Review = ({ product, onAddReview }) => {
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 {" "}
-                Ulasan Anda (Opsional){" "}
+                Your Review (Optional){" "}
               </label>
               <textarea
                 value={comment}
                 onChange={(e) => setComment(e.target.value)}
                 className="w-full p-3 border rounded-md focus:ring-2 focus:ring-black"
                 rows="4"
-                placeholder="Bagaimana kualitas produk ini? Apakah sesuai dengan deskripsi?"
+                placeholder="How is the product quality? Does it match the description?"
               ></textarea>
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 {" "}
-                Tambah Foto (Opsional){" "}
+                Add Photo (Optional){" "}
               </label>
               <div className="flex items-center gap-4">
                 <div className="w-24 h-24 border-2 border-dashed rounded-md flex items-center justify-center bg-gray-50">
@@ -135,14 +135,14 @@ const Review = ({ product, onAddReview }) => {
                     className="flex items-center gap-2 text-sm w-full border border-gray-300 text-gray-700 py-2 px-4 rounded-md font-medium hover:bg-gray-50 transition-colors"
                   >
                     {" "}
-                    <Camera size={16} /> Buka Kamera{" "}
+                    <Camera size={16} /> Open Camera{" "}
                   </button>
                   <button
                     onClick={() => triggerFileInput(null)}
                     className="flex items-center gap-2 text-sm w-full border border-gray-300 text-gray-700 py-2 px-4 rounded-md font-medium hover:bg-gray-50 transition-colors"
                   >
                     {" "}
-                    <ImageIcon size={16} /> Pilih dari Galeri{" "}
+                    <ImageIcon size={16} /> Choose from Gallery{" "}
                   </button>
                   <input
                     type="file"
@@ -160,7 +160,7 @@ const Review = ({ product, onAddReview }) => {
               className="w-full bg-black text-white py-3 rounded-md font-medium hover:bg-gray-800 transition-colors"
             >
               {" "}
-              Kirim Ulasan{" "}
+              Submit Review{" "}
             </button>
           </div>
         </div>
