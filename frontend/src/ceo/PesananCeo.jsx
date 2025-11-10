@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from "react";
-import { Check, X, ArrowRight, Search, ChevronDown } from "lucide-react";
+import React, { useState, useMemo, useEffect } from "react";
+import { Check, X, Search, ChevronDown } from "lucide-react";
 
 const StatusBadge = ({ status }) => {
   const statusStyles = {
@@ -9,18 +9,32 @@ const StatusBadge = ({ status }) => {
     selesai: "bg-green-200 text-green-900 border-green-900",
     "pembatalan diajukan": "bg-orange-100 text-orange-800 border-orange-800",
     dibatalkan: "bg-gray-200 text-gray-800 border-gray-800",
-    "pengembalian": "bg-purple-100 text-purple-800 border-purple-800",
+    pengembalian: "bg-purple-100 text-purple-800 border-purple-800",
     "pengembalian berhasil": "bg-purple-200 text-purple-900 border-purple-900",
     "pengembalian ditolak": "bg-red-100 text-red-800 border-red-800",
   };
-  const style = statusStyles[status] || "bg-gray-100 text-gray-800 border-gray-800";
+  const style =
+    statusStyles[status] || "bg-gray-100 text-gray-800 border-gray-800";
   return (
-    <span className={`px-3 py-1 text-xs rounded-md font-bold border-2 ${style}`}>
+    <span
+      className={`px-3 py-1 text-xs rounded-md font-bold border-2 ${style}`}
+    >
       {status.charAt(0).toUpperCase() + status.slice(1)}
     </span>
   );
 };
 
+const formatDate = (dateString) => {
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) {
+    return "-";
+  }
+  return date.toLocaleDateString("id-ID", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+};
 
 function PesananCeo({
   checkouts,
@@ -31,7 +45,23 @@ function PesananCeo({
   onRejectCancellation,
 }) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [openDropdown, setOpenDropdown] = useState(null);
+  const [activeDropdown, setActiveDropdown] = useState(null);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      if (activeDropdown) {
+        setActiveDropdown(null);
+      }
+    };
+
+    if (activeDropdown) {
+      window.addEventListener("scroll", handleScroll, true);
+    }
+
+    return () => {
+      window.removeEventListener("scroll", handleScroll, true);
+    };
+  }, [activeDropdown]);
 
   const pendingReturns = useMemo(
     () => checkouts.filter((o) => o.status === "pengembalian"),
@@ -41,29 +71,53 @@ function PesananCeo({
     () => checkouts.filter((o) => o.status === "pembatalan diajukan"),
     [checkouts]
   );
-  
+
   const filteredCheckouts = useMemo(
-    () => checkouts.filter(order =>
-        order.nama.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        String(order.id).includes(searchTerm) ||
-        order.status.toLowerCase().includes(searchTerm.toLowerCase())
-    ),
+    () =>
+      checkouts.filter(
+        (order) =>
+          (order.nama &&
+            order.nama.toLowerCase().includes(searchTerm.toLowerCase())) ||
+          (order.id && String(order.id).includes(searchTerm)) ||
+          (order.status &&
+            order.status.toLowerCase().includes(searchTerm.toLowerCase()))
+      ),
     [checkouts, searchTerm]
   );
-  
+
+  const handleDropdownToggle = (e, order) => {
+    e.stopPropagation();
+    if (activeDropdown && activeDropdown.order.id === order.id) {
+      setActiveDropdown(null);
+    } else {
+      const rect = e.currentTarget.getBoundingClientRect();
+      setActiveDropdown({
+        order,
+        top: rect.bottom + window.scrollY,
+        left: rect.left + window.scrollX,
+      });
+    }
+  };
+
   const handleStatusChange = (orderId, newStatus) => {
     onUpdateOrderStatus(orderId, newStatus);
-    setOpenDropdown(null);
+    setActiveDropdown(null);
   };
 
   const ActionCard = ({ title, count, children }) => (
     <div className="bg-white p-6 rounded-lg border-2 border-black shadow-lg">
       <h3 className="font-bold text-xl mb-4 pb-2 border-b-2 border-black flex justify-between items-center">
         <span>{title}</span>
-        <span className="font-mono bg-black text-white rounded-full px-2.5 py-1 text-sm">{count}</span>
+        <span className="font-mono bg-black text-white rounded-full px-2.5 py-1 text-sm">
+          {count}
+        </span>
       </h3>
       <div className="space-y-4 max-h-80 overflow-y-auto">
-        {count > 0 ? children : <p className="text-gray-500 italic py-4">No pending requests.</p>}
+        {count > 0 ? (
+          children
+        ) : (
+          <p className="text-gray-500 italic py-4">No pending requests.</p>
+        )}
       </div>
     </div>
   );
@@ -75,14 +129,22 @@ function PesananCeo({
           <p className="font-bold text-black">Order #{order.id}</p>
           <p className="text-sm text-gray-600">{order.nama}</p>
         </div>
-        <p className="text-sm font-mono">{new Date(order.tanggal).toLocaleDateString()}</p>
+        <p className="text-sm font-mono">{formatDate(order.tanggal)}</p>
       </div>
       <div className="mt-2 flex space-x-2">
-        <button onClick={() => onApprove(order.id)} className="flex-1 bg-green-600 text-white px-3 py-1.5 text-sm rounded font-bold hover:bg-green-700 flex items-center justify-center space-x-1">
-          <Check size={16}/><span>Approve</span>
+        <button
+          onClick={() => onApprove(order.id)}
+          className="flex-1 bg-green-600 text-white px-3 py-1.5 text-sm rounded font-bold hover:bg-green-700 flex items-center justify-center space-x-1"
+        >
+          <Check size={16} />
+          <span>Approve</span>
         </button>
-        <button onClick={() => onReject(order.id)} className="flex-1 bg-red-600 text-white px-3 py-1.5 text-sm rounded font-bold hover:bg-red-700 flex items-center justify-center space-x-1">
-          <X size={16}/><span>Reject</span>
+        <button
+          onClick={() => onReject(order.id)}
+          className="flex-1 bg-red-600 text-white px-3 py-1.5 text-sm rounded font-bold hover:bg-red-700 flex items-center justify-center space-x-1"
+        >
+          <X size={16} />
+          <span>Reject</span>
         </button>
       </div>
     </div>
@@ -94,23 +156,41 @@ function PesananCeo({
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <ActionCard title="Return Requests" count={pendingReturns.length}>
-          {pendingReturns.map(order => (
-            <RequestItem key={order.id} order={order} onApprove={onApproveReturn} onReject={onRejectReturn} />
+          {pendingReturns.map((order) => (
+            <RequestItem
+              key={order.id}
+              order={order}
+              onApprove={onApproveReturn}
+              onReject={onRejectReturn}
+            />
           ))}
         </ActionCard>
-        <ActionCard title="Cancellation Requests" count={pendingCancellations.length}>
-          {pendingCancellations.map(order => (
-            <RequestItem key={order.id} order={order} onApprove={onApproveCancellation} onReject={onRejectCancellation} />
+        <ActionCard
+          title="Cancellation Requests"
+          count={pendingCancellations.length}
+        >
+          {pendingCancellations.map((order) => (
+            <RequestItem
+              key={order.id}
+              order={order}
+              onApprove={onApproveCancellation}
+              onReject={onRejectCancellation}
+            />
           ))}
         </ActionCard>
       </div>
 
       <div className="bg-white text-black shadow-lg rounded-lg p-6 border-2 border-black">
         <div className="flex flex-col sm:flex-row justify-between items-center mb-6 pb-4 border-b-2 border-black">
-          <h2 className="text-2xl font-bold mb-4 sm:mb-0">Comprehensive Order Log</h2>
+          <h2 className="text-2xl font-bold mb-4 sm:mb-0">
+            Comprehensive Order Log
+          </h2>
           <div className="relative w-full sm:w-72">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" size={20}/>
-            <input 
+            <Search
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
+              size={20}
+            />
+            <input
               type="text"
               placeholder="Search by ID, name, status..."
               value={searchTerm}
@@ -119,53 +199,124 @@ function PesananCeo({
             />
           </div>
         </div>
-        
-        <div className="overflow-x-auto">
+
+        <div className="overflow-x-auto max-h-96 overflow-y-auto border-2 border-black rounded-lg">
           <table className="w-full border-collapse">
-            <thead>
-              <tr className="bg-gray-100">
-                <th className="p-3 border-2 border-black text-left font-bold">Order ID</th>
-                <th className="p-3 border-2 border-black text-left font-bold">Customer</th>
-                <th className="p-3 border-2 border-black text-left font-bold">Date</th>
-                <th className="p-3 border-2 border-black text-left font-bold">Total</th>
-                <th className="p-3 border-2 border-black text-center font-bold">Status</th>
-                <th className="p-3 border-2 border-black text-center font-bold">Actions</th>
+            <thead className="bg-gray-100">
+              <tr>
+                <th className="p-3 border-2 border-black text-left font-bold">
+                  Order ID
+                </th>
+                <th className="p-3 border-2 border-black text-left font-bold">
+                  Customer
+                </th>
+                <th className="p-3 border-2 border-black text-left font-bold">
+                  Date
+                </th>
+                <th className="p-3 border-2 border-black text-left font-bold">
+                  Total
+                </th>
+                <th className="p-3 border-2 border-black text-center font-bold">
+                  Status
+                </th>
+                <th className="p-3 border-2 border-black text-center font-bold">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
-              {filteredCheckouts.length > 0 ? filteredCheckouts.map((order) => (
-                <tr key={order.id} className="border-b-2 border-gray-300">
-                  <td className="p-3 border-x-2 border-black font-mono font-bold">#{order.id}</td>
-                  <td className="p-3 border-x-2 border-black">{order.nama}</td>
-                  <td className="p-3 border-x-2 border-black">{new Date(order.tanggal).toLocaleDateString("id-ID")}</td>
-                  <td className="p-3 border-x-2 border-black">Rp {order.totalHarga.toLocaleString("id-ID")}</td>
-                  <td className="p-3 border-x-2 border-black text-center"><StatusBadge status={order.status}/></td>
-                  <td className="p-3 border-x-2 border-black text-center">
-                    <div className="relative inline-block">
-                      <button 
-                        onClick={() => setOpenDropdown(openDropdown === order.id ? null : order.id)}
+              {filteredCheckouts.length > 0 ? (
+                filteredCheckouts.map((order) => (
+                  <tr key={order.id} className="border-b-2 border-gray-300">
+                    <td className="p-3 border-x-2 border-black font-mono font-bold">
+                      #{order.id}
+                    </td>
+                    <td className="p-3 border-x-2 border-black">
+                      {order.nama}
+                    </td>
+                    <td className="p-3 border-x-2 border-black">
+                      {formatDate(order.tanggal)}
+                    </td>
+                    <td className="p-3 border-x-2 border-black">
+                      Rp {order.totalHarga.toLocaleString("id-ID")}
+                    </td>
+                    <td className="p-3 border-x-2 border-black text-center">
+                      <StatusBadge status={order.status} />
+                    </td>
+                    <td className="p-3 border-x-2 border-black text-center">
+                      <button
+                        onClick={(e) => handleDropdownToggle(e, order)}
                         className="bg-black text-white px-3 py-1.5 rounded font-bold flex items-center hover:bg-gray-800"
                       >
-                        Update Status <ChevronDown size={16} className="ml-1"/>
+                        Update Status <ChevronDown size={16} className="ml-1" />
                       </button>
-                      {openDropdown === order.id && (
-                        <div className="absolute right-0 mt-2 w-48 bg-white border-2 border-black rounded-md shadow-2xl z-10">
-                          <a onClick={() => handleStatusChange(order.id, 'diproses')} className="block px-4 py-2 text-sm text-black hover:bg-gray-100 cursor-pointer">Diproses</a>
-                          <a onClick={() => handleStatusChange(order.id, 'dikirim')} className="block px-4 py-2 text-sm text-black hover:bg-gray-100 cursor-pointer">Dikirim</a>
-                          <a onClick={() => handleStatusChange(order.id, 'sampai')} className="block px-4 py-2 text-sm text-black hover:bg-gray-100 cursor-pointer">Sampai</a>
-                          <a onClick={() => handleStatusChange(order.id, 'selesai')} className="block px-4 py-2 text-sm text-black hover:bg-gray-100 cursor-pointer">Selesai</a>
-                        </div>
-                      )}
-                    </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan="6"
+                    className="p-10 text-center text-gray-500 italic"
+                  >
+                    No orders found.
                   </td>
                 </tr>
-              )) : (
-                <tr><td colSpan="6" className="p-10 text-center text-gray-500 italic">No orders found matching your search.</td></tr>
               )}
             </tbody>
           </table>
         </div>
       </div>
+
+      {activeDropdown && (
+        <>
+          <div
+            className="fixed inset-0 z-20"
+            onClick={() => setActiveDropdown(null)}
+          ></div>
+          <div
+            style={{
+              position: "absolute",
+              top: `${activeDropdown.top + 2}px`, 
+              left: `${activeDropdown.left}px`,
+            }}
+            className="w-48 bg-white border-2 border-black rounded-md shadow-2xl z-30"
+          >
+            <a
+              onClick={() =>
+                handleStatusChange(activeDropdown.order.id, "diproses")
+              }
+              className="block px-4 py-2 text-sm text-black hover:bg-gray-100 cursor-pointer"
+            >
+              Diproses
+            </a>
+            <a
+              onClick={() =>
+                handleStatusChange(activeDropdown.order.id, "dikirim")
+              }
+              className="block px-4 py-2 text-sm text-black hover:bg-gray-100 cursor-pointer"
+            >
+              Dikirim
+            </a>
+            <a
+              onClick={() =>
+                handleStatusChange(activeDropdown.order.id, "sampai")
+              }
+              className="block px-4 py-2 text-sm text-black hover:bg-gray-100 cursor-pointer"
+            >
+              Sampai
+            </a>
+            <a
+              onClick={() =>
+                handleStatusChange(activeDropdown.order.id, "selesai")
+              }
+              className="block px-4 py-2 text-sm text-black hover:bg-gray-100 cursor-pointer"
+            >
+              Selesai
+            </a>
+          </div>
+        </>
+      )}
     </div>
   );
 }
