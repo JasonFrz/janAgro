@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
+import { fetchProducts } from "../features/products/productSlice";
 import {
   Search,
   ShoppingCart,
@@ -23,10 +25,19 @@ const Notification = ({ message, type }) => {
   );
 };
 
-const Shop = ({ user, onAddToCart, cartCount, produk }) => {
+const Shop = ({ user, onAddToCart, cartCount }) => {
+  const dispatch = useDispatch();
+  const { items: produk, loading, error } = useSelector(
+    (state) => state.products
+  );
+
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [notification, setNotification] = useState(null);
+
+  useEffect(() => {
+    dispatch(fetchProducts());
+  }, [dispatch]);
 
   useEffect(() => {
     if (notification) {
@@ -36,12 +47,13 @@ const Shop = ({ user, onAddToCart, cartCount, produk }) => {
       return () => clearTimeout(timer);
     }
   }, [notification]);
+
   const handleAddToCartClick = async (productId) => {
     const productToAdd = produk.find((p) => p._id === productId);
     if (productToAdd && productToAdd.stock === 0) {
       setNotification({
         type: "error",
-        message: "Produk ini sedang tidak tersedia (Out of Stock).",
+        message: "This product is currently unavailable (Out of Stock).",
       });
       return;
     }
@@ -49,15 +61,19 @@ const Shop = ({ user, onAddToCart, cartCount, produk }) => {
     if (!user) {
       setNotification({
         type: "error",
-        message: "Silakan login terlebih dahulu.",
+        message: "Please log in first.",
       });
       return;
-    } 
+    }
+
     const resultMessage = await onAddToCart(productId);
-    const messageType = resultMessage.toLowerCase().includes("gagal") ? "error" : "success";
+    const messageType = resultMessage.toLowerCase().includes("fail")
+      ? "error"
+      : "success";
 
     setNotification({ type: messageType, message: resultMessage });
   };
+
   const filteredProduk = produk.filter((item) => {
     const matchesCategory =
       selectedCategory === "all" ||
@@ -68,14 +84,30 @@ const Shop = ({ user, onAddToCart, cartCount, produk }) => {
     return matchesCategory && matchesSearch;
   });
 
+  if (loading)
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p>Loading products...</p>
+      </div>
+    );
+
+  if (error)
+    return (
+      <div className="min-h-screen flex items-center justify-center text-red-600">
+        <p>Failed to load products: {error}</p>
+      </div>
+    );
+
   return (
     <>
       <Notification message={notification?.message} type={notification?.type} />
+
+      {/* Floating buttons */}
       <div className="fixed top-24 right-4 sm:right-8 z-30 flex flex-col gap-4">
         <Link
           to="/cart"
           className="relative bg-white p-4 rounded-full shadow-lg border transition-transform hover:scale-110"
-          aria-label="Buka Keranjang"
+          aria-label="Open Cart"
         >
           <ShoppingCart size={24} className="text-black" />
           {cartCount > 0 && (
@@ -88,12 +120,14 @@ const Shop = ({ user, onAddToCart, cartCount, produk }) => {
           <Link
             to="/pesanan"
             className="relative bg-white p-4 rounded-full shadow-lg border transition-transform hover:scale-110"
-            aria-label="Lacak Pesanan"
+            aria-label="Track Orders"
           >
             <Truck size={24} className="text-black" />
           </Link>
         )}
       </div>
+
+      {/* Main content */}
       <div className="min-h-screen bg-gray-50 pt-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center mb-12">
@@ -105,6 +139,8 @@ const Shop = ({ user, onAddToCart, cartCount, produk }) => {
               Discover our complete range of Fertilizers, Tools & Seeds
             </p>
           </div>
+
+          {/* Search + Categories */}
           <div className="mb-8 flex flex-col md:flex-row gap-4 items-center justify-between">
             <div className="relative flex-1 w-full md:max-w-md">
               <Search
@@ -119,8 +155,9 @@ const Shop = ({ user, onAddToCart, cartCount, produk }) => {
                 className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-sm focus:ring-2 focus:ring-black focus:border-transparent transition-all"
               />
             </div>
+
             <div className="flex gap-3 flex-wrap justify-center">
-              {["all", "Pupuk", "Alat", "Bibit"].map((category) => (
+              {["all", "fertilizer", "tools", "seeds"].map((category) => (
                 <button
                   key={category}
                   onClick={() => setSelectedCategory(category)}
@@ -135,6 +172,8 @@ const Shop = ({ user, onAddToCart, cartCount, produk }) => {
               ))}
             </div>
           </div>
+
+          {/* Product Grid */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredProduk.map((item) => (
               <div
@@ -153,6 +192,7 @@ const Shop = ({ user, onAddToCart, cartCount, produk }) => {
                     </div>
                   )}
                 </div>
+
                 <div className="p-6">
                   <div className="mb-4">
                     <h3 className="text-xl font-bold text-black mb-1 group-hover:text-gray-700 transition-colors">
