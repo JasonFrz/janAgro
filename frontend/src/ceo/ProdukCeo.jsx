@@ -64,8 +64,10 @@ function ProdukCeo({
           <h2 className="text-2xl font-bold mb-6 pb-4 border-b-2 border-black">
             {editingId ? "Edit Product Details" : "Add New Product"}
           </h2>
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="md:col-span-2">
+          {/* Form tidak berubah */}
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 md-grid-cols-2 gap-6">
+            {/* ... isi form ... */}
+             <div className="md:col-span-2">
               <label className="block text-sm font-bold mb-1">Product Name</label>
               <input type="text" placeholder="e.g., Organic Garden Booster" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full p-3 border-2 border-black rounded" required />
             </div>
@@ -122,7 +124,8 @@ function ProdukCeo({
 
         <div className="bg-white text-black shadow-lg rounded-lg p-6 border-2 border-black">
           <h2 className="text-2xl font-bold mb-4">Product Inventory List</h2>
-          <div className="overflow-x-auto">
+          {/* ===== PERUBAHAN DI SINI ===== */}
+          <div className="overflow-x-auto max-h-96 overflow-y-auto border-2 border-black rounded-lg">
             <table className="w-full border-collapse">
               <thead className="bg-gray-100">
                 <tr>

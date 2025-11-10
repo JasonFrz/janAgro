@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Routes, Route, useNavigate, useParams } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import Navbar from "./components/Navbar";
 import ProfileSlide from "./components/ProfileSlide";
 import Footer from "./components/Footer";
@@ -19,6 +20,14 @@ import PengembalianBarang from "./pages/PengembalianBarang";
 import "./index.css";
 import axios from "axios";
 
+import {
+  fetchProducts,
+  addProduct,
+  updateProduct,
+  deleteProduct,
+} from "./features/products/productSlice";
+
+
 function App() {
   const [showProfile, setShowProfile] = useState(false);
   const [user, setUser] = useState(null);
@@ -32,8 +41,14 @@ function App() {
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    
+  const dispatch = useDispatch();
+  const { items: produk, status: productStatus } = useSelector((state) => state.products);
+
+ useEffect(() => {
+    if (productStatus === 'idle') {
+      dispatch(fetchProducts());
+    }
+
     const fetchUserProfile = async () => {
       const token = localStorage.getItem("token");
       if (token) {
@@ -41,61 +56,23 @@ function App() {
           const response = await fetch(`${API_URL}/auth/profile`, {
             headers: { Authorization: `Bearer ${token}` },
           });
-
           if (response.ok) {
-            
             const data = await response.json();
             setUser(data.user);
-            if (data.user.role === "Admin") {
-              setIsAdmin(true);
-            }
-            if (data.user.role === "Pemilik") {
-              setIsPemilik(true);
-            }
           } else {
             localStorage.removeItem("token");
-            setIsAdmin(false); // Pastikan state kembali false saat token invalid
-            setIsPemilik(false);
+            setUser(null);
           }
         } catch (error) {
           console.error("Error fetching profile:", error);
           localStorage.removeItem("token");
-          setIsAdmin(false);
-          setIsPemilik(false);
         }
-      }
-    };
-
-    
-    // Fetch products
-    // --- (Inside App.jsx's useEffect) ---
-
-    const fetchProducts = async () => {
-      try {
-        const response = await fetch(`${API_URL}/products`);
-        if (response.ok) {
-          const data = await response.json();
-
-          // --- THIS IS THE MOST IMPORTANT LOG ---
-          // --- WHAT DOES THIS SAY IN YOUR CONSOLE? ---
-          console.log("API response for products:", data);
-
-          // This line assumes 'data' is an array [...]
-          // or an object { products: [...] }
-          setProduk(data.products || data);
-        } else {
-          console.error("Failed to fetch products");
-          setProduk([]); // Set to empty on failure
-        }
-      } catch (error) {
-        console.error("Error fetching products:", error);
-        setProduk([]); // Set to empty on failure
       }
     };
 
     fetchUserProfile();
-    fetchProducts();
-  }, []);
+  }, [productStatus, dispatch, API_URL]);
+
 
 
     useEffect(() => {
@@ -142,7 +119,6 @@ function App() {
       isActive: true,
     },
   ]);
-  const [produk, setProduk] = useState([]);
   const [reviews, setReviews] = useState([
     {
       id: 101,
@@ -223,20 +199,9 @@ console.log("Mencoba menambahkan ke keranjang dengan URL:", `${API_URL}/api/cart
   return error.response?.data?.message || "Gagal menambahkan produk ke keranjang.";
 }
   };
-  useEffect(() => {
-    fetchProduk();
-  }, []);
 
-  const fetchProduk = async () => {
-    try {
-      const res = await axios.get("http://localhost:3000/api/products/get-all-products");
-      if (res.data.success) {
-        setProduk(res.data.data);
-      }
-    } catch (err) {
-      console.error("Gagal fetch produk:", err);
-    }
-  };
+
+
 useEffect(() => {
   const fetchCart = async () => {
     const token = localStorage.getItem("token");
@@ -499,94 +464,20 @@ const handleProfileSave = async (userId, payload) => {
       )
     );
   };
-  const fetchProducts = async () => {
-    try {
-      const response = await fetch(`${API_URL}/products/get-all-products`);
-      if (response.ok) {
-        const result = await response.json();
-        setProduk(result.data || []);
-      } else {
-        console.error("Gagal mengambil data produk");
-        setProduk([]);
-      }
-    } catch (error) {
-      console.error("Error saat mengambil data produk:", error);
-      setProduk([]);
-    }
+
+
+    const handleAddProduk = (newData) => {
+    dispatch(addProduct(newData));
   };
 
-  const handleAddProduk = async (newData) => {
-    try {
-      const response = await fetch(`${API_URL}/products/add-product`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(newData),
-      });
-
-      const result = await response.json();
-      if (response.ok) {
-        setProduk([...produk, result.data]);
-        alert(result.message);
-      } else {
-        alert(result.message || "Gagal menambahkan produk.");
-      }
-    } catch (error) {
-      console.error("Error saat menambahkan produk:", error);
-      alert("Terjadi kesalahan pada server.");
-    }
+  const handleUpdateProduk = (produkId, updatedData) => {
+    dispatch(updateProduct({ id: produkId, productData: updatedData }));
   };
 
-  const handleUpdateProduk = async (produkId, updatedData) => {
-    try {
-      const response = await fetch(
-        `${API_URL}/products/update-product/${produkId}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(updatedData),
-        }
-      );
-
-      const result = await response.json();
-      if (response.ok) {
-        setProduk(produk.map((p) => (p._id === produkId ? result.data : p)));
-        alert(result.message);
-      } else {
-        alert(result.message || "Gagal memperbarui produk.");
-      }
-    } catch (error) {
-      console.error("Error saat memperbarui produk:", error);
-      alert("Terjadi kesalahan pada server.");
-    }
+  const handleDeleteProduk = (produkId) => {
+    dispatch(deleteProduct(produkId));
   };
 
-  const handleDeleteProduk = async (produkId) => {
-    try {
-      const response = await fetch(
-        `${API_URL}/products/delete-product/${produkId}`,
-        {
-          method: "DELETE",
-          headers: {
-          },
-        }
-      );
-
-      const result = await response.json();
-      if (response.ok) {
-        setProduk(produk.filter((p) => p._id !== produkId));
-        alert(result.message);
-      } else {
-        alert(result.message || "Gagal menghapus produk.");
-      }
-    } catch (error) {
-      console.error("Error saat menghapus produk:", error);
-      alert("Terjadi kesalahan pada server.");
-    }
-  };
 
   const fetchVouchers = async () => {
     try {
@@ -687,7 +578,6 @@ return (
             element={
               <Shop
                 produk={produk}
-                setProduk={setProduk}
                 user={user}
                 onAddToCart={handleAddToCart}
                 cartCount={cart.length}

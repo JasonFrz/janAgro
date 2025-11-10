@@ -121,7 +121,8 @@ function UserCeo() {
       {userList.length === 0 ? (
         <p className="text-gray-500 italic">No user in this category.</p>
       ) : (
-        <div className="overflow-x-auto border-2 border-black rounded-lg">
+        // ===== PERUBAHAN DI SINI =====
+        <div className="overflow-x-auto max-h-96 overflow-y-auto border-2 border-black rounded-lg">
           <table className="min-w-full divide-y-2 divide-gray-300">
             <thead className="bg-gray-50">
               <tr>
