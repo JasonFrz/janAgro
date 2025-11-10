@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import Joi from "joi";
+import { useSelector, useDispatch } from "react-redux";
+import { fetchUsers,addUser,loginUser } from "../features/user/userSlice";
 import {
   X,
   User,
   Mail,
-  Lock,
+  Lock, 
   Eye,
   EyeOff,
   Settings,
@@ -20,9 +22,12 @@ const ProfileSlide = ({
   onClose,
   user,
   setUser, 
-  setShowProfile,
-  API_URL,
+  // setShowProfile,
+  // API_URL,
 }) => {
+
+  const dispatch = useDispatch();
+
   const [currentView, setCurrentView] = useState("main");
   const [formData, setFormData] = useState({
     identifier: "",
@@ -30,7 +35,7 @@ const ProfileSlide = ({
     name: "",
     username: "",
     email: "",
-    noTelp: "",
+    no_telp: "",
     confirmPassword: "",
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -46,6 +51,14 @@ const ProfileSlide = ({
     setSuccessMessage(null);
     setCurrentView(view);
   };
+
+  const { users } = useSelector((state) => state.users);
+  
+console.log(users);
+
+  useEffect(() => {
+    dispatch(fetchUsers());
+  }, [dispatch]);
 
   useEffect(() => {
     if (isOpen) {
@@ -69,40 +82,40 @@ const ProfileSlide = ({
   const loginSchema = Joi.object({
     identifier: Joi.string()
       .required()
-      .messages({ "string.empty": "Email atau username wajib diisi" }),
+      .messages({ "string.empty": "Email or username field cannot be empty" }),
     password: Joi.string()
       .required()
-      .messages({ "string.empty": "Password wajib diisi" }),
+      .messages({ "string.empty": "Password field cannot be empty" }),
   });
 
   const registerSchema = Joi.object({
     username: Joi.string()
       .required()
-      .messages({ "string.empty": "Username wajib diisi" }),
+      .messages({ "string.empty": "Username Field Cannot be empty" }),
     name: Joi.string()
       .required()
-      .messages({ "string.empty": "Nama lengkap wajib diisi" }),
+      .messages({ "string.empty": "Name Field Cannot be empty" }),
     email: Joi.string()
       .email({ tlds: { allow: false } })
       .required()
       .messages({
-        "string.empty": "Email wajib diisi",
-        "string.email": "Format email tidak valid",
+        "string.empty": "Email Field Cannot be empty",
+        "string.email": "Email Format is invalid",
       }),
-    noTelp: Joi.string()
+    no_telp: Joi.string()
       .pattern(/^[0-9]{8,15}$/)
       .required()
       .messages({
-        "string.empty": "Nomor telepon wajib diisi",
-        "string.pattern.base": "Nomor telepon harus antara 8 hingga 15 digit",
+        "string.empty": "Phone number Cannot be empty",
+        "string.pattern.base": "Phone must be 8-15 digits",
       }),
     password: Joi.string().min(6).required().messages({
-      "string.empty": "Password wajib diisi",
-      "string.min": "Password minimal 6 karakter",
+      "string.empty": "Password Field Cannot be empty",
+      "string.min": "Minimal of 6 characters Required",
     }),
     confirmPassword: Joi.any().valid(Joi.ref("password")).required().messages({
-      "any.only": "Konfirmasi password tidak cocok",
-      "any.required": "Konfirmasi password wajib diisi",
+      "any.only": "Password confirmation does not match",
+      "any.required": "Password confirmation is required",
     }),
   });
 
@@ -119,38 +132,62 @@ const ProfileSlide = ({
       setErrorMessage(error.details[0].message);
       return;
     }
-
     setIsLoading(true);
+
     try {
-      const response = await fetch(`${API_URL}/auth/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          identifier: formData.identifier,
-          password: formData.password,
-        }),
-      });
-
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || "Login failed");
-      }
-
-      localStorage.setItem("token", data.token);
-      setUser(data.user); 
-
-      if (data.user.role === "Pemilik") {
+      const userData = await dispatch(loginUser({
+        identifier: formData.identifier,
+        password: formData.password
+      })).unwrap();
+      setUser(userData.user);
+  
+      
+        
+      if (user.role === "Pemilik") {
         navigate("/ceo");
-      } else if (data.user.role === "Admin") {
+      } else if (user.role === "Admin") {
         navigate("/admin");
       }
 
-      setShowProfile(false);
-    } catch (err) {
-      setErrorMessage(err.message);
+    } catch (error) {
+      setErrorMessage(error.message || "Invalid Password or Username");
     } finally {
       setIsLoading(false);
     }
+    
+
+    // setIsLoading(true);
+    // try {
+    //   const response = await fetch(`${API_URL}/auth/login`, {
+    //     method: "POST",
+    //     headers: { "Content-Type": "application/json" },
+    //     body: JSON.stringify({
+    //       identifier: formData.identifier,
+    //       password: formData.password,
+    //     }),
+    //   });
+
+    //   const data = await response.json();
+    //   if (!response.ok) {
+    //     throw new Error(data.message || "Login failed");
+    //   }
+
+    //   localStorage.setItem("token", data.token);
+    //   setUser(data.user); 
+
+    //   if (data.user.role === "Pemilik") {
+    //     navigate("/ceo");
+    //   } else if (data.user.role === "Admin") {
+    //     navigate("/admin");
+    //   }
+
+    //   setShowProfile(false);
+    // } catch (err) {
+    //   setErrorMessage(err.message);
+    // } finally {
+    //   setIsLoading(false);
+    // }
+
   };
 
   const handleRegister = async (e) => {
@@ -167,41 +204,64 @@ const ProfileSlide = ({
       return;
     }
 
-    setIsLoading(true);
-    try {
-      const response = await fetch(`${API_URL}/auth/register`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: formData.name,
-          username: formData.username,
-          email: formData.email,
-          password: formData.password,
-          no_telp: formData.noTelp,
-        }),
-      });
+  try {
+    await dispatch(addUser(formData));
+    changeView("login");
+  } catch (error) {
+    setErrorMessage(error.message || "Registration failed");
+  }
 
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.message || "Registration failed");
-      }
+    
 
-      setSuccessMessage(data.message + " Silakan login.");
-      changeView("login");
-      setFormData({
-        ...formData,
-        identifier: formData.email,
-        password: "",
-        name: "",
-        username: "",
-        confirmPassword: "",
-        noTelp: "",
-      });
-    } catch (err) {
-      setErrorMessage(err.message);
-    } finally {
-      setIsLoading(false);
-    }
+    // e.preventDefault();
+    // setErrorMessage(null);
+    // setSuccessMessage(null);
+
+    // const { error } = registerSchema.validate(formData, {
+    //   abortEarly: true,
+    //   allowUnknown: true,
+    // });
+    // if (error) {
+    //   setErrorMessage(error.details[0].message);
+    //   return;
+    // }
+
+    // setIsLoading(true);
+    // try {
+    //   const response = await fetch(`${API_URL}/auth/register`, {
+    //     method: "POST",
+    //     headers: { "Content-Type": "application/json" },
+    //     body: JSON.stringify({
+    //       name: formData.name,
+    //       username: formData.username,
+    //       email: formData.email,
+    //       password: formData.password,
+    //       no_telp: formData.noTelp,
+    //     }),
+    //   });
+
+    //   const data = await response.json();
+    //   if (!response.ok) {
+    //     throw new Error(data.message || "Registration failed");
+    //   }
+
+    //   setSuccessMessage(data.message + " Silakan login.");
+    //   changeView("login");
+    //   setFormData({
+    //     ...formData,
+    //     identifier: formData.email,
+    //     password: "",
+    //     name: "",
+    //     username: "",
+    //     confirmPassword: "",
+    //     noTelp: "",
+    //   });
+    // } catch (err) {
+    //   setErrorMessage(err.message);
+    // } finally {
+    //   setIsLoading(false);
+    // }
+    
   };
 
   const handleLogout = () => {
@@ -334,8 +394,8 @@ const ProfileSlide = ({
             />
             <input
               type="tel"
-              name="noTelp"
-              value={formData.noTelp}
+              name="no_telp"
+              value={formData.no_telp}
               onChange={handleInputChange}
               className="w-full pl-16 pr-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black"
               placeholder="81234567890"
@@ -428,7 +488,6 @@ const ProfileSlide = ({
 
   const renderMainView = () => (
     <div className="space-y-6">
-      {/* Bagian atas (info, keuntungan, tombol) tetap sama */}
       <div className="text-center">
         <div className="w-20 h-20 bg-gray-100 rounded-full mx-auto mb-4 flex items-center justify-center">
           <User size={40} className="text-gray-600" />
@@ -535,7 +594,7 @@ const ProfileSlide = ({
               onChange={handleInputChange}
               className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black"
               placeholder="Enter your email or username"
-              required
+              // required
             />
           </div>
         </div>
@@ -555,7 +614,7 @@ const ProfileSlide = ({
               onChange={handleInputChange}
               className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black"
               placeholder="Enter your password"
-              required
+              // required
             />
             <button
               type="button"
@@ -667,6 +726,9 @@ const ProfileSlide = ({
       </div>
     </div>
   );
+
+  
+
 };
 
 export default ProfileSlide;
