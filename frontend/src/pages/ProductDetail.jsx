@@ -9,6 +9,9 @@ import {
   Truck,
 } from "lucide-react";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+const SERVER_URL = API_URL.replace("/api", "");
+
 const Notification = ({ message, type }) => {
   if (!message) return null;
   const isError = type === "error";
@@ -25,7 +28,6 @@ const Notification = ({ message, type }) => {
 };
 const StarRating = ({ rating }) => (
   <div className="flex items-center">
-    {" "}
     {[...Array(5)].map((_, index) => (
       <Star
         key={index}
@@ -34,7 +36,7 @@ const StarRating = ({ rating }) => (
           index < rating ? "text-yellow-400 fill-current" : "text-gray-300"
         }
       />
-    ))}{" "}
+    ))}
   </div>
 );
 
@@ -59,16 +61,28 @@ const ProductDetail = ({
     }
   }, [notification]);
 
-  const handleAddToCartClick = (productId) => {
+  // 2. Perbaiki logika notifikasi agar andal dengan fungsi async
+  const handleAddToCartClick = async (productId) => {
+    if (product.stock === 0) {
+      setNotification({
+        type: "error",
+        message: "Produk ini sedang tidak tersedia (Stok Habis).",
+      });
+      return;
+    }
     if (!user) {
       setNotification({
         type: "error",
-        message: "Please log in first.",
+        message: "Silakan login terlebih dahulu.",
       });
-    } else {
-      const successMessage = onAddToCart(productId);
-      setNotification({ type: "success", message: successMessage });
+      return;
     }
+
+    const resultMessage = await onAddToCart(productId);
+    const messageType = resultMessage.toLowerCase().includes("gagal")
+      ? "error"
+      : "success";
+    setNotification({ type: messageType, message: resultMessage });
   };
 
   const filteredReviews = reviews
@@ -88,7 +102,7 @@ const ProductDetail = ({
         <Link
           to="/cart"
           className="relative bg-white p-4 rounded-full shadow-lg border transition-transform hover:scale-110"
-          aria-label="Open Cart"
+          aria-label="Buka Keranjang"
         >
           <ShoppingCart size={24} className="text-black" />
           {cartCount > 0 && (
@@ -101,7 +115,7 @@ const ProductDetail = ({
           <Link
             to="/pesanan"
             className="relative bg-white p-4 rounded-full shadow-lg border transition-transform hover:scale-110"
-            aria-label="Track Order"
+            aria-label="Lacak Pesanan"
           >
             <Truck size={24} className="text-black" />
           </Link>
@@ -113,53 +127,57 @@ const ProductDetail = ({
             to="/shop"
             className="flex items-center gap-2 text-gray-600 hover:text-black mb-8 transition"
           >
-            <ArrowLeft size={20} /> Back to Shop
+            <ArrowLeft size={20} /> Kembali ke Toko
           </Link>
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
-            <div className="lg:col-span-2 flex items-center justify-center bg-gray-100 rounded-sm text-8xl h-96">
-              {" "}
-              {product.image}{" "}
+            {/* 3. PERBAIKAN UTAMA DI SINI */}
+            <div className="lg:col-span-2 flex items-center justify-center bg-gray-100 rounded-sm h-96 overflow-hidden">
+              {product.image ? (
+                <img
+                  src={`${SERVER_URL}/${product.image}`}
+                  alt={product.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-8xl">🪴</span>
+              )}
             </div>
+
             <div className="lg:col-span-3 flex flex-col">
               <span className="text-sm uppercase text-gray-500 tracking-wider">
-                {" "}
-                {product.category}{" "}
+                {product.category}
               </span>
               <h1 className="text-4xl font-bold text-gray-900 my-2">
-                {" "}
-                {product.name}{" "}
+                {product.name}
               </h1>
               <p className="text-3xl font-light text-gray-800 mb-4">
-                {" "}
-                Rp {product.price.toLocaleString("id-ID")}{" "}
+                Rp {product.price.toLocaleString("id-ID")}
               </p>
               <p className="text-gray-600 mb-6 leading-relaxed">
-                {" "}
-                {product.detail}{" "}
+                {product.detail}
               </p>
+
               {product.stock > 0 && product.stock <= 10 && (
                 <p className="text-sm mb-6 font-semibold text-yellow-600">
-                  {" "}
-                  Limited Stock: Only {product.stock} left!{" "}
+                  Stok Terbatas: Hanya tersisa {product.stock}!
                 </p>
               )}
+
               <button
                 onClick={() => handleAddToCartClick(product._id)}
                 disabled={product.stock === 0}
                 className="w-full bg-black text-white py-4 px-4 rounded-sm transition-all duration-300 hover:bg-gray-800 text-sm font-medium uppercase tracking-wide disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
-                {" "}
-                {product.stock > 0 ? "Add to Cart" : "Out of Stock"}{" "}
+                {product.stock > 0 ? "Tambah ke Keranjang" : "Stok Habis"}
               </button>
             </div>
           </div>
           <div className="mt-16 border-t pt-12">
-            <h2 className="text-3xl font-bold mb-4">Product Reviews</h2>
+            <h2 className="text-3xl font-bold mb-4">Ulasan Produk</h2>
             <div className="flex flex-col md:flex-row gap-4 mb-8 p-4 border rounded-sm">
               <div className="flex-1">
                 <label className="block text-sm font-medium mb-2">
-                  {" "}
-                  Filter by Rating{" "}
+                  Filter Berdasarkan Rating
                 </label>
                 <div className="flex gap-2 flex-wrap">
                   {[0, 5, 4, 3, 2, 1].map((star) => (
@@ -172,16 +190,14 @@ const ProductDetail = ({
                           : "bg-white text-gray-700 border-gray-300 hover:border-black"
                       }`}
                     >
-                      {" "}
-                      {star === 0 ? "All" : `★ ${star}`}{" "}
+                      {star === 0 ? "Semua" : `★ ${star}`}
                     </button>
                   ))}
                 </div>
               </div>
               <div className="flex-1">
                 <label className="block text-sm font-medium mb-2">
-                  {" "}
-                  Filter by Media{" "}
+                  Filter Berdasarkan Media
                 </label>
                 <div className="flex gap-2 flex-wrap">
                   <button
@@ -192,8 +208,7 @@ const ProductDetail = ({
                         : "bg-white text-gray-700 border-gray-300 hover:border-black"
                     }`}
                   >
-                    {" "}
-                    All{" "}
+                    Semua
                   </button>
                   <button
                     onClick={() => setMediaFilter("dengan-media")}
@@ -203,8 +218,7 @@ const ProductDetail = ({
                         : "bg-white text-gray-700 border-gray-300 hover:border-black"
                     }`}
                   >
-                    {" "}
-                    With Media{" "}
+                    Dengan Media
                   </button>
                   <button
                     onClick={() => setMediaFilter("tanpa-media")}
@@ -214,8 +228,7 @@ const ProductDetail = ({
                         : "bg-white text-gray-700 border-gray-300 hover:border-black"
                     }`}
                   >
-                    {" "}
-                    Without Media{" "}
+                    Tanpa Media
                   </button>
                 </div>
               </div>
@@ -223,40 +236,36 @@ const ProductDetail = ({
             {filteredReviews.length > 0 ? (
               <div className="space-y-8">
                 {filteredReviews.map((review) => {
-                  const user = users.find((u) => u.id === review.userId);
+                  const reviewUser = users.find((u) => u.id === review.userId);
                   return (
                     <div key={review.id} className="flex gap-4 border-b pb-8">
                       <div className="w-12 h-12 rounded-full bg-gray-200 flex-shrink-0 flex items-center justify-center font-bold text-gray-500">
-                        {" "}
-                        {user ? user.name.charAt(0) : "A"}{" "}
+                        {reviewUser ? reviewUser.name.charAt(0) : "A"}
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
                           <div>
                             <p className="font-semibold">
-                              {" "}
-                              {user ? user.name : "Anonymous"}{" "}
+                              {reviewUser ? reviewUser.name : "Anonim"}
                             </p>
                             <StarRating rating={review.rating} />
                           </div>
                           <p className="text-sm text-gray-500">
-                            {" "}
                             {new Date(review.date).toLocaleDateString("id-ID", {
                               year: "numeric",
                               month: "long",
                               day: "numeric",
-                            })}{" "}
+                            })}
                           </p>
                         </div>
                         <p className="text-gray-700 mt-2">{review.comment}</p>
                         {review.imageUrl && (
                           <div className="mt-4">
-                            {" "}
                             <img
                               src={review.imageUrl}
-                              alt="Product review"
+                              alt="Ulasan produk"
                               className="max-w-xs rounded-md border"
-                            />{" "}
+                            />
                           </div>
                         )}
                       </div>
@@ -266,8 +275,7 @@ const ProductDetail = ({
               </div>
             ) : (
               <p className="text-gray-500 bg-gray-50 p-6 rounded-sm">
-                {" "}
-                No reviews match your filters.{" "}
+                Tidak ada ulasan yang cocok dengan filter Anda.
               </p>
             )}
           </div>

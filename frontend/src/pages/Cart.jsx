@@ -2,6 +2,9 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Trash2, AlertCircle, CheckCircle } from "lucide-react";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+const SERVER_URL = API_URL.replace("/api", "");
+
 const formatPhoneInput = (value) => {
   const digits = value.replace(/\D/g, "").substring(0, 15);
   let formatted = "";
@@ -41,6 +44,47 @@ const Notification = ({ message, type, onClose }) => {
   );
 };
 
+const VoucherCard = ({ voucher, onSelect, isSelected }) => {
+  const isAvailable = voucher.isActive && voucher.currentUses < voucher.maxUses;
+  return (
+    <div
+      onClick={() => isAvailable && onSelect(voucher)}
+      className={`
+                p-3 border rounded-md flex-shrink-0
+                ${isAvailable ? "cursor-pointer" : "cursor-not-allowed"}
+                ${
+                  isSelected
+                    ? "border-green-500 bg-green-50 border-2"
+                    : "border-gray-300 bg-white"
+                }
+                ${
+                  !isAvailable
+                    ? "bg-gray-100 opacity-60"
+                    : "hover:border-green-400"
+                }
+                transition-all duration-200
+            `}
+    >
+      <div className="flex items-center gap-3">
+        <img
+          src="/image/janAgroVoucher.png"
+          alt="Voucher Icon"
+          className="w-12 h-12 object-contain"
+        />
+        <div>
+          <p className="font-bold text-sm text-gray-800">{voucher.code}</p>
+          <p className="text-xs text-gray-600">
+            Diskon {voucher.discountPercentage}%
+          </p>
+          {!isAvailable && (
+            <p className="text-xs text-red-500 font-semibold">Tidak Tersedia</p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const Cart = ({
   cart,
   produk,
@@ -53,13 +97,11 @@ const Cart = ({
   const [customerName, setCustomerName] = useState("");
   const [customerAddress, setCustomerAddress] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
-  console.log("PROPS received in Cart.jsx -> cart:", cart);
-  console.log("PROPS received in Cart.jsx -> produk:", produk);
 
   const [useProfileName, setUseProfileName] = useState(false);
   const [useProfileAddress, setUseProfileAddress] = useState(false);
   const [useProfilePhone, setUseProfilePhone] = useState(false);
-  const [voucherCode, setVoucherCode] = useState("");
+
   const [appliedVoucher, setAppliedVoucher] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState("");
   const [error, setError] = useState("");
@@ -68,6 +110,7 @@ const Cart = ({
   const onCloseNotification = useCallback(() => {
     setNotification({ message: "", type: "" });
   }, []);
+
   useEffect(() => {
     if (user) {
       if (useProfileName) setCustomerName(user.name || "");
@@ -88,7 +131,7 @@ const Cart = ({
       case "address":
         if (isChecked && user && !user.alamat) {
           setError(
-            "Your profile address is empty. Please fill it in on the profile page or manually."
+            "Alamat profil Anda kosong. Silakan isi di halaman profil atau manual."
           );
           setUseProfileAddress(false);
           return;
@@ -99,7 +142,7 @@ const Cart = ({
       case "phone":
         if (isChecked && user && !user.no_telp) {
           setError(
-            "Your profile phone number is empty. Please fill it in on the profile page or manually."
+            "Nomor telepon profil Anda kosong. Silakan isi di halaman profil atau manual."
           );
           setUseProfilePhone(false);
           return;
@@ -117,13 +160,15 @@ const Cart = ({
         break;
     }
   };
+
   const handlePhoneChange = (e) => {
     const numericValue = e.target.value.replace(/\D/g, "");
     if (numericValue.length <= 15) {
       setCustomerPhone(numericValue);
     }
-    if (error.includes("Phone Number")) setError("");
+    if (error.includes("Nomor Telepon")) setError("");
   };
+
   const cartDetails = cart
     .map((item) => {
       let productData;
@@ -135,10 +180,7 @@ const Cart = ({
       if (!productData) {
         return null;
       }
-      return {
-        ...productData,
-        quantity: item.quantity,
-      };
+      return { ...productData, quantity: item.quantity };
     })
     .filter(Boolean);
 
@@ -152,24 +194,21 @@ const Cart = ({
   );
   const kurirFee = 10000;
 
-  const handleApplyVoucher = () => {
+  const handleSelectVoucher = (voucher) => {
     setError("");
     onCloseNotification();
-    const foundVoucher = vouchers.find(
-      (v) =>
-        v.code.toLowerCase() === voucherCode.toLowerCase() &&
-        v.isActive &&
-        v.currentUses < v.maxUses
-    );
-    if (foundVoucher) {
-      setAppliedVoucher(foundVoucher);
+    if (appliedVoucher && appliedVoucher._id === voucher._id) {
+      setAppliedVoucher(null);
       setNotification({
-        message: `Voucher ${foundVoucher.code} applied successfully!`,
-        type: "success",
+        message: `Voucher ${voucher.code} dibatalkan.`,
+        type: "error",
       });
     } else {
-      setAppliedVoucher(null);
-      setError("Invalid, inactive, or expired voucher code.");
+      setAppliedVoucher(voucher);
+      setNotification({
+        message: `Voucher ${voucher.code} berhasil digunakan!`,
+        type: "success",
+      });
     }
   };
 
@@ -181,25 +220,24 @@ const Cart = ({
   const handleCheckoutClick = async () => {
     setError("");
     onCloseNotification();
-
     if (!user) {
-      setError("Please log in to continue checkout.");
+      setError("Silakan login untuk melanjutkan checkout.");
       return;
     }
     if (!customerName || !customerAddress || !customerPhone) {
-      setError("Please complete all shipping details.");
+      setError("Harap lengkapi semua detail pengiriman.");
       return;
     }
     if (customerPhone.length < 8 || customerPhone.length > 15) {
-      setError("Phone number must be between 8 and 15 digits.");
+      setError("Nomor telepon harus antara 8 dan 15 digit.");
       return;
     }
     if (!paymentMethod) {
-      setError("Please select a payment method.");
+      setError("Silakan pilih metode pembayaran.");
       return;
     }
     if (totalQuantity === 0) {
-      setError("Your cart is empty.");
+      setError("Keranjang Anda kosong.");
       return;
     }
 
@@ -221,21 +259,21 @@ const Cart = ({
       const checkoutResult = await onCheckout(checkoutData);
       if (checkoutResult.success) {
         setNotification({
-          message: "Order successfully created! Thank you.",
+          message: "Pesanan berhasil dibuat! Terima kasih.",
           type: "success",
         });
       } else {
-        setError(checkoutResult.message || "An error occurred during checkout.");
+        setError(checkoutResult.message || "Terjadi kesalahan saat checkout.");
         setNotification({
-          message: checkoutResult.message || "Checkout failed.",
+          message: checkoutResult.message || "Checkout gagal.",
           type: "error",
         });
       }
     } catch (err) {
-      console.error("Checkout error:", err);
-      setError("A system or network error occurred.");
+      console.error("Kesalahan checkout:", err);
+      setError("Terjadi kesalahan sistem atau jaringan.");
       setNotification({
-        message: "An error occurred while processing your order.",
+        message: "Terjadi kesalahan saat memproses pesanan Anda.",
         type: "error",
       });
     }
@@ -255,13 +293,13 @@ const Cart = ({
           to="/shop"
           className="flex items-center gap-2 text-gray-600 hover:text-black mb-8 transition"
         >
-          <ArrowLeft size={20} /> Continue Shopping
+          <ArrowLeft size={20} /> Lanjutkan Belanja
         </Link>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           <div className="lg:col-span-2 space-y-8">
             <div className="bg-white p-6 rounded-sm border">
               <h2 className="text-xl font-bold mb-4">
-                Order Details ({totalQuantity} items)
+                Detail Pesanan ({totalQuantity} item)
               </h2>
               {cartDetails.length > 0 ? (
                 <div className="space-y-4">
@@ -270,8 +308,18 @@ const Cart = ({
                       key={item._id}
                       className="flex items-center gap-4 border-b pb-4 last:border-b-0 last:pb-0"
                     >
-                      <div className="w-20 h-20 bg-gray-100 rounded-sm flex items-center justify-center text-4xl flex-shrink-0">
-                        {item.image}
+                      <div className="w-20 h-20 bg-gray-100 rounded-sm flex-shrink-0 overflow-hidden">
+                        {item.image ? (
+                          <img
+                            src={`${SERVER_URL}/${item.image}`}
+                            alt={item.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <span className="text-4xl flex items-center justify-center h-full">
+                            🪴
+                          </span>
+                        )}
                       </div>
                       <div className="flex-grow">
                         <p className="font-bold">{item.name}</p>
@@ -288,7 +336,9 @@ const Cart = ({
                         >
                           -
                         </button>
-                        <span className="px-2 font-medium">{item.quantity}</span>
+                        <span className="px-2 font-medium">
+                          {item.quantity}
+                        </span>
                         <button
                           onClick={() =>
                             onUpdateQuantity(item._id, item.quantity + 1)
@@ -299,7 +349,8 @@ const Cart = ({
                         </button>
                       </div>
                       <p className="font-semibold w-28 text-right">
-                        Rp {(item.price * item.quantity).toLocaleString("id-ID")}
+                        Rp{" "}
+                        {(item.price * item.quantity).toLocaleString("id-ID")}
                       </p>
                       <button
                         onClick={() => onRemove(item._id)}
@@ -313,17 +364,16 @@ const Cart = ({
               ) : (
                 <div className="text-center py-10">
                   <h3 className="text-xl font-semibold text-black">
-                    Your Cart is Empty
+                    Keranjang Anda Kosong
                   </h3>
                   <p className="text-gray-500 mt-2">
-                    Add products from the shop page to get started.
+                    Tambahkan produk dari halaman toko untuk memulai.
                   </p>
                 </div>
               )}
             </div>
-
             <div className="bg-white p-6 rounded-sm border">
-              <h2 className="text-xl font-bold mb-4">Shipping Details</h2>
+              <h2 className="text-xl font-bold mb-4">Detail Pengiriman</h2>
               {user && (
                 <div className="space-y-2 mb-4 p-3 bg-gray-50 rounded-md border">
                   <label className="flex items-center gap-2 cursor-pointer text-sm">
@@ -334,8 +384,8 @@ const Cart = ({
                         handleCheckboxChange("name", e.target.checked)
                       }
                       className="form-checkbox"
-                    />
-                    Use profile name
+                    />{" "}
+                    Gunakan nama profil
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer text-sm">
                     <input
@@ -345,8 +395,8 @@ const Cart = ({
                         handleCheckboxChange("address", e.target.checked)
                       }
                       className="form-checkbox"
-                    />
-                    Use profile address
+                    />{" "}
+                    Gunakan alamat profil
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer text-sm">
                     <input
@@ -356,15 +406,15 @@ const Cart = ({
                         handleCheckboxChange("phone", e.target.checked)
                       }
                       className="form-checkbox"
-                    />
-                    Use profile phone number
+                    />{" "}
+                    Gunakan nomor telepon profil
                   </label>
                 </div>
               )}
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Recipient Name
+                    Nama Penerima
                   </label>
                   <input
                     type="text"
@@ -376,7 +426,7 @@ const Cart = ({
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Full Address
+                    Alamat Lengkap
                   </label>
                   <textarea
                     value={customerAddress}
@@ -388,7 +438,7 @@ const Cart = ({
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Recipient Phone Number
+                    Nomor Telepon Penerima
                   </label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
@@ -410,26 +460,28 @@ const Cart = ({
           <div className="lg:col-span-1">
             <div className="bg-white p-6 rounded-sm border sticky top-24 space-y-6">
               <h2 className="text-xl font-bold text-center mb-4">
-                Shopping Summary
+                Ringkasan Belanja
               </h2>
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  placeholder="Enter Voucher Code"
-                  value={voucherCode}
-                  onChange={(e) => {
-                    setVoucherCode(e.target.value);
-                    setError("");
-                    onCloseNotification();
-                  }}
-                  className="flex-grow p-3 border rounded-sm focus:ring-2 focus:ring-black"
-                />
-                <button
-                  onClick={handleApplyVoucher}
-                  className="bg-gray-200 text-black p-3 rounded-sm font-medium hover:bg-gray-300"
-                >
-                  Apply
-                </button>
+              <div>
+                <h3 className="text-lg font-bold mb-3">Voucher Tersedia</h3>
+                {vouchers && vouchers.length > 0 ? (
+                  <div className="flex flex-col space-y-3 overflow-y-auto max-h-48 pr-2">
+                    {vouchers.map((voucher) => (
+                      <VoucherCard
+                        key={voucher._id}
+                        voucher={voucher}
+                        onSelect={handleSelectVoucher}
+                        isSelected={
+                          appliedVoucher && appliedVoucher._id === voucher._id
+                        }
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500 bg-gray-50 p-3 rounded-md">
+                    Tidak ada voucher yang tersedia saat ini.
+                  </p>
+                )}
               </div>
               <div className="space-y-2 border-t pt-4">
                 <div className="flex justify-between">
@@ -440,30 +492,30 @@ const Cart = ({
                 </div>
                 {appliedVoucher && (
                   <div className="flex justify-between text-green-600">
-                    <span>Discount ({appliedVoucher.discountPercentage}%)</span>
+                    <span>Diskon ({appliedVoucher.discountPercentage}%)</span>
                     <span className="font-medium">
                       - Rp {discountAmount.toLocaleString("id-ID")}
                     </span>
                   </div>
                 )}
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Courier Fee</span>
+                  <span className="text-gray-600">Biaya Kurir</span>
                   <span className="font-medium">
                     Rp {kurirFee.toLocaleString("id-ID")}
                   </span>
                 </div>
                 <div className="flex justify-between text-lg font-bold border-t pt-2 mt-2">
-                  <span>Total Price</span>
+                  <span>Total Harga</span>
                   <span>Rp {totalHarga.toLocaleString("id-ID")}</span>
                 </div>
               </div>
               <div>
-                <h3 className="text-lg font-bold mb-2">Payment Method</h3>
+                <h3 className="text-lg font-bold mb-2">Metode Pembayaran</h3>
                 <div className="space-y-2">
                   {[
-                    { label: "COD (Cash on Delivery)", value: "COD" },
-                    { label: "Bank Transfer", value: "Transfer Bank" },
-                    { label: "Credit Card", value: "Kartu Kredit" },
+                    { label: "COD (Bayar di Tempat)", value: "COD" },
+                    { label: "Transfer Bank", value: "Transfer Bank" },
+                    { label: "Kartu Kredit", value: "Kartu Kredit" },
                   ].map((method) => (
                     <label
                       key={method.value}

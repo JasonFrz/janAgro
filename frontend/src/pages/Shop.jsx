@@ -10,6 +10,9 @@ import {
   Truck,
 } from "lucide-react";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+const SERVER_URL = API_URL.replace("/api", "");
+
 const Notification = ({ message, type }) => {
   if (!message) return null;
   const isError = type === "error";
@@ -27,17 +30,22 @@ const Notification = ({ message, type }) => {
 
 const Shop = ({ user, onAddToCart, cartCount }) => {
   const dispatch = useDispatch();
-  const { items: produk, loading, error } = useSelector(
-    (state) => state.products
-  );
+
+  const {
+    items: produk,
+    status: productStatus,
+    error,
+  } = useSelector((state) => state.products);
 
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [notification, setNotification] = useState(null);
 
   useEffect(() => {
-    dispatch(fetchProducts());
-  }, [dispatch]);
+    if (productStatus === "idle") {
+      dispatch(fetchProducts());
+    }
+  }, [productStatus, dispatch]);
 
   useEffect(() => {
     if (notification) {
@@ -53,7 +61,7 @@ const Shop = ({ user, onAddToCart, cartCount }) => {
     if (productToAdd && productToAdd.stock === 0) {
       setNotification({
         type: "error",
-        message: "This product is currently unavailable (Out of Stock).",
+        message: "Produk ini sedang tidak tersedia (Stok Habis).",
       });
       return;
     }
@@ -61,13 +69,13 @@ const Shop = ({ user, onAddToCart, cartCount }) => {
     if (!user) {
       setNotification({
         type: "error",
-        message: "Please log in first.",
+        message: "Silakan login terlebih dahulu.",
       });
       return;
     }
 
     const resultMessage = await onAddToCart(productId);
-    const messageType = resultMessage.toLowerCase().includes("fail")
+    const messageType = resultMessage.toLowerCase().includes("gagal")
       ? "error"
       : "success";
 
@@ -84,17 +92,17 @@ const Shop = ({ user, onAddToCart, cartCount }) => {
     return matchesCategory && matchesSearch;
   });
 
-  if (loading)
+  if (productStatus === "loading" || productStatus === "idle")
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <p>Loading products...</p>
+        <p>Memuat produk...</p>
       </div>
     );
 
-  if (error)
+  if (productStatus === "failed")
     return (
       <div className="min-h-screen flex items-center justify-center text-red-600">
-        <p>Failed to load products: {error}</p>
+        <p>Gagal memuat produk: {error}</p>
       </div>
     );
 
@@ -102,12 +110,11 @@ const Shop = ({ user, onAddToCart, cartCount }) => {
     <>
       <Notification message={notification?.message} type={notification?.type} />
 
-      {/* Floating buttons */}
       <div className="fixed top-24 right-4 sm:right-8 z-30 flex flex-col gap-4">
         <Link
           to="/cart"
           className="relative bg-white p-4 rounded-full shadow-lg border transition-transform hover:scale-110"
-          aria-label="Open Cart"
+          aria-label="Buka Keranjang"
         >
           <ShoppingCart size={24} className="text-black" />
           {cartCount > 0 && (
@@ -120,14 +127,13 @@ const Shop = ({ user, onAddToCart, cartCount }) => {
           <Link
             to="/pesanan"
             className="relative bg-white p-4 rounded-full shadow-lg border transition-transform hover:scale-110"
-            aria-label="Track Orders"
+            aria-label="Lacak Pesanan"
           >
             <Truck size={24} className="text-black" />
           </Link>
         )}
       </div>
 
-      {/* Main content */}
       <div className="min-h-screen bg-gray-50 pt-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center mb-12">
@@ -136,11 +142,10 @@ const Shop = ({ user, onAddToCart, cartCount }) => {
             </h1>
             <div className="w-24 h-[1px] bg-black mx-auto mb-6"></div>
             <p className="text-xl text-gray-600 font-light">
-              Discover our complete range of Fertilizers, Tools & Seeds
+              Temukan rangkaian lengkap Pupuk, Alat & Bibit kami
             </p>
           </div>
 
-          {/* Search + Categories */}
           <div className="mb-8 flex flex-col md:flex-row gap-4 items-center justify-between">
             <div className="relative flex-1 w-full md:max-w-md">
               <Search
@@ -149,20 +154,19 @@ const Shop = ({ user, onAddToCart, cartCount }) => {
               />
               <input
                 type="text"
-                placeholder="Search products..."
+                placeholder="Cari produk..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-sm focus:ring-2 focus:ring-black focus:border-transparent transition-all"
               />
             </div>
-
             <div className="flex gap-3 flex-wrap justify-center">
-              {["all", "fertilizer", "tools", "seeds"].map((category) => (
+              {["all", "Pupuk", "Alat", "Bibit"].map((category) => (
                 <button
                   key={category}
-                  onClick={() => setSelectedCategory(category)}
+                  onClick={() => setSelectedCategory(category.toLowerCase())}
                   className={`px-4 py-2 rounded-sm border transition ${
-                    selectedCategory === category
+                    selectedCategory === category.toLowerCase()
                       ? "bg-black text-white border-black"
                       : "bg-white text-gray-700 border-gray-300 hover:border-black"
                   }`}
@@ -173,7 +177,6 @@ const Shop = ({ user, onAddToCart, cartCount }) => {
             </div>
           </div>
 
-          {/* Product Grid */}
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
             {filteredProduk.map((item) => (
               <div
@@ -182,17 +185,24 @@ const Shop = ({ user, onAddToCart, cartCount }) => {
                   item.stock === 0 ? "grayscale" : ""
                 }`}
               >
-                <div className="relative h-56 bg-gray-100 flex items-center justify-center overflow-hidden text-6xl transform group-hover:scale-110 transition-transform duration-500">
-                  {item.image || "🪴"}
+                <div className="relative h-56 bg-gray-100 flex items-center justify-center overflow-hidden">
+                  {item.image ? (
+                    <img
+                      src={`${SERVER_URL}/${item.image}`}
+                      alt={item.name}
+                      className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+                    />
+                  ) : (
+                    <span className="text-6xl">🪴</span>
+                  )}
                   {item.stock === 0 && (
                     <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
                       <span className="text-white text-xl font-bold uppercase tracking-widest">
-                        Out of Stock
+                        Stok Habis
                       </span>
                     </div>
                   )}
                 </div>
-
                 <div className="p-6">
                   <div className="mb-4">
                     <h3 className="text-xl font-bold text-black mb-1 group-hover:text-gray-700 transition-colors">
@@ -215,14 +225,14 @@ const Shop = ({ user, onAddToCart, cartCount }) => {
                       to={`/product/${item._id}`}
                       className="flex-1 text-center bg-black text-white py-3 px-4 rounded-sm transition-all duration-300 hover:bg-gray-800 text-sm font-medium uppercase tracking-wide"
                     >
-                      View Details
+                      Lihat Detail
                     </Link>
                     <button
                       onClick={() => handleAddToCartClick(item._id)}
                       disabled={item.stock === 0}
                       className="border border-gray-300 hover:border-black text-gray-700 hover:text-black py-3 px-4 rounded-sm transition-all duration-300 text-sm font-medium uppercase tracking-wide disabled:bg-gray-200 disabled:cursor-not-allowed disabled:text-gray-400 disabled:border-gray-200"
                     >
-                      Add to Cart
+                      Tambah
                     </button>
                   </div>
                 </div>
