@@ -1,13 +1,25 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { X, Tag, Percent, User, Edit, Trash2, Plus } from "lucide-react";
 import ConfirmationModal from "./ConfirmationModal";
 import VoucherModal from "./VoucherModal";
+import { fetchVouchers } from "../features/voucher/voucherSlice";
+import { useDispatch, useSelector } from "react-redux";
 
-function Voucher({ vouchers, onAdd, onUpdate, onDelete }) {
+function Voucher({ onAdd, onUpdate, onDelete }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [editingVoucher, setEditingVoucher] = useState(null);
   const [voucherToDelete, setVoucherToDelete] = useState(null);
+
+  const dispatch = useDispatch();
+
+  const {vouchers} = useSelector((state) => state.vouchers);
+  console.log("Vouchers from Redux:", vouchers);
+
+  useEffect(() => {
+    dispatch(fetchVouchers());
+  }, [dispatch]);
+
 
   const handleOpenModal = (voucher = null) => {
     setEditingVoucher(voucher);
