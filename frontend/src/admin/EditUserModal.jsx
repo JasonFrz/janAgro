@@ -1,7 +1,10 @@
 import React, { useState } from "react";
 import { X, User, Mail, AtSign, Lock, Phone, MapPin } from "lucide-react";
+import { editUser } from "../features/admin/adminSlice"
+import { useDispatch } from "react-redux";
 
 const EditUserModal = ({ user, onClose, onSave }) => {
+  const [ErrorMessage,setErrorMessage] = useState({})
   const [formData, setFormData] = useState({
     username: user.username,
     name: user.name,
@@ -11,23 +14,41 @@ const EditUserModal = ({ user, onClose, onSave }) => {
     password: "",
   });
 
+  
+  const dispatch = useDispatch();
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
+
     if (name === "noTelp") {
       const numericValue = value.replace(/\D/g, "");
       setFormData({ ...formData, [name]: numericValue });
     } else {
       setFormData({ ...formData, [name]: value });
     }
+
   };
 
-const handleSave = async () => {
-  console.log("Saving user:", user._id, formData); // 👈 Add this
-  const dataToSave = { ...formData };
-  if (!dataToSave.password) delete dataToSave.password;
 
-  await onSave(user._id, dataToSave);
-  onClose();
+const handleSave = async () => {
+  console.log("Saving user:", user._id, formData);
+  
+
+  try {
+      console.log("TES")
+      const userData = await dispatch(editUser({id: user._id, userData:formData})).unwrap()
+    
+      console.log("TES2")
+      onSave(userData.user)
+  
+    } catch (error) {
+      setErrorMessage(error)
+    }finally{ 
+      onClose();
+    }
+
+  // if (!dataToSave.password) delete dataToSave.password;
+  
 };
 
 

@@ -3,6 +3,9 @@ import axios from "axios";
 import { Edit, Trash2, UserX, UserCheck } from "lucide-react";
 import ConfirmationModal from "./ConfirmationModal";
 import EditUserModal from "./EditUserModal";
+import { editUser, fetchUsers } from "../features/admin/adminSlice"
+import { useDispatch,useSelector} from "react-redux";
+
 
 const formatPhoneNumber = (phone) => {
   if (!phone) return "-";
@@ -26,48 +29,69 @@ function UserAdmin() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [ErrorMessage,setErrorMessage] = useState({})
   const [editingUser, setEditingUser] = useState(null);
   const [confirmation, setConfirmation] = useState({
     isOpen: false,
     action: null,
     user: null,
   });
+  const dispatch = useDispatch();
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const res = await axios.get("http://localhost:3000/api/admin/get-all-users");
-        if (res.data.success) {
-          setUsers(res.data.data);
-        } else {
-          setError("Failed to fetch users");
-        }
-      } catch (err) {
-        console.error(err);
-        setError("Server error fetching users");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchUsers();
-  }, []);
-
-const handleUpdate = async (id, updatedData) => {
-  try {
-    const res = await axios.put(
-      `http://localhost:3000/api/admin/update-user/${id}`,
-      updatedData
-    );
-    if (res.data.success) {
-      setUsers((prev) =>
-        prev.map((u) => (u._id === id ? res.data.data : u))
-      );
-    } else {
-      console.error("Update failed:", res.data.message);
+  const fetchAllUsers = async () => {
+    try {
+      const res = await dispatch(fetchUsers()).unwrap();
+      setUsers(res);
+    } catch (err) {
+      console.error(err);
+      setError("Server error fetching users");
+    } finally {
+      setLoading(false);
     }
-  } catch (err) {
-    console.error("Error updating user:", err);
-  }
+  };
+useEffect(() => {
+
+  fetchAllUsers();
+}, [dispatch]); // <-- IMPORTANT
+
+
+const handleUpdate = async () => {
+
+  
+  try {
+      console.log("TES")
+      const userData = await dispatch(editUser({id: userData._id, updatedData:userData})).unwrap()
+      console.log("TES2")
+      setUsers(userData.user)
+  
+    } catch (error) {
+      setErrorMessage(error)
+    }finally{ 
+      // setErrorMessage(null)
+      
+  fetchAllUsers();
+    }
+
+
+
+  // try {
+  //   const res = await axios.put(
+  //     `http://localhost:3000/api/admin/update-user/${id}`,
+  //     updatedData
+  //   );
+  //   if (res.data.success) {
+  //     setUsers((prev) =>
+  //       prev.map((u) => (u._id === id ? res.data.data : u))
+  //     );
+  //   } else {
+  //     console.error("Update failed:", res.data.message);
+  //   }
+  // } catch (err) {
+  //   console.error("Error updating user:", err);
+  // }
+
+
+
 };
 
 

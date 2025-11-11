@@ -52,13 +52,13 @@ const ProfileSlide = ({
     setCurrentView(view);
   };
 
-  const { users } = useSelector((state) => state.users);
+//   const { users } = useSelector((state) => state.users);
   
-console.log(users);
+// console.log(users);
 
-  useEffect(() => {
-    dispatch(fetchUsers());
-  }, [dispatch]);
+//   useEffect(() => {
+//     dispatch(fetchUsers());
+//   }, [dispatch]);
 
   useEffect(() => {
     if (isOpen) {
