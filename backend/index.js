@@ -8,6 +8,7 @@ connectDatabase();
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
+app.use(express.static('public'));
 
 const authRoutes = require("./src/routes/authRoutes");
 const productsRoutes = require("./src/routes/productsRoutes");

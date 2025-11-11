@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 export const fetchProducts = createAsyncThunk(
   "products/fetchProducts",
@@ -19,7 +19,9 @@ export const addProduct = createAsyncThunk(
   "products/addProduct",
   async (productData, { rejectWithValue }) => {
     try {
-      const response = await axios.post(`${API_URL}/products/add-product`, productData);
+      const response = await axios.post(`${API_URL}/products/add-product`, productData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
       alert(response.data.message);
       return response.data.data;
     } catch (error) {
@@ -34,7 +36,9 @@ export const updateProduct = createAsyncThunk(
   "products/updateProduct",
   async ({ id, productData }, { rejectWithValue }) => {
     try {
-      const response = await axios.put(`${API_URL}/products/update-product/${id}`, productData);
+      const response = await axios.put(`${API_URL}/products/update-product/${id}`, productData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
       alert(response.data.message);
       return response.data.data;
     } catch (error) {
