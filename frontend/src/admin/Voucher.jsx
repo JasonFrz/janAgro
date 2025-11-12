@@ -1,25 +1,34 @@
 import React, { useEffect, useState } from "react";
-import { X, Tag, Percent, User, Edit, Trash2, Plus } from "lucide-react";
+import { Edit, Trash2, Plus } from "lucide-react";
 import ConfirmationModal from "./ConfirmationModal";
 import VoucherModal from "./VoucherModal";
-import { fetchVouchers } from "../features/voucher/voucherSlice";
 import { useDispatch, useSelector } from "react-redux";
+import {
+  fetchVouchers,
+  createVoucher,
+  updateVoucher,
+  deleteVoucher,
+} from "../features/voucher/voucherSlice";
 
-function Voucher({ onAdd, onUpdate, onDelete }) {
+function Voucher() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [editingVoucher, setEditingVoucher] = useState(null);
   const [voucherToDelete, setVoucherToDelete] = useState(null);
+  const [successMessage, setSuccessMessage] = useState("");
 
   const dispatch = useDispatch();
-
-  const {vouchers} = useSelector((state) => state.vouchers);
-  console.log("Vouchers from Redux:", vouchers);
+  const { vouchers, loading, error } = useSelector((state) => state.vouchers);
 
   useEffect(() => {
     dispatch(fetchVouchers());
   }, [dispatch]);
 
+  // success message auto-clear
+  const showSuccess = (msg) => {
+    setSuccessMessage(msg);
+    setTimeout(() => setSuccessMessage(""), 3000);
+  };
 
   const handleOpenModal = (voucher = null) => {
     setEditingVoucher(voucher);
@@ -29,21 +38,36 @@ function Voucher({ onAdd, onUpdate, onDelete }) {
     setIsModalOpen(false);
     setEditingVoucher(null);
   };
+
   const handleOpenConfirm = (voucher) => {
     setVoucherToDelete(voucher);
     setIsConfirmOpen(true);
   };
+
   const handleDelete = () => {
-    onDelete(voucherToDelete._id); 
+    if (voucherToDelete) {
+      dispatch(deleteVoucher(voucherToDelete._id))
+        .unwrap()
+        .then(() => showSuccess("Voucher deleted successfully!"))
+        .catch(() => {});
+    }
     setIsConfirmOpen(false);
     setVoucherToDelete(null);
   };
+
   const handleSaveVoucher = (voucherData) => {
     if (editingVoucher) {
-      onUpdate(editingVoucher._id, voucherData); 
+      dispatch(updateVoucher({ id: editingVoucher._id, voucherData }))
+        .unwrap()
+        .then(() => showSuccess("Voucher updated successfully!"))
+        .catch(() => {});
     } else {
-      onAdd(voucherData);
+      dispatch(createVoucher(voucherData))
+        .unwrap()
+        .then(() => showSuccess("Voucher created successfully!"))
+        .catch(() => {});
     }
+    handleCloseModal();
   };
 
   return (
@@ -54,6 +78,7 @@ function Voucher({ onAdd, onUpdate, onDelete }) {
         onSave={handleSaveVoucher}
         voucher={editingVoucher}
       />
+
       <ConfirmationModal
         isOpen={isConfirmOpen}
         onClose={() => setIsConfirmOpen(false)}
@@ -63,8 +88,9 @@ function Voucher({ onAdd, onUpdate, onDelete }) {
         confirmButtonText="Delete"
         confirmButtonColor="bg-red-600 hover:bg-red-700"
       />
+
       <div className="bg-white shadow rounded-lg p-6">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center justify-between mb-2">
           <h2 className="text-xl font-semibold">Voucher Management</h2>
           <button
             onClick={() => handleOpenModal()}
@@ -74,33 +100,32 @@ function Voucher({ onAdd, onUpdate, onDelete }) {
             <span>Add Voucher</span>
           </button>
         </div>
-        <div className="overflow-x-auto border border-gray-200 rounded-lg">
+
+        {/* ✅ Success Message */}
+        {successMessage && (
+          <span className="text-green-600 text-sm font-medium transition-opacity duration-300">
+            {successMessage}
+          </span>
+        )}
+
+        {loading && <p className="text-gray-500 text-sm mb-3">Loading vouchers...</p>}
+        {error && <p className="text-red-500 text-sm mb-3">{error}</p>}
+
+        <div className="overflow-x-auto border border-gray-200 rounded-lg mt-3">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Code
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Discount
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Usage
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">
-                  Actions
-                </th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Code</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Discount</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Usage</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
               {vouchers.length > 0 ? (
                 vouchers.map((voucher) => (
                   <tr key={voucher._id}>
-                    {" "}
-                    {/* <-- Gunakan _id */}
                     <td className="px-6 py-4 whitespace-nowrap font-mono font-bold text-black">
                       {voucher.code}
                     </td>
@@ -113,14 +138,12 @@ function Voucher({ onAdd, onUpdate, onDelete }) {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
                         className={`px-2 py-1 text-xs rounded-full font-medium ${
-                          voucher.isActive &&
-                          voucher.currentUses < voucher.maxUses
+                          voucher.isActive && voucher.currentUses < voucher.maxUses
                             ? "bg-green-100 text-green-600"
                             : "bg-gray-100 text-gray-600"
                         }`}
                       >
-                        {voucher.isActive &&
-                        voucher.currentUses < voucher.maxUses
+                        {voucher.isActive && voucher.currentUses < voucher.maxUses
                           ? "Active"
                           : "Inactive"}
                       </span>
@@ -157,4 +180,3 @@ function Voucher({ onAdd, onUpdate, onDelete }) {
 }
 
 export default Voucher;
-                        

@@ -11,7 +11,7 @@ const registerSchema = Joi.object({
     "string.empty": "Email wajib diisi",
     "string.email": "Format email tidak valid",
   }),
-  no_telp: Joi.string()
+  phone: Joi.string()
     .pattern(/^[0-9]{8,15}$/)
     .required()
     .messages({

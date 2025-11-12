@@ -35,7 +35,7 @@ const ProfileSlide = ({
     name: "",
     username: "",
     email: "",
-    no_telp: "",
+    phone: "",
     confirmPassword: "",
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -71,7 +71,7 @@ const ProfileSlide = ({
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setErrorMessage(null);
-    if (name === "noTelp") {
+    if (name === "phone") {
       const numericValue = value.replace(/\D/g, "");
       setFormData({ ...formData, [name]: numericValue });
     } else {
@@ -102,7 +102,7 @@ const ProfileSlide = ({
         "string.empty": "Email Field Cannot be empty",
         "string.email": "Email Format is invalid",
       }),
-    no_telp: Joi.string()
+    phone: Joi.string()
       .pattern(/^[0-9]{8,15}$/)
       .required()
       .messages({
@@ -279,7 +279,7 @@ const ProfileSlide = ({
       name: "",
       username: "",
       email: "",
-      noTelp: "",
+      phone: "",
       confirmPassword: "",
     });
   };
@@ -394,8 +394,8 @@ const ProfileSlide = ({
             />
             <input
               type="tel"
-              name="no_telp"
-              value={formData.no_telp}
+              name="phone"
+              value={formData.phone}
               onChange={handleInputChange}
               className="w-full pl-16 pr-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black"
               placeholder="81234567890"

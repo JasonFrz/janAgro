@@ -20,7 +20,7 @@ router.post("/register", async (req, res) => {
       name: req.body.name,
       username: req.body.username,
       email: req.body.email,
-      no_telp: req.body.no_telp,
+      phone: req.body.phone,
       password: req.body.password,
     });
     if (error) {
@@ -42,7 +42,7 @@ router.post("/register", async (req, res) => {
       username: req.body.username,
       name: req.body.name,
       email: req.body.email,
-      no_telp: req.body.no_telp,
+      phone: req.body.phone,
       password: hashedPassword,
     });
 
@@ -53,7 +53,7 @@ router.post("/register", async (req, res) => {
         username: newUser.username,
         name: newUser.name,
         email: newUser.email,
-        no_telp: newUser.no_telp,
+        phone: newUser.phone,
         role: newUser.role,
       },
     });
@@ -123,7 +123,7 @@ router.get("/profile", authenticateToken, async (req, res) => {
     res.status(200).json({ user });
      const userForFrontend = {
       ...userFromDb,
-      noTelp: userFromDb.no_telp,
+      phone: userFromDb.phone,
     };
   } catch (error) {
     console.error(error);
