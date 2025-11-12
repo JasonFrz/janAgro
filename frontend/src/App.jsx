@@ -46,10 +46,7 @@ function App() {
   const token = useSelector((state) => state.users.token);
   const isAuthenticated = useSelector((state) => state.users.isAuthenticated);
 
-  if (!isAuthenticated || !token) {
-    alert("Silakan login untuk menambahkan produk ke keranjang.");
-    return;
-  }
+
  useEffect(() => {
     if (productStatus === 'idle') {
       dispatch(fetchProducts());
@@ -293,6 +290,12 @@ useEffect(() => {
     
     fetchCheckouts();
   }, [user]);
+
+  // TOKEN
+  if (!isAuthenticated || !token) {
+    alert("Silakan login untuk menambahkan produk ke keranjang.");
+    return;
+  }
   const handleCheckout = async (checkoutData) => {
     const token = localStorage.getItem("token");
     if (!token) {
@@ -386,6 +389,7 @@ const handleProfileSave = async (userId, payload) => {
       };
     }
   };
+  
   const handlePasswordChange = (currentPassword, newPassword) => {
     if (!user) return { success: false, message: "No user logged in." };
     if (user.password !== currentPassword)
