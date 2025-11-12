@@ -38,7 +38,7 @@ export const updateProduct = createAsyncThunk(
     try {
       const response = await axios.put(`${API_URL}/products/update-product/${id}`, productData, {
         headers: { "Content-Type": "multipart/form-data" },
-      });
+      }); 
       alert(response.data.message);
       return response.data.data;
     } catch (error) {

@@ -31,8 +31,8 @@ router.put(
       user.name = profileData.name;
       user.username = profileData.username;
       user.email = profileData.email;
-      user.no_telp = profileData.no_telp;
-      user.alamat = profileData.alamat;
+      user.phone = profileData.phone;
+      user.address = profileData.address;
 
       if (newPassword) {
         user.password = await hashPassword(newPassword);

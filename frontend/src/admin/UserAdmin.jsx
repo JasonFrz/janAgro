@@ -158,7 +158,7 @@ const handleUpdate = async () => {
                   Contact
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Alamat
+                  Address
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Joined
@@ -182,14 +182,14 @@ const handleUpdate = async () => {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-600">{user.email}</div>
                     <div className="text-sm text-gray-500">
-                      {formatPhoneNumber(user.no_telp)}
+                      {formatPhoneNumber(user.phone)}
                     </div>
                   </td>
                   <td
                     className="px-6 py-4 text-sm text-gray-600 max-w-xs truncate"
-                    title={user.alamat}
+                    title={user.address}
                   >
-                    {user.alamat || "-"}
+                    {user.address || "-"}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                     {new Date(user.createdAt).toLocaleDateString("id-ID")}

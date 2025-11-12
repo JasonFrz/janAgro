@@ -81,16 +81,21 @@ const Shop = ({ user, onAddToCart, cartCount }) => {
 
     setNotification({ type: messageType, message: resultMessage });
   };
+const filteredProduk = produk.filter((item) => {
+  const itemCategory = item.category?.toLowerCase() || "";
+  const itemName = item.name?.toLowerCase() || "";
+  const search = searchQuery?.toLowerCase() || "";
+  const selected = selectedCategory?.toLowerCase() || "all";
 
-  const filteredProduk = produk.filter((item) => {
-    const matchesCategory =
-      selectedCategory === "all" ||
-      item.category.toLowerCase() === selectedCategory.toLowerCase();
-    const matchesSearch =
-      item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.category.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  const matchesCategory =
+    selected === "all" || itemCategory === selected;
+
+  const matchesSearch =
+    itemName.includes(search) || itemCategory.includes(search);
+
+  return matchesCategory && matchesSearch;
+});
+
 
   if (productStatus === "loading" || productStatus === "idle")
     return (
@@ -142,7 +147,7 @@ const Shop = ({ user, onAddToCart, cartCount }) => {
             </h1>
             <div className="w-24 h-[1px] bg-black mx-auto mb-6"></div>
             <p className="text-xl text-gray-600 font-light">
-              Temukan rangkaian lengkap Pupuk, Alat & Bibit kami
+              Find your finest Fertilizers, Tools, and Seeds
             </p>
           </div>
 
@@ -161,7 +166,7 @@ const Shop = ({ user, onAddToCart, cartCount }) => {
               />
             </div>
             <div className="flex gap-3 flex-wrap justify-center">
-              {["all", "Pupuk", "Alat", "Bibit"].map((category) => (
+              {["all", "Fertilizer", "Tools", "Seeds"].map((category) => (
                 <button
                   key={category}
                   onClick={() => setSelectedCategory(category.toLowerCase())}
@@ -198,7 +203,7 @@ const Shop = ({ user, onAddToCart, cartCount }) => {
                   {item.stock === 0 && (
                     <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
                       <span className="text-white text-xl font-bold uppercase tracking-widest">
-                        Stok Habis
+                        Out of Stock
                       </span>
                     </div>
                   )}
@@ -225,14 +230,14 @@ const Shop = ({ user, onAddToCart, cartCount }) => {
                       to={`/product/${item._id}`}
                       className="flex-1 text-center bg-black text-white py-3 px-4 rounded-sm transition-all duration-300 hover:bg-gray-800 text-sm font-medium uppercase tracking-wide"
                     >
-                      Lihat Detail
+                      View Detail
                     </Link>
                     <button
                       onClick={() => handleAddToCartClick(item._id)}
                       disabled={item.stock === 0}
                       className="border border-gray-300 hover:border-black text-gray-700 hover:text-black py-3 px-4 rounded-sm transition-all duration-300 text-sm font-medium uppercase tracking-wide disabled:bg-gray-200 disabled:cursor-not-allowed disabled:text-gray-400 disabled:border-gray-200"
                     >
-                      Tambah
+                      Add to Cart
                     </button>
                   </div>
                 </div>

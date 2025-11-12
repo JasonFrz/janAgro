@@ -293,13 +293,13 @@ const Cart = ({
           to="/shop"
           className="flex items-center gap-2 text-gray-600 hover:text-black mb-8 transition"
         >
-          <ArrowLeft size={20} /> Lanjutkan Belanja
+          <ArrowLeft size={20} /> Continue Shopping
         </Link>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           <div className="lg:col-span-2 space-y-8">
             <div className="bg-white p-6 rounded-sm border">
               <h2 className="text-xl font-bold mb-4">
-                Detail Pesanan ({totalQuantity} item)
+                Delivery Detail ({totalQuantity} item)
               </h2>
               {cartDetails.length > 0 ? (
                 <div className="space-y-4">
@@ -364,16 +364,16 @@ const Cart = ({
               ) : (
                 <div className="text-center py-10">
                   <h3 className="text-xl font-semibold text-black">
-                    Keranjang Anda Kosong
+                    Cart is Empty
                   </h3>
                   <p className="text-gray-500 mt-2">
-                    Tambahkan produk dari halaman toko untuk memulai.
+                    Add a product to cart
                   </p>
                 </div>
               )}
             </div>
             <div className="bg-white p-6 rounded-sm border">
-              <h2 className="text-xl font-bold mb-4">Detail Pengiriman</h2>
+              <h2 className="text-xl font-bold mb-4">Delivery Detail</h2>
               {user && (
                 <div className="space-y-2 mb-4 p-3 bg-gray-50 rounded-md border">
                   <label className="flex items-center gap-2 cursor-pointer text-sm">
@@ -385,7 +385,7 @@ const Cart = ({
                       }
                       className="form-checkbox"
                     />{" "}
-                    Gunakan nama profil
+                    Use Profile Name
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer text-sm">
                     <input
@@ -407,14 +407,14 @@ const Cart = ({
                       }
                       className="form-checkbox"
                     />{" "}
-                    Gunakan nomor telepon profil
+                    Use Profile Number
                   </label>
                 </div>
               )}
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Nama Penerima
+                    Receiver Name
                   </label>
                   <input
                     type="text"
@@ -426,7 +426,7 @@ const Cart = ({
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Alamat Lengkap
+                    Address
                   </label>
                   <textarea
                     value={customerAddress}
@@ -492,25 +492,25 @@ const Cart = ({
                 </div>
                 {appliedVoucher && (
                   <div className="flex justify-between text-green-600">
-                    <span>Diskon ({appliedVoucher.discountPercentage}%)</span>
+                    <span>Discount ({appliedVoucher.discountPercentage}%)</span>
                     <span className="font-medium">
                       - Rp {discountAmount.toLocaleString("id-ID")}
                     </span>
                   </div>
                 )}
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Biaya Kurir</span>
+                  <span className="text-gray-600">Courier Cost</span>
                   <span className="font-medium">
                     Rp {kurirFee.toLocaleString("id-ID")}
                   </span>
                 </div>
                 <div className="flex justify-between text-lg font-bold border-t pt-2 mt-2">
-                  <span>Total Harga</span>
+                  <span>Total Price</span>
                   <span>Rp {totalHarga.toLocaleString("id-ID")}</span>
                 </div>
               </div>
               <div>
-                <h3 className="text-lg font-bold mb-2">Metode Pembayaran</h3>
+                <h3 className="text-lg font-bold mb-2">Payment Method</h3>
                 <div className="space-y-2">
                   {[
                     { label: "COD (Bayar di Tempat)", value: "COD" },

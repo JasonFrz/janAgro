@@ -10,19 +10,20 @@ const {
 } = require("./src/database/database");
 const Checkout = require("./src/models/Checkout");
 const Return = require("./src/models/Return");
-faker.seed(23);
 const Cancellation = require("./src/models/Cancellation");
 
+faker.seed(23);
+
 const createUser = async (role) => {
-  console.log("Password semuanya password123");
+  console.log("All passwords are 'password123'");
   const hashedPassword = await hashPassword("password123");
   return {
     username: faker.internet.username(),
     name: faker.person.fullName(),
     email: faker.internet.email(),
     password: hashedPassword,
-    no_telp: faker.phone.number("08##########"),
-    alamat: faker.location.streetAddress(),
+    phone: faker.phone.number("08##########"),
+    address: faker.location.streetAddress(),
     role: role,
     cart: [],
     isBanned: false,
@@ -31,10 +32,10 @@ const createUser = async (role) => {
 };
 
 async function createVouchers() {
-  console.log("Membuat voucher");
+  console.log("Creating vouchers...");
   const vouchers = [
     {
-      code: "HEMAT10",
+      code: "SAVE10",
       discountPercentage: 10,
       maxUses: 100,
       currentUses: 25,
@@ -48,68 +49,65 @@ async function createVouchers() {
       isActive: true,
     },
     {
-      code: "DISKONBARU",
+      code: "NEWUSER15",
       discountPercentage: 15,
       maxUses: 200,
-      isActive: false, 
+      isActive: false,
     },
   ];
   await Voucher.insertMany(vouchers);
 }
 
-
-   
 async function createProducts() {
-  console.log("Membuat produk");
+  console.log("Creating products...");
   const products = [
     {
       name: "Organic Garden Booster",
-      category: "Pupuk",
+      category: "Fertilizer",
       price: 24.99,
       image: "🌱",
       description: "Premium organic fertilizer for all garden plants.",
       rating: 4.8,
       stock: 17,
       detail:
-        "Pupuk organik premium untuk semua tanaman kebun, sangat bagus untuk meningkatkan kesuburan tanah dan hasil panen.",
+        "A premium organic fertilizer suitable for all garden plants. Great for improving soil fertility and crop yield.",
     },
     {
-      name: "Sekop Taman Pro",
-      category: "Alat",
+      name: "Pro Garden Shovel",
+      category: "Tools",
       price: 15.5,
       image: "🛠️",
-      description: "Alat sekop tahan lama untuk kebutuhan berkebun.",
+      description: "Durable shovel for all your gardening needs.",
       rating: 4.5,
       stock: 8,
       detail:
-        "Terbuat dari baja berkualitas tinggi, anti karat dan kokoh. Gagang ergonomis untuk kenyamanan maksimal.",
+        "Made from high-quality steel, rust-resistant and sturdy. Ergonomic handle for maximum comfort.",
     },
     {
-      name: "Bibit Tomat Cherry",
-      category: "Bibit",
+      name: "Cherry Tomato Seeds",
+      category: "Seeds",
       price: 5.99,
       image: "🍅",
-      description: "Bibit tomat cherry unggul, cepat berbuah.",
+      description: "High-quality cherry tomato seeds, fast-growing variety.",
       rating: 4.9,
       stock: 50,
       detail:
-        "Satu paket berisi 50 biji bibit tomat cherry pilihan. Tahan terhadap penyakit dan cocok untuk iklim tropis.",
+        "One pack contains 50 selected cherry tomato seeds. Resistant to disease and suitable for tropical climates.",
     },
     {
-      name: "Pestisida Organik Neem",
-      category: "Pupuk",
+      name: "Neem Organic Pesticide",
+      category: "Fertilizer",
       price: 12.0,
       image: "🌿",
-      description: "Pestisida alami dari ekstrak daun neem.",
+      description: "Natural pesticide made from neem leaf extract.",
       rating: 4.6,
       stock: 0,
       detail:
-        "Aman untuk tanaman dan lingkungan, efektif mengusir hama seperti kutu daun, ulat, dan tungau.",
+        "Safe for plants and the environment, effective against pests such as aphids, caterpillars, and mites.",
     },
   ];
   await Product.insertMany(products);
 }
-
 
 async function seed() {
   try {
@@ -120,23 +118,28 @@ async function seed() {
     await Voucher.deleteMany({});
     await Cancellation.deleteMany({});
     await Return.deleteMany({});
-    console.log("Table Users cleared");
+    console.log("All collections cleared.");
+
     const adminUser = await createUser("admin");
     await User.create(adminUser);
-    const PemilikUser = await createUser("pemilik");
-    await User.create(PemilikUser);
+
+    const ownerUser = await createUser("owner");
+    await User.create(ownerUser);
+
     for (let i = 0; i < 10; i++) {
-      const pengguna = await createUser("pengguna");
-      console.log(pengguna);
-      await User.create(pengguna);
+      const user = await createUser("user");
+      console.log(user);
+      await User.create(user);
     }
+
     await createProducts();
     await createVouchers();
     await Checkout.insertMany([]);
     await Review.insertMany([]);
-    console.log("Database seeder sukses!");
+
+    console.log("Database seeding successful!");
   } catch (error) {
-    console.error("Seeder error: ", error);
+    console.error("Seeder error:", error);
     process.exit(1);
   } finally {
     await disconnectDatabase();
