@@ -43,7 +43,13 @@ function App() {
 
   const dispatch = useDispatch();
   const { items: produk, status: productStatus } = useSelector((state) => state.products);
+  const token = useSelector((state) => state.users.token);
+  const isAuthenticated = useSelector((state) => state.users.isAuthenticated);
 
+  if (!isAuthenticated || !token) {
+    alert("Silakan login untuk menambahkan produk ke keranjang.");
+    return;
+  }
  useEffect(() => {
     if (productStatus === 'idle') {
       dispatch(fetchProducts());
@@ -174,11 +180,7 @@ function App() {
       console.error("handleAddToCart dipanggil dengan productId kosong");
       return;
     }
-    const token = localStorage.getItem("token");
-    if (!token) {
-      alert("Silakan login untuk menambahkan produk ke keranjang.");
-      return;
-    }
+
 
 try {
 console.log("Mencoba menambahkan ke keranjang dengan URL:", `${API_URL}/api/cart`);
