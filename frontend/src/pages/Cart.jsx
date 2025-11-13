@@ -1,9 +1,12 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Trash2, AlertCircle, CheckCircle } from "lucide-react";
+import { useSelector, useDispatch } from "react-redux";
+import { updateCartQuantity, removeCartItem,fetchCart } from "../features/cart/cartSlice";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 const SERVER_URL = API_URL.replace("/api", "");
+
 
 const formatPhoneInput = (value) => {
   const digits = value.replace(/\D/g, "").substring(0, 15);
@@ -74,10 +77,10 @@ const VoucherCard = ({ voucher, onSelect, isSelected }) => {
         <div>
           <p className="font-bold text-sm text-gray-800">{voucher.code}</p>
           <p className="text-xs text-gray-600">
-            Diskon {voucher.discountPercentage}%
+            Discount {voucher.discountPercentage}%
           </p>
           {!isAvailable && (
-            <p className="text-xs text-red-500 font-semibold">Tidak Tersedia</p>
+            <p className="text-xs text-red-500 font-semibold">Unavailable</p>
           )}
         </div>
       </div>
@@ -86,14 +89,12 @@ const VoucherCard = ({ voucher, onSelect, isSelected }) => {
 };
 
 const Cart = ({
-  cart,
   produk,
   user,
   vouchers,
-  onUpdateQuantity,
-  onRemove,
   onCheckout,
 }) => {
+  
   const [customerName, setCustomerName] = useState("");
   const [customerAddress, setCustomerAddress] = useState("");
   const [customerPhone, setCustomerPhone] = useState("");
@@ -107,6 +108,21 @@ const Cart = ({
   const [error, setError] = useState("");
   const [notification, setNotification] = useState({ message: "", type: "" });
 
+  const dispatch = useDispatch();
+  const { items: cart, loading } = useSelector((state) => state.cart);
+  const { token } = useSelector((state) => state.users);
+
+  const hasFetched = useRef(false);
+
+  useEffect(() => {
+    if (!hasFetched.current && token) {
+      dispatch(fetchCart());
+      hasFetched.current = true;
+    }
+  }, [dispatch, token]);
+
+
+
   const onCloseNotification = useCallback(() => {
     setNotification({ message: "", type: "" });
   }, []);
@@ -114,9 +130,9 @@ const Cart = ({
   useEffect(() => {
     if (user) {
       if (useProfileName) setCustomerName(user.name || "");
-      if (useProfileAddress) setCustomerAddress(user.alamat || "");
+      if (useProfileAddress) setCustomerAddress(user.address || "");
       if (useProfilePhone)
-        setCustomerPhone(user.no_telp ? user.no_telp.replace(/\D/g, "") : "");
+        setCustomerPhone(user.phone ? user.phone.replace(/\D/g, "") : "");
     }
   }, [user, useProfileName, useProfileAddress, useProfilePhone]);
 
@@ -129,20 +145,20 @@ const Cart = ({
         setCustomerName(isChecked && user ? user.name || "" : "");
         break;
       case "address":
-        if (isChecked && user && !user.alamat) {
+        if (isChecked && user && !user.address) {
           setError(
-            "Alamat profil Anda kosong. Silakan isi di halaman profil atau manual."
+            "Address profile is empty. Please fill it in the profile page or manually."
           );
           setUseProfileAddress(false);
           return;
         }
         setUseProfileAddress(isChecked);
-        setCustomerAddress(isChecked && user ? user.alamat || "" : "");
+        setCustomerAddress(isChecked && user ? user.address || "" : "");
         break;
       case "phone":
-        if (isChecked && user && !user.no_telp) {
+        if (isChecked && user && !user.phone) {
           setError(
-            "Nomor telepon profil Anda kosong. Silakan isi di halaman profil atau manual."
+            "Phone number profile is empty. Please fill it in the profile page or manually."
           );
           setUseProfilePhone(false);
           return;
@@ -150,8 +166,8 @@ const Cart = ({
         setUseProfilePhone(isChecked);
         setCustomerPhone(
           isChecked && user
-            ? user.no_telp
-              ? user.no_telp.replace(/\D/g, "")
+            ? user.phone
+              ? user.phone.replace(/\D/g, "")
               : ""
             : ""
         );
@@ -166,7 +182,7 @@ const Cart = ({
     if (numericValue.length <= 15) {
       setCustomerPhone(numericValue);
     }
-    if (error.includes("Nomor Telepon")) setError("");
+    if (error.includes("Telephone Number")) setError("");
   };
 
   const cartDetails = cart
@@ -200,13 +216,13 @@ const Cart = ({
     if (appliedVoucher && appliedVoucher._id === voucher._id) {
       setAppliedVoucher(null);
       setNotification({
-        message: `Voucher ${voucher.code} dibatalkan.`,
+        message: `Voucher ${voucher.code} Cancelled.`,
         type: "error",
       });
     } else {
       setAppliedVoucher(voucher);
       setNotification({
-        message: `Voucher ${voucher.code} berhasil digunakan!`,
+        message: `Voucher ${voucher.code} Successfully applied!`,
         type: "success",
       });
     }
@@ -221,30 +237,30 @@ const Cart = ({
     setError("");
     onCloseNotification();
     if (!user) {
-      setError("Silakan login untuk melanjutkan checkout.");
+      setError("Please log in to proceed with checkout.");
       return;
     }
     if (!customerName || !customerAddress || !customerPhone) {
-      setError("Harap lengkapi semua detail pengiriman.");
+      setError("Please fill in all delivery details.");
       return;
     }
     if (customerPhone.length < 8 || customerPhone.length > 15) {
-      setError("Nomor telepon harus antara 8 dan 15 digit.");
+      setError("Phone number must be between 8 to 15 digits.");
       return;
     }
     if (!paymentMethod) {
-      setError("Silakan pilih metode pembayaran.");
+      setError("Choose a payment method to proceed.");
       return;
     }
     if (totalQuantity === 0) {
-      setError("Keranjang Anda kosong.");
+      setError("Your cart is empty.");
       return;
     }
 
     const checkoutData = {
       userId: user._id,
-      nama: customerName,
-      alamat: customerAddress,
+      name: customerName,
+      address: customerAddress,
       noTelpPenerima: customerPhone,
       items: cartDetails,
       subtotal,
@@ -259,13 +275,13 @@ const Cart = ({
       const checkoutResult = await onCheckout(checkoutData);
       if (checkoutResult.success) {
         setNotification({
-          message: "Pesanan berhasil dibuat! Terima kasih.",
+          message: "Order made successfuly",
           type: "success",
         });
       } else {
-        setError(checkoutResult.message || "Terjadi kesalahan saat checkout.");
+        setError(checkoutResult.message || "There was an issue with your checkout.");
         setNotification({
-          message: checkoutResult.message || "Checkout gagal.",
+          message: checkoutResult.message || "Checkout Failed.",
           type: "error",
         });
       }
@@ -330,31 +346,43 @@ const Cart = ({
                       <div className="flex items-center gap-2 border rounded-sm">
                         <button
                           onClick={() =>
-                            onUpdateQuantity(item._id, item.quantity - 1)
+                            dispatch(
+                              updateCartQuantity({
+                                productId: item._id,
+                                quantity: item.quantity - 1,
+                              })
+                            )
                           }
-                          className="px-3 py-1 hover:bg-gray-100"
+                          disabled={item.quantity <= 1 || loading}
+                          className="px-3 py-1 hover:bg-gray-100 disabled:opacity-50"
                         >
                           -
                         </button>
-                        <span className="px-2 font-medium">
-                          {item.quantity}
-                        </span>
+                        <span className="px-2 font-medium">{item.quantity}</span>
                         <button
                           onClick={() =>
-                            onUpdateQuantity(item._id, item.quantity + 1)
+                            dispatch(
+                              updateCartQuantity({
+                                productId: item._id,
+                                quantity: item.quantity + 1,
+                              })
+                            )
                           }
-                          className="px-3 py-1 hover:bg-gray-100"
+                          disabled={loading}
+                          className="px-3 py-1 hover:bg-gray-100 disabled:opacity-50"
                         >
                           +
                         </button>
                       </div>
+
                       <p className="font-semibold w-28 text-right">
-                        Rp{" "}
-                        {(item.price * item.quantity).toLocaleString("id-ID")}
+                        Rp {(item.price * item.quantity).toLocaleString("id-ID")}
                       </p>
+
                       <button
-                        onClick={() => onRemove(item._id)}
-                        className="text-gray-400 hover:text-red-500"
+                        onClick={() => dispatch(removeCartItem(item._id))}
+                        disabled={loading}
+                        className="text-gray-400 hover:text-red-500 disabled:opacity-50"
                       >
                         <Trash2 size={18} />
                       </button>
@@ -396,7 +424,7 @@ const Cart = ({
                       }
                       className="form-checkbox"
                     />{" "}
-                    Gunakan alamat profil
+                    Use Profile Address
                   </label>
                   <label className="flex items-center gap-2 cursor-pointer text-sm">
                     <input
@@ -438,7 +466,7 @@ const Cart = ({
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Nomor Telepon Penerima
+                    Receiver Telephone Number
                   </label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
@@ -460,10 +488,10 @@ const Cart = ({
           <div className="lg:col-span-1">
             <div className="bg-white p-6 rounded-sm border sticky top-24 space-y-6">
               <h2 className="text-xl font-bold text-center mb-4">
-                Ringkasan Belanja
+                Order Summary
               </h2>
               <div>
-                <h3 className="text-lg font-bold mb-3">Voucher Tersedia</h3>
+                <h3 className="text-lg font-bold mb-3">Voucher Available</h3>
                 {vouchers && vouchers.length > 0 ? (
                   <div className="flex flex-col space-y-3 overflow-y-auto max-h-48 pr-2">
                     {vouchers.map((voucher) => (
@@ -479,7 +507,7 @@ const Cart = ({
                   </div>
                 ) : (
                   <p className="text-sm text-gray-500 bg-gray-50 p-3 rounded-md">
-                    Tidak ada voucher yang tersedia saat ini.
+                    No vouchers available at the moment.
                   </p>
                 )}
               </div>
@@ -513,9 +541,9 @@ const Cart = ({
                 <h3 className="text-lg font-bold mb-2">Payment Method</h3>
                 <div className="space-y-2">
                   {[
-                    { label: "COD (Bayar di Tempat)", value: "COD" },
-                    { label: "Transfer Bank", value: "Transfer Bank" },
-                    { label: "Kartu Kredit", value: "Kartu Kredit" },
+                    { label: "COD (Cash on Deliver)", value: "COD" },
+                    { label: "Bank transfer", value: "Bank transfer" },
+                    { label: "Credit Card", value: "Credit Card" },
                   ].map((method) => (
                     <label
                       key={method.value}
