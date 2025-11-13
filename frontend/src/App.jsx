@@ -27,28 +27,28 @@ import {
   deleteProduct,
 } from "./features/products/productSlice";
 
-
 function App() {
   const [showProfile, setShowProfile] = useState(false);
   const [user, setUser] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isPemilik, setIsPemilik] = useState(false);
   const [cart, setCart] = useState([]);
-   const [checkouts, setCheckouts] = useState([]);
-   const totalCartQuantity = cart.reduce((sum, item) => sum + item.quantity, 0);
+  const [checkouts, setCheckouts] = useState([]);
+  const totalCartQuantity = cart.reduce((sum, item) => sum + item.quantity, 0);
 
   const API_URL = import.meta.env.VITE_API_URL;
 
   const navigate = useNavigate();
 
   const dispatch = useDispatch();
-  const { items: produk, status: productStatus } = useSelector((state) => state.products);
+  const { items: produk, status: productStatus } = useSelector(
+    (state) => state.products
+  );
   const token = useSelector((state) => state.users.token);
   const isAuthenticated = useSelector((state) => state.users.isAuthenticated);
 
-
- useEffect(() => {
-    if (productStatus === 'idle') {
+  useEffect(() => {
+    if (productStatus === "idle") {
       dispatch(fetchProducts());
     }
 
@@ -76,9 +76,7 @@ function App() {
     fetchUserProfile();
   }, [productStatus, dispatch, API_URL]);
 
-
-
-    useEffect(() => {
+  useEffect(() => {
     if (user && user.role) {
       const role = user.role.toLowerCase();
       setIsAdmin(role === "admin");
@@ -145,7 +143,7 @@ function App() {
       imageUrl: null,
     },
   ]);
-  
+
   const [returns, setReturns] = useState([
     {
       id: 1,
@@ -178,57 +176,66 @@ function App() {
       return;
     }
 
+    try {
+      console.log(
+        "Mencoba menambahkan ke keranjang dengan URL:",
+        `${API_URL}/api/cart`
+      );
+      const response = await axios.post(
+        `${API_URL}/cart/add`,
+        { productId: productId, quantity: 1 },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
-try {
-console.log("Mencoba menambahkan ke keranjang dengan URL:", `${API_URL}/api/cart`);
-  const response = await axios.post(
-    `${API_URL}/cart/add`, 
-    { productId: productId, quantity: 1 },
-    { headers: { Authorization: `Bearer ${token}` } }
-  );
-
-  if (response.data.success) {
-    setCart(response.data.data.items);
-    return "Produk berhasil ditambahkan ke keranjang!";
-  } else {
-    return response.data.message || "Gagal menambahkan produk.";
-  }
-} catch (error) {
-  console.error("Gagal menambahkan ke keranjang:", error.response?.data?.message || error.message);
-  return error.response?.data?.message || "Gagal menambahkan produk ke keranjang.";
-}
-  };
-
-
-
-useEffect(() => {
-  const fetchCart = async () => {
-    const token = localStorage.getItem("token");
-    if (user && token) {
-      console.log("FETCHING CART for user:", user.name);
-      try {
-        const response = await axios.get(`${API_URL}/cart`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });-
-        console.log("RAW RESPONSE from /api/cart:", response); 
-        
-        if (response.data.success) {
-          console.log("DATA to be set into cart state:", response.data.data.items); 
-          setCart(response.data.data.items || []);
-        }
-
-      } catch (error) {
-        console.error("Gagal mengambil data keranjang (fetchCart):", error.response || error.message); // <-- LOG 4: Lihat detail error
-        setCart([]);
+      if (response.data.success) {
+        setCart(response.data.data.items);
+        return "Produk berhasil ditambahkan ke keranjang!";
+      } else {
+        return response.data.message || "Gagal menambahkan produk.";
       }
-    } else {
-      setCart([]);
+    } catch (error) {
+      console.error(
+        "Gagal menambahkan ke keranjang:",
+        error.response?.data?.message || error.message
+      );
+      return (
+        error.response?.data?.message ||
+        "Gagal menambahkan produk ke keranjang."
+      );
     }
   };
-  fetchCart();
-}, [user]); 
 
- 
+  useEffect(() => {
+    const fetchCart = async () => {
+      const token = localStorage.getItem("token");
+      if (user && token) {
+        console.log("FETCHING CART for user:", user.name);
+        try {
+          const response = await axios.get(`${API_URL}/cart`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          -console.log("RAW RESPONSE from /api/cart:", response);
+
+          if (response.data.success) {
+            console.log(
+              "DATA to be set into cart state:",
+              response.data.data.items
+            );
+            setCart(response.data.data.items || []);
+          }
+        } catch (error) {
+          console.error(
+            "Gagal mengambil data keranjang (fetchCart):",
+            error.response || error.message
+          ); // <-- LOG 4: Lihat detail error
+          setCart([]);
+        }
+      } else {
+        setCart([]);
+      }
+    };
+    fetchCart();
+  }, [user]);
 
   const handleUpdateCartQuantity = async (productId, newQuantity) => {
     const token = localStorage.getItem("token");
@@ -248,7 +255,10 @@ useEffect(() => {
         setCart(response.data.data.items);
       }
     } catch (error) {
-      console.error("Gagal update kuantitas:", error.response?.data?.message || error.message);
+      console.error(
+        "Gagal update kuantitas:",
+        error.response?.data?.message || error.message
+      );
     }
   };
 
@@ -265,11 +275,14 @@ useEffect(() => {
         setCart(response.data.data.items);
       }
     } catch (error) {
-      console.error("Gagal menghapus item:", error.response?.data?.message || error.message);
+      console.error(
+        "Gagal menghapus item:",
+        error.response?.data?.message || error.message
+      );
     }
   };
 
- useEffect(() => {
+  useEffect(() => {
     const fetchCheckouts = async () => {
       const token = localStorage.getItem("token");
       if (user && token) {
@@ -278,7 +291,7 @@ useEffect(() => {
             headers: { Authorization: `Bearer ${token}` },
           });
           if (response.data.success) {
-            setCheckouts(response.data.data); 
+            setCheckouts(response.data.data);
           }
         } catch (error) {
           console.error("Gagal mengambil data pesanan:", error);
@@ -287,45 +300,43 @@ useEffect(() => {
         setCheckouts([]);
       }
     };
-    
+
     fetchCheckouts();
   }, [user]);
 
-  // TOKEN
-  if (!isAuthenticated || !token) {
-    alert("Silakan login untuk menambahkan produk ke keranjang.");
-    return;
-  }
   const handleCheckout = async (checkoutData) => {
+    // TOKEN
+    if (!isAuthenticated || !token) {
+      alert("Silakan login untuk menambahkan produk ke keranjang.");
+      return;
+    }
     const token = localStorage.getItem("token");
     if (!token) {
       return { success: false, message: "Autentikasi gagal." };
     }
     try {
       const response = await axios.post(
-        `${API_URL}/checkouts/create`, 
-        checkoutData, 
+        `${API_URL}/checkouts/create`,
+        checkoutData,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       if (response.data.success) {
         setCart([]);
         fetchVouchers();
-        setCheckouts(prevCheckouts => [response.data.data, ...prevCheckouts]);
-        
+        setCheckouts((prevCheckouts) => [response.data.data, ...prevCheckouts]);
+
         navigate("/pesanan");
         return { success: true, message: "Checkout berhasil! Terima kasih." };
       }
-
     } catch (error) {
       console.error("Gagal checkout:", error);
-      return { 
-        success: false, 
-        message: error.response?.data?.message || "Gagal memproses pesanan." 
+      return {
+        success: false,
+        message: error.response?.data?.message || "Gagal memproses pesanan.",
       };
     }
   };
-
 
   const handleRequestReturn = (returnData) => {
     setReturns([...returns, { ...returnData, id: Date.now() }]);
@@ -363,10 +374,13 @@ useEffect(() => {
       );
     }
   };
-const handleProfileSave = async (userId, payload) => {
+  const handleProfileSave = async (userId, payload) => {
     const token = localStorage.getItem("token");
     if (!token) {
-      return { success: false, message: "Autentikasi gagal. Silakan masuk lagi." };
+      return {
+        success: false,
+        message: "Autentikasi gagal. Silakan masuk lagi.",
+      };
     }
 
     try {
@@ -385,11 +399,12 @@ const handleProfileSave = async (userId, payload) => {
     } catch (error) {
       return {
         success: false,
-        message: error.response?.data?.message || "Terjadi kesalahan pada server.",
+        message:
+          error.response?.data?.message || "Terjadi kesalahan pada server.",
       };
     }
   };
-  
+
   const handlePasswordChange = (currentPassword, newPassword) => {
     if (!user) return { success: false, message: "No user logged in." };
     if (user.password !== currentPassword)
@@ -471,8 +486,7 @@ const handleProfileSave = async (userId, payload) => {
     );
   };
 
-
-    const handleAddProduk = (newData) => {
+  const handleAddProduk = (newData) => {
     dispatch(addProduct(newData));
   };
 
@@ -483,7 +497,6 @@ const handleProfileSave = async (userId, payload) => {
   const handleDeleteProduk = (produkId) => {
     dispatch(deleteProduct(produkId));
   };
-
 
   const fetchVouchers = async () => {
     try {
@@ -508,7 +521,7 @@ const handleProfileSave = async (userId, payload) => {
       });
       const result = await response.json();
       if (response.ok) {
-        setVouchers([result.data, ...vouchers]); 
+        setVouchers([result.data, ...vouchers]);
         alert(result.message);
       } else {
         alert(result.message || "Gagal menambahkan voucher.");
@@ -567,8 +580,7 @@ const handleProfileSave = async (userId, payload) => {
     fetchProducts();
   }, []);
 
-
-return (
+  return (
     <div className="min-h-screen bg-white">
       <Navbar
         setShowProfile={setShowProfile}
@@ -632,12 +644,7 @@ return (
           />
           <Route
             path="/review/:productId"
-            element={
-              <ReviewWrapper
-                produk={produk}
-                API_URL={API_URL}
-              />
-            }
+            element={<ReviewWrapper produk={produk} API_URL={API_URL} />}
           />
           <Route
             path="/pengembalian-barang/:orderId"
@@ -650,14 +657,14 @@ return (
           />
           <Route path="/about" element={<About />} />
           <Route path="/location" element={<Location />} />
-           <Route
+          <Route
             path="/profile"
             element={
               user ? (
                 <Profile
                   user={user}
                   onAvatarChange={handleAvatarChange}
-                  onProfileSave={handleProfileSave} 
+                  onProfileSave={handleProfileSave}
                 />
               ) : (
                 <Home API_URL={API_URL} />
@@ -681,7 +688,7 @@ return (
                   API_URL={API_URL}
                 />
               ) : (
-                <Home API_URL={API_URL} /> 
+                <Home API_URL={API_URL} />
               )
             }
           />
@@ -709,7 +716,7 @@ return (
                   onRejectCancellation={handleRejectCancellation}
                 />
               ) : (
-                <Home API_URL={API_URL} /> 
+                <Home API_URL={API_URL} />
               )
             }
           />
