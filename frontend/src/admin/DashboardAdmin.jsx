@@ -1,74 +1,71 @@
 import React, { useState, useMemo, useEffect } from "react";
-import axios from "axios";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchUsers } from "../features/user/userSlice";
+import { fetchProducts } from "../features/products/productSlice";
+import { fetchVouchers } from "../features/voucher/voucherSlice";
 
-function DashboardAdmin({ vouchers = [], produk = [] }) {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+function DashboardAdmin() {
+  const dispatch = useDispatch();
+
+  const { users, loading: userLoading, error: userError } = useSelector(
+    (state) => state.users
+  );
+  const { items: produk, loading: produkLoading } = useSelector(
+    (state) => state.products
+  );
+  const { vouchers, loading: voucherLoading } = useSelector(
+    (state) => state.vouchers
+  );
 
   const [produkSortAsc, setProdukSortAsc] = useState(true);
   const [userSortAsc, setUserSortAsc] = useState(true);
 
+  // Fetch all data using Redux on mount
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        setLoading(true);
-        const res = await axios.get("http://localhost:3000/api/admin/get-all-users");
-        if (res.data.success) {
-          setUsers(res.data.data);
-        } else {
-          setError("Gagal mengambil data pengguna");
-        }
-      } catch (err) {
-        console.error(err);
-        setError("Terjadi kesalahan pada server saat mengambil data pengguna");
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchUsers();
-  }, []); 
+    dispatch(fetchUsers());
+    dispatch(fetchProducts());
+    dispatch(fetchVouchers());
+  }, [dispatch]);
 
   const getProdukStatus = (stock) => {
     if (stock === 0)
       return { text: "Out of Stock", color: "bg-red-100 text-red-600" };
     if (stock <= 10)
-      return { text: "Stock Running out", color: "bg-yellow-100 text-yellow-600" };
+      return { text: "Stock Running Out", color: "bg-yellow-100 text-yellow-600" };
     return { text: "Available", color: "bg-green-100 text-green-600" };
   };
 
   const getUserStatus = (isBanned) => {
     if (isBanned) return { text: "Blocked", color: "bg-red-100 text-red-600" };
-    return { text: "Aktif", color: "bg-green-100 text-green-600" };
+    return { text: "Active", color: "bg-green-100 text-green-600" };
   };
 
   const cards = [
-    { title: "User Total", count: users.length, icon: "/icon/group.png" },
-    { title: "Product Total", count: produk.length, icon: "/icon/product.png" },
+    { title: "User Total", count: users?.length || 0, icon: "/icon/group.png" },
+    { title: "Product Total", count: produk?.length || 0, icon: "/icon/product.png" },
     {
       title: "Voucher Total",
-      count: vouchers.length,
+      count: vouchers?.length || 0,
       icon: "/icon/voucher.png",
     },
   ];
 
- const sortedProduk = useMemo(() => {
-    return [...produk].sort((a, b) => {
-      if (produkSortAsc) {
-        return a.stock - b.stock;
-      } else {
-        return b.stock - a.stock;
-      }
-    });
+  const sortedProduk = useMemo(() => {
+    return [...(produk || [])].sort((a, b) =>
+      produkSortAsc ? a.stock - b.stock : b.stock - a.stock
+    );
   }, [produk, produkSortAsc]);
 
   const sortedUsers = useMemo(() => {
-    return [...users].sort((a, b) => {
-      if (userSortAsc)
-        return (a.username || "").localeCompare(b.username || "");
-      return (b.username || "").localeCompare(a.username || "");
+    return [...(users || [])].sort((a, b) => {
+      const nameA = (a.username || "").toLowerCase();
+      const nameB = (b.username || "").toLowerCase();
+      return userSortAsc ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
     });
   }, [users, userSortAsc]);
+
+  const loading = userLoading || produkLoading || voucherLoading;
+  const error = userError;
 
   return (
     <div className="space-y-6">
@@ -88,10 +85,11 @@ function DashboardAdmin({ vouchers = [], produk = [] }) {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* User Section */}
         <div className="bg-white shadow rounded-lg p-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold flex items-center space-x-2">
-              <span>Latest User</span>
+              <span>Latest Users</span>
               <button
                 onClick={() => setUserSortAsc(!userSortAsc)}
                 className="p-1 rounded border hover:bg-gray-100"
@@ -107,11 +105,12 @@ function DashboardAdmin({ vouchers = [], produk = [] }) {
               </button>
             </h2>
           </div>
+
           {loading ? (
-            <p className="text-gray-500">Loading Users...</p>
+            <p className="text-gray-500">Loading...</p>
           ) : error ? (
             <p className="text-red-500">{error}</p>
-          ) : users.length === 0 ? (
+          ) : users?.length === 0 ? (
             <p className="text-gray-500">No Users Available</p>
           ) : (
             <div className="overflow-y-auto max-h-96">
@@ -120,14 +119,12 @@ function DashboardAdmin({ vouchers = [], produk = [] }) {
                   const status = getUserStatus(user.isBanned);
                   return (
                     <li
-                      key={user._id} 
+                      key={user._id}
                       className="flex items-center justify-between py-3"
                     >
                       <div>
                         <p className="font-medium text-black">{user.name}</p>
-                        <p className="text-sm text-gray-500">
-                          @{user.username}
-                        </p>
+                        <p className="text-sm text-gray-500">@{user.username}</p>
                       </div>
                       <div className="flex items-center space-x-3">
                         <span
@@ -144,6 +141,7 @@ function DashboardAdmin({ vouchers = [], produk = [] }) {
           )}
         </div>
 
+        {/* Product Section */}
         <div className="bg-white shadow rounded-lg p-4">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-xl font-semibold flex items-center space-x-2">
@@ -151,7 +149,7 @@ function DashboardAdmin({ vouchers = [], produk = [] }) {
               <button
                 onClick={() => setProdukSortAsc(!produkSortAsc)}
                 className="p-1 rounded border hover:bg-gray-100"
-                title={`Sort By Name ${produkSortAsc ? "DESC" : "ASC"}`}
+                title={`Sort By Stock ${produkSortAsc ? "DESC" : "ASC"}`}
               >
                 <img
                   src="/icon/down.png"
@@ -163,6 +161,7 @@ function DashboardAdmin({ vouchers = [], produk = [] }) {
               </button>
             </h2>
           </div>
+
           <div className="overflow-y-auto max-h-96">
             <ul className="divide-y divide-gray-200">
               {sortedProduk.slice(0, 6).map((p) => {
