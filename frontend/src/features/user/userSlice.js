@@ -43,19 +43,25 @@ export const addUser = createAsyncThunk(
 );
 
 export const loginUser = createAsyncThunk(
-  "auth/login",
-  async (userData, { rejectWithValue }) => { 
+  "users/loginUser",
+  async ({ identifier, password }, { rejectWithValue }) => {
     try {
-      const response = await axios.post(`${API_URL}/auth/login`, userData);
-      alert(response.data.message);
-      return response.data;
-    } catch (error) {
-      const errorMessage = error.response?.data?.message || "Gagal login";
-      alert(errorMessage);
-      return rejectWithValue(errorMessage);
-    } 
+      const res = await axios.post(`${API_URL}/auth/login`, {
+        identifier,
+        password,
+      });
+      return res.data; // { token, user }
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || "Login failed");
+    }
   }
 );
+
+export const logoutUser = createAsyncThunk("users/logoutUser", async () => {
+  // If your backend has logout route, call it here
+  return null;
+});
+
 
 const userSlice = createSlice({
     name: "users",  
@@ -99,23 +105,20 @@ const userSlice = createSlice({
             state.loading = false;
             state.error = action.payload;
         });
-        builder.addCase(loginUser.pending, (state) => {
+        builder
+          .addCase(loginUser.pending, (state) => {
             state.loading = true;
             state.error = null;
-        });
-        builder.addCase(loginUser.fulfilled, (state, action) => {
-            state.loading = false;
-            state.isAuthenticated = true;
-            state.token = action.payload.token;
-            state.user = action.payload.data;
-        });
-        builder.addCase(loginUser.rejected, (state, action) => {
+          })  
+          .addCase(loginUser.rejected, (state, action) => {
             state.loading = false;
             state.error = action.payload;
-            state.isAuthenticated = false;
-            state.token = null;
-            state.user = null;
-            
+          })
+          .addCase(loginUser.fulfilled, (state, action) => {
+          state.loading = false;
+          state.user = action.payload.user;
+          state.token = action.payload.token;
+          state.isAuthenticated = true; // ✅ add this line
         });
     }
 });

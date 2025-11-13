@@ -8,17 +8,17 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 const SERVER_URL = API_URL.replace("/api", "");
 
 
-const formatPhoneInput = (value) => {
-  const digits = value.replace(/\D/g, "").substring(0, 15);
-  let formatted = "";
-  for (let i = 0; i < digits.length; i++) {
-    if (i > 0 && i % 4 === 0) {
-      formatted += "-";
-    }
-    formatted += digits[i];
-  }
-  return formatted;
-};
+// const formatPhoneInput = (value) => {
+//   const digits = value.replace(/\D/g, "").substring(0, 15);
+//   let formatted = "";
+//   for (let i = 0; i < digits.length; i++) {
+//     if (i > 0 && i % 4 === 0) {
+//       formatted += "-";
+//     }
+//     formatted += digits[i];
+//   }
+//   return formatted;
+// };
 
 const Notification = ({ message, type, onClose }) => {
   useEffect(() => {
@@ -97,11 +97,10 @@ const Cart = ({
   
   const [customerName, setCustomerName] = useState("");
   const [customerAddress, setCustomerAddress] = useState("");
-  const [customerPhone, setCustomerPhone] = useState("");
 
   const [useProfileName, setUseProfileName] = useState(false);
   const [useProfileAddress, setUseProfileAddress] = useState(false);
-  const [useProfilePhone, setUseProfilePhone] = useState(false);
+
 
   const [appliedVoucher, setAppliedVoucher] = useState(null);
   const [paymentMethod, setPaymentMethod] = useState("");
@@ -111,6 +110,12 @@ const Cart = ({
   const dispatch = useDispatch();
   const { items: cart, loading } = useSelector((state) => state.cart);
   const { token } = useSelector((state) => state.users);
+const userPhone = useSelector(
+  (state) => state.users.user?.phone || state.users.user?.no_telp || ""
+);
+const [useProfilePhone, setUseProfilePhone] = useState(false);
+const [customerPhone, setCustomerPhone] = useState("");
+
 
   const hasFetched = useRef(false);
 
@@ -127,63 +132,68 @@ const Cart = ({
     setNotification({ message: "", type: "" });
   }, []);
 
-  useEffect(() => {
-    if (user) {
-      if (useProfileName) setCustomerName(user.name || "");
-      if (useProfileAddress) setCustomerAddress(user.address || "");
-      if (useProfilePhone)
-        setCustomerPhone(user.phone ? user.phone.replace(/\D/g, "") : "");
-    }
-  }, [user, useProfileName, useProfileAddress, useProfilePhone]);
+useEffect(() => {
+  if (useProfilePhone && userPhone) {
+    setCustomerPhone(userPhone.replace(/\D/g, ""));
+  }
+}, [useProfilePhone, userPhone]);
 
-  const handleCheckboxChange = (type, isChecked) => {
-    setError("");
-    onCloseNotification();
-    switch (type) {
-      case "name":
-        setUseProfileName(isChecked);
-        setCustomerName(isChecked && user ? user.name || "" : "");
-        break;
-      case "address":
-        if (isChecked && user && !user.address) {
-          setError(
-            "Address profile is empty. Please fill it in the profile page or manually."
-          );
-          setUseProfileAddress(false);
+const handleCheckboxChange = (type, isChecked) => {
+  setError("");
+  onCloseNotification();
+
+  switch (type) {
+    case "name":
+      setUseProfileName(isChecked);
+      setCustomerName(isChecked && user ? user.name || "" : "");
+      break;
+
+    case "address":
+      setUseProfileAddress(isChecked);
+      setCustomerAddress(
+        isChecked && user ? user.address || user.alamat || "" : ""
+      );
+      break;
+
+    case "phone":
+      setUseProfilePhone(isChecked);
+      if (isChecked) {
+        if (!userPhone) {
+          setError("Your profile phone number is empty. Please add it first.");
           return;
         }
-        setUseProfileAddress(isChecked);
-        setCustomerAddress(isChecked && user ? user.address || "" : "");
-        break;
-      case "phone":
-        if (isChecked && user && !user.phone) {
-          setError(
-            "Phone number profile is empty. Please fill it in the profile page or manually."
-          );
-          setUseProfilePhone(false);
-          return;
-        }
-        setUseProfilePhone(isChecked);
-        setCustomerPhone(
-          isChecked && user
-            ? user.phone
-              ? user.phone.replace(/\D/g, "")
-              : ""
-            : ""
-        );
-        break;
-      default:
-        break;
-    }
-  };
+        setCustomerPhone(userPhone);
+      } else {
+        setCustomerPhone("");
+      }
+      break;
 
-  const handlePhoneChange = (e) => {
-    const numericValue = e.target.value.replace(/\D/g, "");
-    if (numericValue.length <= 15) {
-      setCustomerPhone(numericValue);
-    }
-    if (error.includes("Telephone Number")) setError("");
-  };
+    default:
+      break;
+  }
+};
+
+
+
+// const handleUseProfilePhone = (checked) => {
+//   setUseProfilePhone(checked);
+//   if (checked) {
+//     if (!userPhone) {
+//       setError("Your profile phone number is empty. Please add it first.");
+//       return;
+//     }
+//     setCustomerPhone(userPhone);
+//   } else {
+//     setError("");
+//     setCustomerPhone(""); // free to type again
+//   }
+// };
+
+
+// const handlePhoneChange = (e) => {
+//   const onlyDigits = e.target.value.replace(/\D/g, "");
+//   setCustomerPhone(onlyDigits);
+// };
 
   const cartDetails = cart
     .map((item) => {
@@ -426,7 +436,7 @@ const Cart = ({
                     />{" "}
                     Use Profile Address
                   </label>
-                  <label className="flex items-center gap-2 cursor-pointer text-sm">
+                  {/* <label className="flex items-center gap-2 cursor-pointer text-sm">
                     <input
                       type="checkbox"
                       checked={useProfilePhone}
@@ -436,7 +446,7 @@ const Cart = ({
                       className="form-checkbox"
                     />{" "}
                     Use Profile Number
-                  </label>
+                  </label> */}
                 </div>
               )}
               <div className="space-y-4">
@@ -464,7 +474,8 @@ const Cart = ({
                     rows="3"
                   ></textarea>
                 </div>
-                <div>
+                {/*  IKI KONTOL COK */}
+                {/* <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Receiver Telephone Number
                   </label>
@@ -472,16 +483,17 @@ const Cart = ({
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
                       +62
                     </span>
-                    <input
-                      type="tel"
-                      value={formatPhoneInput(customerPhone)}
-                      onChange={handlePhoneChange}
-                      disabled={useProfilePhone}
-                      className="w-full pl-10 pr-4 py-3 border rounded-sm focus:ring-2 focus:ring-black disabled:bg-gray-100"
-                      placeholder="812-3456-7890"
-                    />
+                  <input
+                    type="tel"
+                    value={customerPhone}
+                    onChange={handlePhoneChange}
+                    disabled={useProfilePhone}
+                    className="w-full pl-10 pr-4 py-3 border rounded-sm focus:ring-2 focus:ring-black disabled:bg-gray-100"
+                    placeholder="81234567890"
+                  />
+
                   </div>
-                </div>
+                </div> */}
               </div>
             </div>
           </div>

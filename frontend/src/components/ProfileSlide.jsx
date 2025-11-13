@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Joi from "joi";
 import { useSelector, useDispatch } from "react-redux";
-import { fetchUsers,addUser,loginUser } from "../features/user/userSlice";
+import { fetchUsers,addUser,loginUser,logoutUser  } from "../features/user/userSlice";
 import {
   X,
   User,
@@ -135,11 +135,15 @@ const ProfileSlide = ({
     setIsLoading(true);
 
     try {
-      const userData = await dispatch(loginUser({
-        identifier: formData.identifier,
-        password: formData.password
-      })).unwrap();
-      setUser(userData.user);
+      const userData = await dispatch(
+        loginUser({
+          identifier: formData.identifier,
+          password: formData.password,
+        })
+      ).unwrap();
+
+      setUser(userData.user); // still useful for parent component state
+
   
       
         
@@ -265,8 +269,8 @@ const ProfileSlide = ({
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    setUser(null); 
+    dispatch(logoutUser()); // clears user + token in redux
+    setUser(null);
     navigate("/");
     changeView("main");
   };
