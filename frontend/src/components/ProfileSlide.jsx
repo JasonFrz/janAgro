@@ -147,7 +147,7 @@ const ProfileSlide = ({
   
       
         
-      if (user.role === "Pemilik") {
+      if (user.role === "owner") {
         navigate("/ceo");
       } else if (user.role === "Admin") {
         navigate("/admin");

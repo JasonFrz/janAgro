@@ -80,7 +80,7 @@ function App() {
     if (user && user.role) {
       const role = user.role.toLowerCase();
       setIsAdmin(role === "admin");
-      setIsPemilik(role === "pemilik");
+      setIsPemilik(role === "owner");
     } else {
       setIsAdmin(false);
       setIsPemilik(false);
