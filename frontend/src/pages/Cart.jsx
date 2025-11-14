@@ -1,43 +1,27 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Trash2, AlertCircle, CheckCircle } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
-import { updateCartQuantity, removeCartItem,fetchCart } from "../features/cart/cartSlice";
+import axios from "axios";
+import {
+  updateCartQuantity,
+  removeCartItem,
+  fetchCart,
+  clearCart,
+} from "../features/cart/cartSlice";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 const SERVER_URL = API_URL.replace("/api", "");
 
-
-const formatPhoneInput = (value) => {
-  const digits = value.replace(/\D/g, "").substring(0, 15);
-  let formatted = "";
-  for (let i = 0; i < digits.length; i++) {
-    if (i > 0 && i % 4 === 0) {
-      formatted += "-";
-    }
-    formatted += digits[i];
-  }
-  return formatted;
-};
-
 const Notification = ({ message, type, onClose }) => {
   useEffect(() => {
     if (!message) return;
-    const timer = setTimeout(() => {
-      onClose();
-    }, 3000);
-    return () => {
-      clearTimeout(timer);
-    };
+    const timer = setTimeout(() => onClose(), 3000);
+    return () => clearTimeout(timer);
   }, [message, onClose]);
-
-  if (!message) {
-    return null;
-  }
-
+  if (!message) return null;
   const bgColor = type === "success" ? "bg-green-600" : "bg-red-600";
   const Icon = type === "success" ? CheckCircle : AlertCircle;
-
   return (
     <div
       className={`fixed top-5 left-1/2 -translate-x-1/2 z-50 p-4 rounded-md shadow-lg flex items-center gap-3 transition-transform animate-fade-in-down ${bgColor} text-white`}
@@ -52,21 +36,15 @@ const VoucherCard = ({ voucher, onSelect, isSelected }) => {
   return (
     <div
       onClick={() => isAvailable && onSelect(voucher)}
-      className={`
-                p-3 border rounded-md flex-shrink-0
-                ${isAvailable ? "cursor-pointer" : "cursor-not-allowed"}
-                ${
-                  isSelected
-                    ? "border-green-500 bg-green-50 border-2"
-                    : "border-gray-300 bg-white"
-                }
-                ${
-                  !isAvailable
-                    ? "bg-gray-100 opacity-60"
-                    : "hover:border-green-400"
-                }
-                transition-all duration-200
-            `}
+      className={`p-3 border rounded-md flex-shrink-0 ${
+        isAvailable ? "cursor-pointer" : "cursor-not-allowed"
+      } ${
+        isSelected
+          ? "border-green-500 bg-green-50 border-2"
+          : "border-gray-300 bg-white"
+      } ${
+        !isAvailable ? "bg-gray-100 opacity-60" : "hover:border-green-400"
+      } transition-all duration-200`}
     >
       <div className="flex items-center gap-3">
         <img
@@ -88,34 +66,23 @@ const VoucherCard = ({ voucher, onSelect, isSelected }) => {
   );
 };
 
-const Cart = ({
-  produk,
-  user,
-  vouchers,
-  onCheckout,
-}) => {
-  
+const Cart = ({ produk, vouchers }) => {
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const { items: cart, loading } = useSelector((state) => state.cart);
+  const { user, token } = useSelector((state) => state.users);
+  const userPhone = useSelector((state) => state.users.user?.phone || "");
+
   const [customerName, setCustomerName] = useState("");
   const [customerAddress, setCustomerAddress] = useState("");
-
+  const [customerPhone, setCustomerPhone] = useState("");
   const [useProfileName, setUseProfileName] = useState(false);
   const [useProfileAddress, setUseProfileAddress] = useState(false);
-
-
+  const [useProfilePhone, setUseProfilePhone] = useState(false);
   const [appliedVoucher, setAppliedVoucher] = useState(null);
-  const [paymentMethod, setPaymentMethod] = useState("");
   const [error, setError] = useState("");
   const [notification, setNotification] = useState({ message: "", type: "" });
-
-  const dispatch = useDispatch();
-  const { items: cart, loading } = useSelector((state) => state.cart);
-  const { token } = useSelector((state) => state.users);
-const userPhone = useSelector(
-  (state) => state.users.user?.phone || state.users.user?.no_telp || ""
-);
-const [useProfilePhone, setUseProfilePhone] = useState(false);
-const [customerPhone, setCustomerPhone] = useState("");
-
 
   const hasFetched = useRef(false);
 
@@ -126,86 +93,55 @@ const [customerPhone, setCustomerPhone] = useState("");
     }
   }, [dispatch, token]);
 
-
-
   const onCloseNotification = useCallback(() => {
     setNotification({ message: "", type: "" });
   }, []);
 
-useEffect(() => {
-  if (useProfilePhone && userPhone) {
-    setCustomerPhone(userPhone.replace(/\D/g, ""));
-  }
-}, [useProfilePhone, userPhone]);
-
-const handleCheckboxChange = (type, isChecked) => {
-  setError("");
-  onCloseNotification();
-
-  switch (type) {
-    case "name":
-      setUseProfileName(isChecked);
-      setCustomerName(isChecked && user ? user.name || "" : "");
-      break;
-
-    case "address":
-      setUseProfileAddress(isChecked);
-      setCustomerAddress(
-        isChecked && user ? user.address || user.alamat || "" : ""
-      );
-      break;
-
-    case "phone":
-      setUseProfilePhone(isChecked);
-      if (isChecked) {
-        if (!userPhone) {
-          setError("Your profile phone number is empty. Please add it first.");
-          return;
-        }
-        setCustomerPhone(userPhone);
-      } else {
-        setCustomerPhone("");
-      }
-      break;
-
-    default:
-      break;
-  }
-};
-
-
-
-const handleUseProfilePhone = (checked) => {
-  setUseProfilePhone(checked);
-  if (checked) {
-    if (!userPhone) {
-      setError("Your profile phone number is empty. Please add it first.");
-      return;
-    }
-    setCustomerPhone(userPhone);
-  } else {
+  const handleCheckboxChange = (type, isChecked) => {
     setError("");
-    setCustomerPhone(""); // free to type again
-  }
-};
+    onCloseNotification();
+    switch (type) {
+      case "name":
+        setUseProfileName(isChecked);
+        setCustomerName(isChecked && user ? user.name || "" : "");
+        break;
+      case "address":
+        setUseProfileAddress(isChecked);
+        setCustomerAddress(
+          isChecked && user ? user.address || user.alamat || "" : ""
+        );
+        break;
+      case "phone":
+        setUseProfilePhone(isChecked);
+        if (isChecked) {
+          if (!userPhone) {
+            setError(
+              "Your profile phone number is empty. Please add it first."
+            );
+            return;
+          }
+          setCustomerPhone(userPhone);
+        } else {
+          setCustomerPhone("");
+        }
+        break;
+      default:
+        break;
+    }
+  };
 
-
-const handlePhoneChange = (e) => {
-  const onlyDigits = e.target.value.replace(/\D/g, "");
-  setCustomerPhone(onlyDigits);
-};
+  const handlePhoneChange = (e) => {
+    const onlyDigits = e.target.value.replace(/\D/g, "");
+    setCustomerPhone(onlyDigits);
+  };
 
   const cartDetails = cart
     .map((item) => {
-      let productData;
-      if (item.productId && typeof item.productId === "object") {
-        productData = item.productId;
-      } else if (item.productId) {
-        productData = produk.find((p) => p._id === item.productId);
-      }
-      if (!productData) {
-        return null;
-      }
+      let productData =
+        item.productId && typeof item.productId === "object"
+          ? item.productId
+          : produk.find((p) => p._id === item.productId);
+      if (!productData) return null;
       return { ...productData, quantity: item.quantity };
     })
     .filter(Boolean);
@@ -219,6 +155,10 @@ const handlePhoneChange = (e) => {
     0
   );
   const kurirFee = 10000;
+  const discountAmount = appliedVoucher
+    ? (subtotal * appliedVoucher.discountPercentage) / 100
+    : 0;
+  const totalHarga = subtotal - discountAmount + kurirFee;
 
   const handleSelectVoucher = (voucher) => {
     setError("");
@@ -238,14 +178,8 @@ const handlePhoneChange = (e) => {
     }
   };
 
-  const discountAmount = appliedVoucher
-    ? (subtotal * appliedVoucher.discountPercentage) / 100
-    : 0;
-  const totalHarga = subtotal - discountAmount + kurirFee;
-
   const handleCheckoutClick = async () => {
     setError("");
-    onCloseNotification();
     if (!user) {
       setError("Please log in to proceed with checkout.");
       return;
@@ -258,10 +192,6 @@ const handlePhoneChange = (e) => {
       setError("Phone number must be between 8 to 15 digits.");
       return;
     }
-    if (!paymentMethod) {
-      setError("Choose a payment method to proceed.");
-      return;
-    }
     if (totalQuantity === 0) {
       setError("Your cart is empty.");
       return;
@@ -269,8 +199,8 @@ const handlePhoneChange = (e) => {
 
     const checkoutData = {
       userId: user._id,
-      name: customerName,
-      address: customerAddress,
+      nama: customerName,
+      alamat: customerAddress,
       noTelpPenerima: customerPhone,
       items: cartDetails,
       subtotal,
@@ -278,30 +208,54 @@ const handlePhoneChange = (e) => {
       kodeVoucher: appliedVoucher ? appliedVoucher.code : null,
       kurir: { nama: "JanAgro Courier", biaya: kurirFee },
       totalHarga,
-      metodePembayaran: paymentMethod,
+      metodePembayaran: "Online Payment",
     };
 
     try {
-      const checkoutResult = await onCheckout(checkoutData);
-      if (checkoutResult.success) {
-        setNotification({
-          message: "Order made successfuly",
-          type: "success",
-        });
-      } else {
-        setError(checkoutResult.message || "There was an issue with your checkout.");
-        setNotification({
-          message: checkoutResult.message || "Checkout Failed.",
-          type: "error",
-        });
-      }
+      const response = await axios.post(
+        `${API_URL}/checkouts/create`,
+        checkoutData,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const transactionToken = response.data.token;
+      if (!transactionToken) throw new Error("Transaction token not received.");
+
+      window.snap.pay(transactionToken, {
+        onSuccess: (result) => {
+          console.log("success", result);
+          dispatch(clearCart());
+          setNotification({
+            message: "Payment successful! Your order is being processed.",
+            type: "success",
+          });
+          setTimeout(() => navigate("/pesanan"), 2000);
+        },
+        onPending: (result) => {
+          console.log("pending", result);
+          setNotification({
+            message: "Waiting for your payment.",
+            type: "info",
+          });
+          setTimeout(() => navigate("/pesanan"), 2000);
+        },
+        onError: (result) => {
+          console.log("error", result);
+          setError("Payment failed. Please try again.");
+        },
+        onClose: () => {
+          console.log(
+            "customer closed the popup without finishing the payment"
+          );
+        },
+      });
     } catch (err) {
       console.error("Kesalahan checkout:", err);
-      setError("Terjadi kesalahan sistem atau jaringan.");
-      setNotification({
-        message: "Terjadi kesalahan saat memproses pesanan Anda.",
-        type: "error",
-      });
+      setError(
+        err.response?.data?.message ||
+          "An error occurred while processing your order."
+      );
     }
   };
 
@@ -325,7 +279,7 @@ const handlePhoneChange = (e) => {
           <div className="lg:col-span-2 space-y-8">
             <div className="bg-white p-6 rounded-sm border">
               <h2 className="text-xl font-bold mb-4">
-                Delivery Detail ({totalQuantity} item)
+                Shopping Cart ({totalQuantity} item)
               </h2>
               {cartDetails.length > 0 ? (
                 <div className="space-y-4">
@@ -368,7 +322,9 @@ const handlePhoneChange = (e) => {
                         >
                           -
                         </button>
-                        <span className="px-2 font-medium">{item.quantity}</span>
+                        <span className="px-2 font-medium">
+                          {item.quantity}
+                        </span>
                         <button
                           onClick={() =>
                             dispatch(
@@ -384,11 +340,10 @@ const handlePhoneChange = (e) => {
                           +
                         </button>
                       </div>
-
                       <p className="font-semibold w-28 text-right">
-                        Rp {(item.price * item.quantity).toLocaleString("id-ID")}
+                        Rp{" "}
+                        {(item.price * item.quantity).toLocaleString("id-ID")}
                       </p>
-
                       <button
                         onClick={() => dispatch(removeCartItem(item._id))}
                         disabled={loading}
@@ -402,16 +357,16 @@ const handlePhoneChange = (e) => {
               ) : (
                 <div className="text-center py-10">
                   <h3 className="text-xl font-semibold text-black">
-                    Cart is Empty
+                    Your Cart is Empty
                   </h3>
                   <p className="text-gray-500 mt-2">
-                    Add a product to cart
+                    Looks like you haven't added anything to your cart yet.
                   </p>
                 </div>
               )}
             </div>
             <div className="bg-white p-6 rounded-sm border">
-              <h2 className="text-xl font-bold mb-4">Delivery Detail</h2>
+              <h2 className="text-xl font-bold mb-4">Delivery Details</h2>
               {user && (
                 <div className="space-y-2 mb-4 p-3 bg-gray-50 rounded-md border">
                   <label className="flex items-center gap-2 cursor-pointer text-sm">
@@ -445,7 +400,7 @@ const handlePhoneChange = (e) => {
                       }
                       className="form-checkbox"
                     />{" "}
-                    Use Profile Number
+                    Use Profile Phone Number
                   </label>
                 </div>
               )}
@@ -464,7 +419,7 @@ const handlePhoneChange = (e) => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Address
+                    Full Address
                   </label>
                   <textarea
                     value={customerAddress}
@@ -474,24 +429,21 @@ const handlePhoneChange = (e) => {
                     rows="3"
                   ></textarea>
                 </div>
-                 
-                 <div>
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Receiver Telephone Number
+                    Receiver Phone Number
                   </label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
-                      +62 
+                      +62
                     </span>
-                  <input
-                    type="tel"
-                    value={customerPhone}
-                    onChange={handlePhoneChange}
-                    disabled={useProfilePhone}
-                    className="w-full pl-10 pr-4 py-3 border rounded-sm focus:ring-2 focus:ring-black disabled:bg-gray-100"
-                    
-                  />
-
+                    <input
+                      type="tel"
+                      value={customerPhone}
+                      onChange={handlePhoneChange}
+                      disabled={useProfilePhone}
+                      className="w-full pl-12 pr-4 py-3 border rounded-sm focus:ring-2 focus:ring-black disabled:bg-gray-100"
+                    />
                   </div>
                 </div>
               </div>
@@ -503,7 +455,7 @@ const handlePhoneChange = (e) => {
                 Order Summary
               </h2>
               <div>
-                <h3 className="text-lg font-bold mb-3">Voucher Available</h3>
+                <h3 className="text-lg font-bold mb-3">Available Vouchers</h3>
                 {vouchers && vouchers.length > 0 ? (
                   <div className="flex flex-col space-y-3 overflow-y-auto max-h-48 pr-2">
                     {vouchers.map((voucher) => (
@@ -539,7 +491,7 @@ const handlePhoneChange = (e) => {
                   </div>
                 )}
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Courier Cost</span>
+                  <span className="text-gray-600">Courier Fee</span>
                   <span className="font-medium">
                     Rp {kurirFee.toLocaleString("id-ID")}
                   </span>
@@ -549,34 +501,6 @@ const handlePhoneChange = (e) => {
                   <span>Rp {totalHarga.toLocaleString("id-ID")}</span>
                 </div>
               </div>
-              <div>
-                <h3 className="text-lg font-bold mb-2">Payment Method</h3>
-                <div className="space-y-2">
-                  {[
-                    { label: "COD (Cash on Deliver)", value: "COD" },
-                    { label: "Bank transfer", value: "Bank transfer" },
-                    { label: "Credit Card", value: "Credit Card" },
-                  ].map((method) => (
-                    <label
-                      key={method.value}
-                      className="flex items-center p-3 border rounded-sm has-[:checked]:bg-gray-100 has-[:checked]:border-black cursor-pointer"
-                    >
-                      <input
-                        type="radio"
-                        name="payment"
-                        value={method.value}
-                        checked={paymentMethod === method.value}
-                        onChange={(e) => {
-                          setPaymentMethod(e.target.value);
-                          if (error.includes("payment method")) setError("");
-                        }}
-                        className="mr-3"
-                      />
-                      {method.label}
-                    </label>
-                  ))}
-                </div>
-              </div>
               {error && (
                 <div className="flex items-center gap-2 text-sm text-red-600 bg-red-50 p-3 rounded-md border border-red-200">
                   <AlertCircle size={16} /> {error}
@@ -584,10 +508,10 @@ const handlePhoneChange = (e) => {
               )}
               <button
                 onClick={handleCheckoutClick}
-                disabled={totalQuantity === 0}
+                disabled={totalQuantity === 0 || loading}
                 className="w-full bg-black text-white py-4 rounded-sm font-medium text-lg hover:bg-gray-800 transition disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
-                Checkout
+                Pay Now
               </button>
             </div>
           </div>

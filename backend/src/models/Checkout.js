@@ -1,3 +1,5 @@
+// File: src/models/Checkout.js
+
 const mongoose = require("mongoose");
 
 const CheckoutSchema = new mongoose.Schema(
@@ -8,13 +10,9 @@ const CheckoutSchema = new mongoose.Schema(
     noTelpPenerima: { type: String, required: true },
     items: [
       {
-        product: {
-          type: mongoose.Schema.ObjectId,
-          ref: "Product",
-          required: true,
-        },
+        product: { type: mongoose.Schema.ObjectId, ref: "Product", required: true },
         name: { type: String, required: true },
-        image: { type: String, required: true },
+        image: { type: String },
         quantity: { type: Number, required: true },
         price: { type: Number, required: true },
       },
@@ -27,14 +25,18 @@ const CheckoutSchema = new mongoose.Schema(
       biaya: { type: Number, required: true },
     },
     totalHarga: { type: Number, required: true },
+
+    // --- PERBAIKAN DI SINI ---
     metodePembayaran: {
       type: String,
-      enum: ["Transfer Bank", "COD", "Kartu Kredit"],
+      enum: ["Transfer Bank", "COD", "Kartu Kredit", "Online Payment"], // <-- TAMBAHKAN "Online Payment"
       required: true,
     },
+    
     status: {
       type: String,
       enum: [
+        "pending",
         "diproses",
         "dikirim",
         "sampai",
@@ -43,7 +45,7 @@ const CheckoutSchema = new mongoose.Schema(
         "pengembalian diajukan",
         "pengembalian ditolak",
       ],
-      default: "diproses",
+      default: "pending",
     },
   },
   { timestamps: true }
