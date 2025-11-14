@@ -32,6 +32,8 @@ const Profile = ({
   onAvatarChange,
   onProfileSave, 
 }) => {
+
+    console.log("Data user yang diterima di Profile:", user);
   const [preview, setPreview] = useState(user?.avatar || null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const fileInputRef = useRef(null);
@@ -148,7 +150,7 @@ const Profile = ({
                   <div className="flex-grow">
                     <p className="text-sm text-gray-500">Phone Number</p>
                     <p className="text-black font-medium">
-                      {formatPhoneNumber(user.no_telp || user.noTelp)}
+                       {formatPhoneNumber(user.phone)}
                     </p>
                   </div>
                 </div>
@@ -157,7 +159,7 @@ const Profile = ({
                   <div className="flex-grow">
                     <p className="text-sm text-gray-500">Address</p>
                     <p className="text-black font-medium whitespace-pre-line">
-                      {user.alamat || "Alamat belum diatur"}
+                      {user.address || "Alamat belum diatur"}
                     </p>
                   </div>
                 </div>

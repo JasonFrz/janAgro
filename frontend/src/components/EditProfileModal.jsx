@@ -16,8 +16,8 @@ const EditProfileModal = ({ user, onClose, onSave }) => {
     name: user.name || "",
     username: user.username || "",
     email: user.email || "",
-    no_telp: user.no_telp || "", 
-    alamat: user.alamat || "",
+    phone: user.phone || "",
+    address: user.address || "",
   });
 
   const [passwordData, setPasswordData] = useState({
@@ -31,7 +31,7 @@ const EditProfileModal = ({ user, onClose, onSave }) => {
 
   const handleProfileChange = (e) => {
     const { name, value } = e.target;
-    if (name === "no_telp") {
+    if (name === "phone") {
       const numericValue = value.replace(/\D/g, "");
       setFormData({ ...formData, [name]: numericValue });
     } else {
@@ -75,7 +75,7 @@ const EditProfileModal = ({ user, onClose, onSave }) => {
     if (result && result.success) {
       setSuccess(result.message);
       setTimeout(() => {
-        onClose(); 
+        onClose();
       }, 2000);
     } else {
       setError(result.message || "Failed to save changes, Please try again.");
@@ -98,59 +98,138 @@ const EditProfileModal = ({ user, onClose, onSave }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Full name</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Full name
+              </label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                <input type="text" name="name" value={formData.name} onChange={handleProfileChange} className="w-full pl-10 pr-4 py-3 border rounded-md focus:ring-2 focus:ring-black" />
+                <User
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  size={16}
+                />
+                <input
+                  type="text"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleProfileChange}
+                  className="w-full pl-10 pr-4 py-3 border rounded-md focus:ring-2 focus:ring-black"
+                />
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Username</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Username
+              </label>
               <div className="relative">
-                <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                <input type="text" name="username" value={formData.username} onChange={handleProfileChange} className="w-full pl-10 pr-4 py-3 border rounded-md focus:ring-2 focus:ring-black" />
+                <AtSign
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  size={16}
+                />
+                <input
+                  type="text"
+                  name="username"
+                  value={formData.username}
+                  onChange={handleProfileChange}
+                  className="w-full pl-10 pr-4 py-3 border rounded-md focus:ring-2 focus:ring-black"
+                />
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Email
+              </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                <input type="email" name="email" value={formData.email} onChange={handleProfileChange} className="w-full pl-10 pr-4 py-3 border rounded-md focus:ring-2 focus:ring-black" />
+                <Mail
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  size={16}
+                />
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleProfileChange}
+                  className="w-full pl-10 pr-4 py-3 border rounded-md focus:ring-2 focus:ring-black"
+                />
               </div>
             </div>
           </div>
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Phone Number
+              </label>
               <div className="relative">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                <input type="tel" name="no_telp" value={formData.no_telp} onChange={handleProfileChange} className="w-full pl-10 pr-4 py-3 border rounded-md focus:ring-2 focus:ring-black" />
+                <Phone
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  size={16}
+                />
+                <input
+                  type="tel"
+                  name="phone"
+                  value={formData.phone}
+                  onChange={handleProfileChange}
+                  className="w-full pl-10 pr-4 py-3 border rounded-md focus:ring-2 focus:ring-black"
+                />
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Address</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Address
+              </label>
               <div className="relative">
-                <MapPin className="absolute left-3 top-4 text-gray-400" size={16} />
-                <textarea name="alamat" value={formData.alamat} onChange={handleProfileChange} className="w-full pl-10 pr-4 py-3 border rounded-md focus:ring-2 focus:ring-black" rows="5"></textarea>
+                <MapPin
+                  className="absolute left-3 top-4 text-gray-400"
+                  size={16}
+                />
+                <textarea
+                  name="address"
+                  value={formData.address}
+                  onChange={handleProfileChange}
+                  className="w-full pl-10 pr-4 py-3 border rounded-md focus:ring-2 focus:ring-black"
+                  rows="5"
+                ></textarea>
               </div>
             </div>
           </div>
         </div>
         <div className="mt-6 pt-6 border-t">
-          <h3 className="text-lg font-bold text-black mb-4">Change Password (Optional)</h3>
+          <h3 className="text-lg font-bold text-black mb-4">
+            Change Password (Optional)
+          </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">New Password</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                New Password
+              </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                <input type="password" name="newPassword" value={passwordData.newPassword} onChange={handlePasswordChange} className="w-full pl-10 pr-4 py-3 border rounded-md focus:ring-2 focus:ring-black" />
+                <Lock
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  size={16}
+                />
+                <input
+                  type="password"
+                  name="newPassword"
+                  value={passwordData.newPassword}
+                  onChange={handlePasswordChange}
+                  className="w-full pl-10 pr-4 py-3 border rounded-md focus:ring-2 focus:ring-black"
+                />
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Confirm New Password</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Confirm New Password
+              </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-                <input type="password" name="confirmNewPassword" value={passwordData.confirmNewPassword} onChange={handlePasswordChange} className="w-full pl-10 pr-4 py-3 border rounded-md focus:ring-2 focus:ring-black" />
+                <Lock
+                  className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+                  size={16}
+                />
+                <input
+                  type="password"
+                  name="confirmNewPassword"
+                  value={passwordData.confirmNewPassword}
+                  onChange={handlePasswordChange}
+                  className="w-full pl-10 pr-4 py-3 border rounded-md focus:ring-2 focus:ring-black"
+                />
               </div>
             </div>
           </div>
@@ -164,8 +243,18 @@ const EditProfileModal = ({ user, onClose, onSave }) => {
             Enter Current password to save changes
           </p>
           <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
-            <input type="password" name="currentPassword" value={passwordData.currentPassword} onChange={handlePasswordChange} className="w-full pl-10 pr-4 py-3 border rounded-md focus:ring-2 focus:ring-black" placeholder="Password saat ini" />
+            <Lock
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              size={16}
+            />
+            <input
+              type="password"
+              name="currentPassword"
+              value={passwordData.currentPassword}
+              onChange={handlePasswordChange}
+              className="w-full pl-10 pr-4 py-3 border rounded-md focus:ring-2 focus:ring-black"
+              placeholder="Password saat ini"
+            />
           </div>
         </div>
         {error && (
@@ -189,7 +278,7 @@ const EditProfileModal = ({ user, onClose, onSave }) => {
           </button>
           <button
             onClick={handleSaveChanges}
-            disabled={!!success} 
+            disabled={!!success}
             className="w-full bg-black text-white py-3 rounded-md hover:bg-gray-800 font-bold disabled:bg-gray-400"
           >
             Save Changes

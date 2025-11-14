@@ -26,6 +26,7 @@ import {
   updateProduct,
   deleteProduct,
 } from "./features/products/productSlice";
+import { setCredentials } from "./features/user/userSlice";
 
 function App() {
   const [showProfile, setShowProfile] = useState(false);
@@ -47,34 +48,38 @@ function App() {
   const token = useSelector((state) => state.users.token);
   const isAuthenticated = useSelector((state) => state.users.isAuthenticated);
 
-  useEffect(() => {
-    if (productStatus === "idle") {
-      dispatch(fetchProducts());
-    }
-
-    const fetchUserProfile = async () => {
-      const token = localStorage.getItem("token");
-      if (token) {
+ useEffect(() => {
+    const bootstrapSession = async () => {
+      const storedToken = localStorage.getItem("token");
+      if (storedToken) {
         try {
           const response = await fetch(`${API_URL}/auth/profile`, {
-            headers: { Authorization: `Bearer ${token}` },
+            headers: { Authorization: `Bearer ${storedToken}` },
           });
+
           if (response.ok) {
             const data = await response.json();
-            setUser(data.user);
+            // Ini adalah langkah paling penting:
+            // Mengisi kembali state Redux dengan data user dan token dari localStorage.
+            dispatch(setCredentials({ user: data.user, token: storedToken }));
+            setUser(data.user); // Anda juga tetap bisa menggunakan state lokal
           } else {
+            // Jika token tidak valid (misalnya kedaluwarsa), hapus dari localStorage.
             localStorage.removeItem("token");
-            setUser(null);
           }
         } catch (error) {
-          console.error("Error fetching profile:", error);
+          console.error("Gagal memuat sesi:", error);
           localStorage.removeItem("token");
         }
       }
     };
 
-    fetchUserProfile();
-  }, [productStatus, dispatch, API_URL]);
+    bootstrapSession();
+
+    if (productStatus === "idle") {
+      dispatch(fetchProducts());
+    }
+  }, [dispatch, API_URL, productStatus]);
 
   useEffect(() => {
     if (user && user.role) {
@@ -205,29 +210,18 @@ function App() {
     }
   };
 
-  useEffect(() => {
+ useEffect(() => {
     const fetchCart = async () => {
-      const token = localStorage.getItem("token");
-      if (user && token) {
-        console.log("FETCHING CART for user:", user.name);
+      if (user && token) { // Gunakan token dari Redux
         try {
           const response = await axios.get(`${API_URL}/cart`, {
             headers: { Authorization: `Bearer ${token}` },
           });
-          -console.log("RAW RESPONSE from /api/cart:", response);
-
           if (response.data.success) {
-            console.log(
-              "DATA to be set into cart state:",
-              response.data.data.items
-            );
             setCart(response.data.data.items || []);
           }
         } catch (error) {
-          console.error(
-            "Gagal mengambil data keranjang (fetchCart):",
-            error.response || error.message
-          ); // <-- LOG 4: Lihat detail error
+          console.error("Gagal mengambil data keranjang (fetchCart):", error.response || error.message);
           setCart([]);
         }
       } else {
@@ -235,7 +229,7 @@ function App() {
       }
     };
     fetchCart();
-  }, [user]);
+  }, [user, token, API_URL]);
 
   const handleUpdateCartQuantity = async (productId, newQuantity) => {
     const token = localStorage.getItem("token");
@@ -302,7 +296,7 @@ function App() {
     };
 
     fetchCheckouts();
-  }, [user]);
+  }, [user, token, API_URL]); 
 
   const handleCheckout = async (checkoutData) => {
     // TOKEN
@@ -374,7 +368,7 @@ function App() {
       );
     }
   };
-  const handleProfileSave = async (userId, payload) => {
+  const handleProfileSave = async (userId, payload) => {  
     const token = localStorage.getItem("token");
     if (!token) {
       return {
@@ -384,16 +378,22 @@ function App() {
     }
 
     try {
-      const response = await axios.put(
+       const response = await axios.put(
         `${API_URL}/users/update-profile/${userId}`,
         payload,
         {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: {
+            // Gunakan token dari scope komponen
+            Authorization: `Bearer ${token}`,
+          },
         }
       );
 
       if (response.data.success) {
-        setUser(response.data.user);
+         const updatedUser = response.data.user;
+        setUser(updatedUser); // Update state lokal
+        // Update juga state di Redux agar tetap sinkron
+        dispatch(setCredentials({ user: updatedUser, token }));
         return { success: true, message: "Profil berhasil diperbarui!" };
       }
     } catch (error) {

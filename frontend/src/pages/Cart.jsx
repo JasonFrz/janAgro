@@ -8,17 +8,17 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 const SERVER_URL = API_URL.replace("/api", "");
 
 
-// const formatPhoneInput = (value) => {
-//   const digits = value.replace(/\D/g, "").substring(0, 15);
-//   let formatted = "";
-//   for (let i = 0; i < digits.length; i++) {
-//     if (i > 0 && i % 4 === 0) {
-//       formatted += "-";
-//     }
-//     formatted += digits[i];
-//   }
-//   return formatted;
-// };
+const formatPhoneInput = (value) => {
+  const digits = value.replace(/\D/g, "").substring(0, 15);
+  let formatted = "";
+  for (let i = 0; i < digits.length; i++) {
+    if (i > 0 && i % 4 === 0) {
+      formatted += "-";
+    }
+    formatted += digits[i];
+  }
+  return formatted;
+};
 
 const Notification = ({ message, type, onClose }) => {
   useEffect(() => {
@@ -175,25 +175,25 @@ const handleCheckboxChange = (type, isChecked) => {
 
 
 
-// const handleUseProfilePhone = (checked) => {
-//   setUseProfilePhone(checked);
-//   if (checked) {
-//     if (!userPhone) {
-//       setError("Your profile phone number is empty. Please add it first.");
-//       return;
-//     }
-//     setCustomerPhone(userPhone);
-//   } else {
-//     setError("");
-//     setCustomerPhone(""); // free to type again
-//   }
-// };
+const handleUseProfilePhone = (checked) => {
+  setUseProfilePhone(checked);
+  if (checked) {
+    if (!userPhone) {
+      setError("Your profile phone number is empty. Please add it first.");
+      return;
+    }
+    setCustomerPhone(userPhone);
+  } else {
+    setError("");
+    setCustomerPhone(""); // free to type again
+  }
+};
 
 
-// const handlePhoneChange = (e) => {
-//   const onlyDigits = e.target.value.replace(/\D/g, "");
-//   setCustomerPhone(onlyDigits);
-// };
+const handlePhoneChange = (e) => {
+  const onlyDigits = e.target.value.replace(/\D/g, "");
+  setCustomerPhone(onlyDigits);
+};
 
   const cartDetails = cart
     .map((item) => {
@@ -436,7 +436,7 @@ const handleCheckboxChange = (type, isChecked) => {
                     />{" "}
                     Use Profile Address
                   </label>
-                  {/* <label className="flex items-center gap-2 cursor-pointer text-sm">
+                  <label className="flex items-center gap-2 cursor-pointer text-sm">
                     <input
                       type="checkbox"
                       checked={useProfilePhone}
@@ -446,7 +446,7 @@ const handleCheckboxChange = (type, isChecked) => {
                       className="form-checkbox"
                     />{" "}
                     Use Profile Number
-                  </label> */}
+                  </label>
                 </div>
               )}
               <div className="space-y-4">
@@ -474,8 +474,8 @@ const handleCheckboxChange = (type, isChecked) => {
                     rows="3"
                   ></textarea>
                 </div>
-                {/*  IKI KONTOL COK */}
-                {/* <div>
+                 
+                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Receiver Telephone Number
                   </label>
@@ -493,7 +493,7 @@ const handleCheckboxChange = (type, isChecked) => {
                   />
 
                   </div>
-                </div> */}
+                </div>
               </div>
             </div>
           </div>
