@@ -63,8 +63,6 @@ router.post("/register", async (req, res) => {
   }
 });
 
-// GANTI DENGAN KODE INI di routes/auth.js
-
 router.post("/login", async (req, res) => {
   try {
     const { error } = loginSchema.validate(req.body);
@@ -99,17 +97,14 @@ router.post("/login", async (req, res) => {
 
     const token = jwt.sign(payload, secret, { expiresIn: "1h" });
 
-    // --- PERBAIKAN DI SINI ---
-    // 1. Ubah Mongoose document menjadi objek biasa agar bisa dimodifikasi
     const userResponse = user.toObject();
     
-    // 2. Hapus password agar tidak terkirim ke frontend (SANGAT PENTING!)
     delete userResponse.password;
 
     return res.status(200).json({
       message: "Login successful",
       token: token,
-      user: userResponse, // 3. Kirim objek user yang sudah lengkap dan aman
+      user: userResponse, 
     });
   } catch (error) {
     console.error(error);
@@ -117,12 +112,10 @@ router.post("/login", async (req, res) => {
   }
 });
 
-// GANTI DENGAN KODE INI di routes/auth.js
 
 router.get("/profile", authenticateToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.id)
-      // Secara eksplisit pilih semua field yang dibutuhkan frontend
       .select("name username email phone address createdAt avatar role")
       .lean();
 
@@ -130,7 +123,6 @@ router.get("/profile", authenticateToken, async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Pastikan field yang opsional ada sebagai string kosong jika null/undefined
     const userForFrontend = {
       ...user,
       phone: user.phone || "",

@@ -481,7 +481,7 @@ const handlePhoneChange = (e) => {
                   </label>
                   <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
-                      +62
+                      +62 
                     </span>
                   <input
                     type="tel"
@@ -489,7 +489,7 @@ const handlePhoneChange = (e) => {
                     onChange={handlePhoneChange}
                     disabled={useProfilePhone}
                     className="w-full pl-10 pr-4 py-3 border rounded-sm focus:ring-2 focus:ring-black disabled:bg-gray-100"
-                    placeholder="81234567890"
+                    
                   />
 
                   </div>

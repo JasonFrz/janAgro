@@ -30,7 +30,7 @@ import { setCredentials } from "./features/user/userSlice";
 
 function App() {
   const [showProfile, setShowProfile] = useState(false);
-  const [user, setUser] = useState(null);
+  // const [user, setUser] = useState(null);    
   const [isAdmin, setIsAdmin] = useState(false);
   const [isPemilik, setIsPemilik] = useState(false);
   const [cart, setCart] = useState([]);
@@ -45,13 +45,12 @@ function App() {
   const { items: produk, status: productStatus } = useSelector(
     (state) => state.products
   );
-  const token = useSelector((state) => state.users.token);
-  const isAuthenticated = useSelector((state) => state.users.isAuthenticated);
+const { user, token, isAuthenticated } = useSelector((state) => state.users);
 
  useEffect(() => {
     const bootstrapSession = async () => {
       const storedToken = localStorage.getItem("token");
-      if (storedToken) {
+      if (storedToken && !token) {
         try {
           const response = await fetch(`${API_URL}/auth/profile`, {
             headers: { Authorization: `Bearer ${storedToken}` },
@@ -62,7 +61,7 @@ function App() {
             // Ini adalah langkah paling penting:
             // Mengisi kembali state Redux dengan data user dan token dari localStorage.
             dispatch(setCredentials({ user: data.user, token: storedToken }));
-            setUser(data.user); // Anda juga tetap bisa menggunakan state lokal
+ 
           } else {
             // Jika token tidak valid (misalnya kedaluwarsa), hapus dari localStorage.
             localStorage.removeItem("token");
@@ -79,13 +78,13 @@ function App() {
     if (productStatus === "idle") {
       dispatch(fetchProducts());
     }
-  }, [dispatch, API_URL, productStatus]);
+  },  [dispatch, API_URL, productStatus, token]);
 
   useEffect(() => {
     if (user && user.role) {
       const role = user.role.toLowerCase();
       setIsAdmin(role === "admin");
-      setIsPemilik(role === "owner");
+      setIsPemilik(role === "owner" || role === "pemilik");
     } else {
       setIsAdmin(false);
       setIsPemilik(false);
@@ -368,40 +367,21 @@ function App() {
       );
     }
   };
-  const handleProfileSave = async (userId, payload) => {  
-    const token = localStorage.getItem("token");
-    if (!token) {
-      return {
-        success: false,
-        message: "Autentikasi gagal. Silakan masuk lagi.",
-      };
+   const handleProfileSave = async (userId, payload) => {
+    if (!token) { // Ambil token dari Redux
+      return { success: false, message: "Autentikasi gagal. Token tidak tersedia." };
     }
-
     try {
-       const response = await axios.put(
-        `${API_URL}/users/update-profile/${userId}`,
-        payload,
-        {
-          headers: {
-            // Gunakan token dari scope komponen
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
+      const response = await axios.put(`${API_URL}/users/update-profile/${userId}`, payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (response.data.success) {
-         const updatedUser = response.data.user;
-        setUser(updatedUser); // Update state lokal
-        // Update juga state di Redux agar tetap sinkron
-        dispatch(setCredentials({ user: updatedUser, token }));
+        // Hapus setUser, cukup dispatch ke Redux
+        dispatch(setCredentials({ user: response.data.user, token }));
         return { success: true, message: "Profil berhasil diperbarui!" };
       }
     } catch (error) {
-      return {
-        success: false,
-        message:
-          error.response?.data?.message || "Terjadi kesalahan pada server.",
-      };
+      return { success: false, message: error.response?.data?.message || "Terjadi kesalahan pada server." };
     }
   };
 
@@ -580,6 +560,10 @@ function App() {
     fetchProducts();
   }, []);
 
+   const handleAvatarUpdateSuccess = (updatedUser) => {
+    // Dispatch ke Redux untuk memperbarui state user di seluruh aplikasi
+  dispatch(setCredentials({ user: updatedUser, token: token }));
+  };
   return (
     <div className="min-h-screen bg-white">
       <Navbar
@@ -663,8 +647,8 @@ function App() {
               user ? (
                 <Profile
                   user={user}
-                  onAvatarChange={handleAvatarChange}
                   onProfileSave={handleProfileSave}
+                  onAvatarUpdateSuccess={handleAvatarUpdateSuccess}
                 />
               ) : (
                 <Home API_URL={API_URL} />
@@ -739,7 +723,7 @@ function App() {
         isOpen={showProfile}
         onClose={() => setShowProfile(false)}
         user={user}
-        setUser={setUser}
+        
         setIsAdmin={setIsAdmin}
         setShowProfile={setShowProfile}
         API_URL={API_URL}

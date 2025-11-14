@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
 import Joi from "joi";
-import { useDispatch } from "react-redux";
-import { addUser,loginUser,logoutUser  } from "../features/user/userSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { addUser, loginUser, logoutUser } from "../features/user/userSlice";
 import {
   X,
   User,
   Mail,
-  Lock, 
+  Lock,
   Eye,
   EyeOff,
   Settings,
@@ -17,16 +17,13 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-const ProfileSlide = ({
-  isOpen,
-  onClose,
-  user,
-  setUser, 
-  // setShowProfile,
-  // API_URL,
-}) => {
+const API_URL = import.meta.env.VITE_API_URL;
 
+const ProfileSlide = ({ isOpen, onClose }) => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const { user } = useSelector((state) => state.users);
 
   const [currentView, setCurrentView] = useState("main");
   const [formData, setFormData] = useState({
@@ -44,21 +41,11 @@ const ProfileSlide = ({
   const [successMessage, setSuccessMessage] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const navigate = useNavigate();
-
   const changeView = (view) => {
     setErrorMessage(null);
     setSuccessMessage(null);
     setCurrentView(view);
   };
-
-//   const { users } = useSelector((state) => state.users);
-  
-// console.log(users);
-
-//   useEffect(() => {
-//     dispatch(fetchUsers());
-//   }, [dispatch]);
 
   useEffect(() => {
     if (isOpen) {
@@ -123,7 +110,6 @@ const ProfileSlide = ({
     e.preventDefault();
     setErrorMessage(null);
     setSuccessMessage(null);
-
     const { error } = loginSchema.validate({
       identifier: formData.identifier,
       password: formData.password,
@@ -133,7 +119,6 @@ const ProfileSlide = ({
       return;
     }
     setIsLoading(true);
-
     try {
       const userData = await dispatch(
         loginUser({
@@ -142,63 +127,25 @@ const ProfileSlide = ({
         })
       ).unwrap();
 
-      setUser(userData.user); // still useful for parent component state
-
-  
-      
-        
-      if (user.role === "owner") {
+      // Redirect berdasarkan role setelah login berhasil
+      if (userData.user.role === "owner" || userData.user.role === "pemilik") {
         navigate("/ceo");
-      } else if (user.role === "Admin") {
+      } else if (userData.user.role === "admin") {
         navigate("/admin");
       }
 
-    } catch (error) {
-      setErrorMessage(error.message || "Invalid Password or Username");
+      onClose(); 
+    } catch (err) {
+      setErrorMessage(err || "Invalid Password or Username");
     } finally {
       setIsLoading(false);
     }
-    
-
-    // setIsLoading(true);
-    // try {
-    //   const response = await fetch(`${API_URL}/auth/login`, {
-    //     method: "POST",
-    //     headers: { "Content-Type": "application/json" },
-    //     body: JSON.stringify({
-    //       identifier: formData.identifier,
-    //       password: formData.password,
-    //     }),
-    //   });
-
-    //   const data = await response.json();
-    //   if (!response.ok) {
-    //     throw new Error(data.message || "Login failed");
-    //   }
-
-    //   localStorage.setItem("token", data.token);
-    //   setUser(data.user); 
-
-    //   if (data.user.role === "Pemilik") {
-    //     navigate("/ceo");
-    //   } else if (data.user.role === "Admin") {
-    //     navigate("/admin");
-    //   }
-
-    //   setShowProfile(false);
-    // } catch (err) {
-    //   setErrorMessage(err.message);
-    // } finally {
-    //   setIsLoading(false);
-    // }
-
   };
 
   const handleRegister = async (e) => {
     e.preventDefault();
     setErrorMessage(null);
     setSuccessMessage(null);
-
     const { error } = registerSchema.validate(formData, {
       abortEarly: true,
       allowUnknown: true,
@@ -207,72 +154,22 @@ const ProfileSlide = ({
       setErrorMessage(error.details[0].message);
       return;
     }
-
-  try {
-    await dispatch(addUser(formData));
-    changeView("login");
-  } catch (error) {
-    setErrorMessage(error.message || "Registration failed");
-  }
-
-    
-
-    // e.preventDefault();
-    // setErrorMessage(null);
-    // setSuccessMessage(null);
-
-    // const { error } = registerSchema.validate(formData, {
-    //   abortEarly: true,
-    //   allowUnknown: true,
-    // });
-    // if (error) {
-    //   setErrorMessage(error.details[0].message);
-    //   return;
-    // }
-
-    // setIsLoading(true);
-    // try {
-    //   const response = await fetch(`${API_URL}/auth/register`, {
-    //     method: "POST",
-    //     headers: { "Content-Type": "application/json" },
-    //     body: JSON.stringify({
-    //       name: formData.name,
-    //       username: formData.username,
-    //       email: formData.email,
-    //       password: formData.password,
-    //       no_telp: formData.noTelp,
-    //     }),
-    //   });
-
-    //   const data = await response.json();
-    //   if (!response.ok) {
-    //     throw new Error(data.message || "Registration failed");
-    //   }
-
-    //   setSuccessMessage(data.message + " Silakan login.");
-    //   changeView("login");
-    //   setFormData({
-    //     ...formData,
-    //     identifier: formData.email,
-    //     password: "",
-    //     name: "",
-    //     username: "",
-    //     confirmPassword: "",
-    //     noTelp: "",
-    //   });
-    // } catch (err) {
-    //   setErrorMessage(err.message);
-    // } finally {
-    //   setIsLoading(false);
-    // }
-    
+    setIsLoading(true);
+    try {
+      await dispatch(addUser(formData)).unwrap();
+      setSuccessMessage("Registrasi berhasil! Silakan login.");
+      changeView("login");
+    } catch (err) {
+      setErrorMessage(err || "Registration failed");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleLogout = () => {
-    dispatch(logoutUser()); // clears user + token in redux
-    setUser(null);
+    dispatch(logoutUser());
     navigate("/");
-    changeView("main");
+    onClose();
   };
 
   const resetView = () => {
@@ -488,8 +385,6 @@ const ProfileSlide = ({
     </div>
   );
 
-  // Di dalam ProfileSlide.jsx
-
   const renderMainView = () => (
     <div className="space-y-6">
       <div className="text-center">
@@ -537,12 +432,10 @@ const ProfileSlide = ({
           Register
         </button>
       </div>
-
       <div className="mt-8 pt-6 border-t border-gray-200 text-center">
         <div className="flex justify-center items-end h-32">
           <svg width="100" height="100" viewBox="0 0 100 100">
             <path d="M 0 95 H 100" stroke="#4a3b2d" strokeWidth="4" />
-
             <path
               className="plant-stem"
               d="M 50 95 V 20 C 50 10, 60 10, 60 20"
@@ -551,7 +444,6 @@ const ProfileSlide = ({
               strokeWidth="4"
               strokeLinecap="round"
             />
-
             <g className="plant-leaf leaf-1">
               <circle cx="42" cy="55" r="10" fill="#34D399" />
             </g>
@@ -598,7 +490,6 @@ const ProfileSlide = ({
               onChange={handleInputChange}
               className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black"
               placeholder="Enter your email or username"
-              // required
             />
           </div>
         </div>
@@ -618,7 +509,6 @@ const ProfileSlide = ({
               onChange={handleInputChange}
               className="w-full pl-10 pr-12 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black"
               placeholder="Enter your password"
-              // required
             />
             <button
               type="button"
@@ -642,7 +532,8 @@ const ProfileSlide = ({
           onClick={() => changeView("register")}
           className="text-sm text-gray-600 hover:text-black"
         >
-         Don't have an account? <span className="font-medium">Register Now</span>
+          Don't have an account?{" "}
+          <span className="font-medium">Register Now</span>
         </button>
       </div>
       <div className="text-center">
@@ -653,45 +544,54 @@ const ProfileSlide = ({
           ← Back
         </button>
       </div>
-
-      
     </div>
   );
 
-  const renderProfileView = () => (
-    <div className="space-y-6">
-      <div className="text-center">
-        <div className="w-20 h-20 bg-gray-900 rounded-full mx-auto mb-4 flex items-center justify-center overflow-hidden border-2 border-gray-200">
-          {user?.avatar ? (
-            <img
-              src={user.avatar}
-              alt="User Avatar"
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <User size={40} className="text-white" />
-          )}
+  const renderProfileView = () => {
+    // Buat URL gambar yang benar
+    const baseUrl = API_URL ? API_URL.replace("/api", "") : '';
+    const avatarUrl = user?.avatar ? `${baseUrl}/${user.avatar}` : null;
+
+    return (
+      <div className="space-y-6">
+        <div className="text-center">
+          <div className="w-20 h-20 bg-gray-900 rounded-full mx-auto mb-4 flex items-center justify-center overflow-hidden border-2 border-gray-200">
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt="User Avatar"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <User size={40} className="text-white" />
+            )}
+          </div>
+          <h3 className="text-xl font-bold text-gray-900">{user?.name}</h3>
+          <p className="text-gray-600">{user?.email}</p>
+          <p className="text-sm text-gray-500">
+            Member since{" "}
+            {user?.createdAt
+              ? new Date(user.createdAt).toLocaleDateString("id-ID")
+              : "N/A"}
+          </p>
         </div>
-        <h3 className="text-xl font-bold text-gray-900">{user?.name}</h3>
-        <p className="text-gray-600">{user?.email}</p>
-        <p className="text-sm text-gray-500">Member since {user?.joinDate}</p>
+        <div className="space-y-3">
+          <button
+            onClick={handleAccountSettingsClick}
+            className="w-full flex items-center justify-center space-x-2 bg-gray-100 text-gray-700 py-3 px-4 rounded-md font-medium hover:bg-gray-200 transition-colors"
+          >
+            <Settings size={16} /> <span>Account Settings</span>
+          </button>
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center justify-center space-x-2 bg-red-50 text-red-600 py-3 px-4 rounded-md font-medium hover:bg-red-100 transition-colors"
+          >
+            <LogOut size={16} /> <span>Logout</span>
+          </button>
+        </div>
       </div>
-      <div className="space-y-3">
-        <button
-          onClick={handleAccountSettingsClick}
-          className="w-full flex items-center justify-center space-x-2 bg-gray-100 text-gray-700 py-3 px-4 rounded-md font-medium hover:bg-gray-200 transition-colors"
-        >
-          <Settings size={16} /> <span>Account Settings</span>
-        </button>
-        <button
-          onClick={handleLogout}
-          className="w-full flex items-center justify-center space-x-2 bg-red-50 text-red-600 py-3 px-4 rounded-md font-medium hover:bg-red-100 transition-colors"
-        >
-          <LogOut size={16} /> <span>Logout</span>
-        </button>
-      </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div
@@ -730,9 +630,6 @@ const ProfileSlide = ({
       </div>
     </div>
   );
-
-  
-
 };
 
 export default ProfileSlide;
