@@ -5,16 +5,16 @@ const router = express.Router();
 const Checkout = require("../models/Checkout");
 const Cart = require("../models/Carts");
 const Voucher = require("../models/Voucher");
+const Product = require("../models/Product"); // <-- 1. Impor model Product
 const { authenticateToken } = require("../middleware/authenticate");
-const snap = require('../config/midtrans'); // Impor konfigurasi Midtrans
+const snap = require('../config/midtrans');
 
+// Rute untuk membuat transaksi (tidak ada perubahan di sini)
 router.post("/create", authenticateToken, async (req, res) => {
   try {
     const userId = req.user.id;
-    // Ambil semua detail yang relevan dari body
-    const { totalHarga, items, nama, alamat, noTelpPenerima, diskon, kurir } = req.body;
+    const { totalHarga, items, nama, alamat, noTelpPenerima } = req.body;
 
-    // 1. Buat dan simpan pesanan di DB dengan status "pending"
     const newCheckout = new Checkout({
       ...req.body,
       userId,
@@ -30,81 +30,50 @@ router.post("/create", authenticateToken, async (req, res) => {
     
     const savedCheckout = await newCheckout.save();
 
-    // --- PERBAIKAN UTAMA DI SINI ---
-    // 2. Siapkan item_details untuk Midtrans
     const itemDetails = items.map(item => ({
       id: item._id.toString(),
       price: Math.round(item.price),
       quantity: item.quantity,
       name: item.name.substring(0, 50),
     }));
-
-    // Tambahkan biaya kurir sebagai item terpisah
-    if (kurir && kurir.biaya > 0) {
-      itemDetails.push({
-        id: 'SHIPPING_FEE',
-        price: Math.round(kurir.biaya),
-        quantity: 1,
-        name: 'Courier Fee',
-      });
+    
+    if (req.body.kurir && req.body.kurir.biaya > 0) {
+        itemDetails.push({ id: 'SHIPPING_FEE', price: Math.round(req.body.kurir.biaya), quantity: 1, name: 'Courier Fee' });
+    }
+    if (req.body.diskon && req.body.diskon > 0) {
+        itemDetails.push({ id: 'DISCOUNT', price: -Math.round(req.body.diskon), quantity: 1, name: 'Discount' });
     }
 
-    // Tambahkan diskon sebagai item dengan harga negatif
-    if (diskon && diskon > 0) {
-      itemDetails.push({
-        id: 'DISCOUNT',
-        price: -Math.round(diskon), // Harga negatif untuk diskon
-        quantity: 1,
-        name: 'Discount',
-      });
-    }
-
-    // 3. Siapkan parameter lengkap untuk Midtrans
     const parameter = {
       transaction_details: {
         order_id: savedCheckout._id.toString(),
-        gross_amount: Math.round(totalHarga), // Total akhir harus cocok
+        gross_amount: Math.round(totalHarga),
       },
-      item_details: itemDetails, // Gunakan item_details yang sudah dimodifikasi
+      item_details: itemDetails,
       customer_details: {
         first_name: nama,
         email: req.user.email,
         phone: noTelpPenerima,
-        shipping_address: {
-          address: alamat,
-        }
+        shipping_address: { address: alamat }
       },
     };
 
-    // 4. Buat transaksi di Midtrans
     const transaction = await snap.createTransaction(parameter);
-    const transactionToken = transaction.token;
-
-    // 5. Kirim token kembali ke frontend
-    res.status(200).json({
-      success: true,
-      message: "Transaksi Midtrans berhasil dibuat.",
-      token: transactionToken,
-    });
+    res.status(200).json({ success: true, message: "Transaksi Midtrans berhasil dibuat.", token: transaction.token });
 
   } catch (error) {
     console.error("Error creating Midtrans transaction:", error);
-    // Cek apakah ini error dari Midtrans
     if (error.ApiResponse) {
-        console.error('Midtrans API Error:', error.ApiResponse);
         return res.status(400).json({ success: false, message: error.ApiResponse.error_messages.join(', ') });
     }
     res.status(500).json({ success: false, message: "Terjadi kesalahan pada server." });
   }
 });
 
-
-// RUTE UNTUK MENERIMA NOTIFIKASI DARI MIDTRANS
+// RUTE NOTIFIKASI MIDTRANS (DENGAN PERBAIKAN)
 router.post("/midtrans-notification", async (req, res) => {
   try {
-    const notificationJson = req.body;
-    
-    const statusResponse = await snap.transaction.notification(notificationJson);
+    const statusResponse = await snap.transaction.notification(req.body);
     const orderId = statusResponse.order_id;
     const transactionStatus = statusResponse.transaction_status;
     const fraudStatus = statusResponse.fraud_status;
@@ -112,34 +81,40 @@ router.post("/midtrans-notification", async (req, res) => {
     console.log(`Notifikasi diterima untuk order ${orderId} dengan status: ${transactionStatus}`);
 
     const checkout = await Checkout.findById(orderId);
-    if (!checkout) {
-      return res.status(404).send('Checkout not found');
-    }
+    if (!checkout) return res.status(404).send('Checkout not found');
+    if (checkout.status !== 'pending') return res.status(200).send('OK (Order status already updated)');
 
-    // Hanya proses jika status pesanan masih 'pending'
-    if (checkout.status !== 'pending') {
-      return res.status(200).send('OK (Order status already updated)');
-    }
+    if ((transactionStatus === 'capture' || transactionStatus === 'settlement') && fraudStatus === 'accept') {
+      // --- PERBAIKAN UTAMA DI SINI ---
+      // 1. Update status pesanan
+      checkout.status = 'diproses';
+      await checkout.save();
 
-    if (transactionStatus == 'capture' || transactionStatus == 'settlement') {
-        if (fraudStatus == 'accept') {
-            // Pembayaran berhasil
-            checkout.status = 'diproses';
-            await checkout.save();
-            await Cart.findOneAndUpdate({ userId: checkout.userId }, { $set: { items: [] } });
+      // 2. Kurangi stok produk
+      for (const item of checkout.items) {
+        await Product.updateOne(
+          { _id: item.product },
+          { $inc: { stock: -item.quantity } }
+        );
+      }
 
-            if (checkout.kodeVoucher) {
-                const voucher = await Voucher.findOne({ code: checkout.kodeVoucher });
-                if (voucher) {
-                    voucher.currentUses += 1;
-                    await voucher.save();
-                }
-            }
-        }
-    } else if (transactionStatus == 'deny' || transactionStatus == 'expire' || transactionStatus == 'cancel') {
-        // Pembayaran gagal
-        checkout.status = 'dibatalkan';
-        await checkout.save();
+      // 3. Tambah penggunaan voucher jika ada
+      if (checkout.kodeVoucher) {
+        await Voucher.updateOne(
+          { code: checkout.kodeVoucher },
+          { $inc: { currentUses: 1 } }
+        );
+      }
+
+      // 4. Kosongkan keranjang pengguna
+      await Cart.findOneAndUpdate({ userId: checkout.userId }, { $set: { items: [] } });
+      
+      console.log(`Order ${orderId} successfully processed.`);
+
+    } else if (transactionStatus === 'deny' || transactionStatus === 'expire' || transactionStatus === 'cancel') {
+      checkout.status = 'dibatalkan';
+      await checkout.save();
+      console.log(`Order ${orderId} was cancelled or failed.`);
     }
 
     res.status(200).send('OK');
@@ -152,17 +127,35 @@ router.post("/midtrans-notification", async (req, res) => {
 
 // Rute GET riwayat pesanan (tidak berubah)
 router.get("/", authenticateToken, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const checkouts = await Checkout.find({ userId: userId }).sort({ createdAt: -1 });
+    res.status(200).json({ success: true, message: "Riwayat pesanan berhasil diambil.", data: checkouts });
+  } catch (error) {
+    console.error("Error fetching checkouts:", error);
+    res.status(500).json({ success: false, message: "Terjadi kesalahan pada server." });
+  }
+});
+
+// Tambahkan ini di checkoutRoutes.js untuk sementara
+router.get("/trigger-success/:orderId", async (req, res) => {
     try {
-        const userId = req.user.id;
-        const checkouts = await Checkout.find({ userId: userId }).sort({ createdAt: -1 });
-        res.status(200).json({
-            success: true,
-            message: "Riwayat pesanan berhasil diambil.",
-            data: checkouts,
-        });
+        const { orderId } = req.params;
+        const checkout = await Checkout.findById(orderId);
+        if (!checkout) return res.status(404).send('Not Found');
+
+        // Jalankan logika yang sama seperti di notifikasi
+        checkout.status = 'diproses';
+        await checkout.save();
+        await Product.updateMany({ _id: { $in: checkout.items.map(i => i.product) } }, { /* logika $inc Anda */ });
+        await Cart.findOneAndUpdate({ userId: checkout.userId }, { $set: { items: [] } });
+        if (checkout.kodeVoucher) {
+            await Voucher.updateOne({ code: checkout.kodeVoucher }, { $inc: { currentUses: 1 } });
+        }
+
+        res.send(`Order ${orderId} has been manually set to 'diproses'.`);
     } catch (error) {
-        console.error("Error fetching checkouts:", error);
-        res.status(500).json({ success: false, message: "Terjadi kesalahan pada server." });
+        res.status(500).send(error.message);
     }
 });
 
