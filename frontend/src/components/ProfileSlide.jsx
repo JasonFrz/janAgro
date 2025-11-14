@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Joi from "joi";
-import { useSelector, useDispatch } from "react-redux";
-import { fetchUsers,addUser,loginUser,logoutUser  } from "../features/user/userSlice";
+import { useDispatch } from "react-redux";
+import { addUser,loginUser,logoutUser  } from "../features/user/userSlice";
 import {
   X,
   User,
@@ -359,7 +359,7 @@ const ProfileSlide = ({
               value={formData.name}
               onChange={handleInputChange}
               className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black"
-              placeholder="Masukkan nama lengkap"
+              placeholder="Enter name"
               required
             />
           </div>
@@ -379,14 +379,14 @@ const ProfileSlide = ({
               value={formData.email}
               onChange={handleInputChange}
               className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black"
-              placeholder="Masukkan email"
+              placeholder="Enter Email"
               required
             />
           </div>
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Nomor Telepon
+            Contact Number
           </label>
           <div className="relative">
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
@@ -436,7 +436,7 @@ const ProfileSlide = ({
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Konfirmasi Password
+            Confirm Password
           </label>
           <div className="relative">
             <Lock
@@ -474,7 +474,7 @@ const ProfileSlide = ({
           onClick={() => changeView("login")}
           className="text-sm text-gray-600 hover:text-black"
         >
-          Sudah punya akun? <span className="font-medium">Login</span>
+          Already have an Account? <span className="font-medium">Login</span>
         </button>
       </div>
       <div className="text-center">
@@ -482,7 +482,7 @@ const ProfileSlide = ({
           onClick={() => changeView("main")}
           className="text-sm text-gray-500 hover:text-gray-700"
         >
-          ← Kembali
+          ← Back
         </button>
       </div>
     </div>
