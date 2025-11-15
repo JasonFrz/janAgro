@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
-import axios from "axios";
-import { Edit, Trash2, UserX, UserCheck } from "lucide-react";
+import { useDispatch, useSelector } from "react-redux";
+import { Edit, Trash2, UserX, UserCheck, User } from "lucide-react";
+import {
+  fetchUsers,
+  deleteUser,
+  toggleBanUser,
+} from "../features/admin/adminSlice";
 import ConfirmationModal from "./ConfirmationModal";
 import EditUserModal from "./EditUserModal";
-import { editUser, fetchUsers } from "../features/admin/adminSlice"
-import { useDispatch,useSelector} from "react-redux";
-
 
 const formatPhoneNumber = (phone) => {
   if (!phone) return "-";
@@ -26,97 +28,29 @@ const formatPhoneNumber = (phone) => {
 };
 
 function UserAdmin() {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [ErrorMessage,setErrorMessage] = useState({})
+  const dispatch = useDispatch();
+  const { users, loading, error } = useSelector((state) => state.admin);
+
   const [editingUser, setEditingUser] = useState(null);
   const [confirmation, setConfirmation] = useState({
     isOpen: false,
     action: null,
     user: null,
   });
-  const dispatch = useDispatch();
 
-  const fetchAllUsers = async () => {
-    try {
-      const res = await dispatch(fetchUsers()).unwrap();
-      setUsers(res);
-    } catch (err) {
-      console.error(err);
-      setError("Server error fetching users");
-    } finally {
-      setLoading(false);
-    }
-  };
-useEffect(() => {
+  const API_URL = import.meta.env.VITE_API_URL;
+  const BASE_SERVER_URL = API_URL.replace("/api", "");
 
-  fetchAllUsers();
-}, [dispatch]); // <-- IMPORTANT
+  useEffect(() => {
+    dispatch(fetchUsers());
+  }, [dispatch]);
 
-
-const handleUpdate = async () => {
-
-  
-  try {
-      console.log("TES")
-      const userData = await dispatch(editUser({id: userData._id, updatedData:userData})).unwrap()
-      console.log("TES2")
-      setUsers(userData.user)
-  
-    } catch (error) {
-      setErrorMessage(error)
-    }finally{ 
-      // setErrorMessage(null)
-      
-  fetchAllUsers();
-    }
-
-
-
-  // try {
-  //   const res = await axios.put(
-  //     `http://localhost:3000/api/admin/update-user/${id}`,
-  //     updatedData
-  //   );
-  //   if (res.data.success) {
-  //     setUsers((prev) =>
-  //       prev.map((u) => (u._id === id ? res.data.data : u))
-  //     );
-  //   } else {
-  //     console.error("Update failed:", res.data.message);
-  //   }
-  // } catch (err) {
-  //   console.error("Error updating user:", err);
-  // }
-
-
-
-};
-
-
-  const handleDelete = async (id) => {
-    try {
-      await axios.delete(`http://localhost:3000/api/admin/delete-user/${id}`);
-      setUsers((prev) => prev.filter((u) => u._id !== id));
-    } catch (err) {
-      console.error("Error deleting user:", err);
-    }
+  const handleDelete = (id) => {
+    dispatch(deleteUser(id));
   };
 
-  const handleToggleBan = async (id) => {
-    try {
-      const res = await axios.put(
-        `http://localhost:3000/api/admin/toggle-ban/${id}`
-      );
-      if (res.data.success) {
-        setUsers((prev) =>
-          prev.map((u) => (u._id === id ? res.data.data : u))
-        );
-      }
-    } catch (err) {
-      console.error("Error toggling ban:", err);
-    }
+  const handleToggleBan = (id) => {
+    dispatch(toggleBanUser(id));
   };
 
   const openConfirmation = (action, user) => {
@@ -132,8 +66,8 @@ const handleUpdate = async () => {
     closeConfirmation();
   };
 
-  // ✅ Loading & error
-  if (loading) return <div className="text-gray-500 italic">Loading users...</div>;
+  if (loading)
+    return <div className="text-gray-500 italic">Memuat data pengguna...</div>;
   if (error) return <div className="text-red-500">{error}</div>;
 
   const activeUsers = users.filter((u) => !u.isBanned);
@@ -141,42 +75,64 @@ const handleUpdate = async () => {
 
   const UserTable = ({ title, userList, isBannedList = false }) => (
     <div>
-      <h3 className="text-lg font-semibold mb-3">
+      <h3 className="text-lg font-bold mb-3">
         {title} ({userList.length})
       </h3>
       {userList.length === 0 ? (
-        <p className="text-gray-500 italic">No users in this category.</p>
+        <p className="text-gray-500 italic">
+          Tidak ada pengguna di kategori ini.
+        </p>
       ) : (
-        <div className="overflow-x-auto border border-gray-200 rounded-lg">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+        <div className="overflow-x-auto max-h-[450px] overflow-y-auto border-2 border-black rounded-lg">
+          <table className="min-w-full divide-y-2 divide-gray-300">
+            <thead className="bg-gray-50 sticky top-0 z-10">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                   User
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                   Contact
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                   Address
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  Role
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                   Joined
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">
                   Actions
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white divide-y-2 divide-gray-300">
               {userList.map((user) => (
                 <tr key={user._id}>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-black">
-                      {user.name}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      @{user.username}
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0 h-12 w-12">
+                        {user.avatar ? (
+                          <img
+                            className="h-12 w-12 rounded-full object-cover"
+                            src={`${BASE_SERVER_URL}/${user.avatar}`}
+                            alt={user.name}
+                          />
+                        ) : (
+                          <div className="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center">
+                            <User className="h-8 w-8 text-gray-500" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="ml-4">
+                        <div className="text-sm font-bold text-black">
+                          {user.name}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          @{user.username}
+                        </div>
+                      </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -191,6 +147,19 @@ const handleUpdate = async () => {
                   >
                     {user.address || "-"}
                   </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span
+                      className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full capitalize ${
+                        user.role === "pemilik"
+                          ? "bg-purple-200 text-purple-800"
+                          : user.role === "admin"
+                          ? "bg-blue-200 text-blue-800"
+                          : "bg-green-200 text-green-800"
+                      }`}
+                    >
+                      {user.role}
+                    </span>
+                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                     {new Date(user.createdAt).toLocaleDateString("id-ID")}
                   </td>
@@ -198,6 +167,7 @@ const handleUpdate = async () => {
                     <button
                       onClick={() => setEditingUser(user)}
                       className="p-2 text-gray-500 hover:text-black"
+                      title="Edit Pengguna"
                     >
                       <Edit size={16} />
                     </button>
@@ -205,6 +175,7 @@ const handleUpdate = async () => {
                       <button
                         onClick={() => openConfirmation("unban", user)}
                         className="p-2 text-green-500 hover:text-green-700"
+                        title="Buka Blokir"
                       >
                         <UserCheck size={16} />
                       </button>
@@ -212,6 +183,7 @@ const handleUpdate = async () => {
                       <button
                         onClick={() => openConfirmation("ban", user)}
                         className="p-2 text-yellow-500 hover:text-yellow-700"
+                        title="Blokir Pengguna"
                       >
                         <UserX size={16} />
                       </button>
@@ -219,6 +191,7 @@ const handleUpdate = async () => {
                     <button
                       onClick={() => openConfirmation("delete", user)}
                       className="p-2 text-red-500 hover:text-red-700"
+                      title="Hapus Pengguna"
                     >
                       <Trash2 size={16} />
                     </button>
@@ -234,21 +207,21 @@ const handleUpdate = async () => {
 
   const confirmationDetails = {
     delete: {
-      title: "Delete User",
-      message: `Are you sure you want to permanently delete @${confirmation.user?.username}?`,
-      btnText: "Delete",
+      title: "Hapus Pengguna",
+      message: `Apakah Anda yakin ingin menghapus @${confirmation.user?.username} secara permanen?`,
+      btnText: "Hapus",
       btnColor: "bg-red-600 hover:bg-red-700",
     },
     ban: {
-      title: "Ban User",
-      message: `Are you sure you want to ban @${confirmation.user?.username}?`,
-      btnText: "Ban User",
+      title: "Blokir Pengguna",
+      message: `Apakah Anda yakin ingin memblokir @${confirmation.user?.username}?`,
+      btnText: "Blokir",
       btnColor: "bg-yellow-500 hover:bg-yellow-600",
     },
     unban: {
-      title: "Unban User",
-      message: `Are you sure you want to restore @${confirmation.user?.username}?`,
-      btnText: "Unban User",
+      title: "Buka Blokir Pengguna",
+      message: `Apakah Anda yakin ingin memulihkan @${confirmation.user?.username}?`,
+      btnText: "Buka Blokir",
       btnColor: "bg-green-500 hover:bg-green-600",
     },
   };
@@ -259,12 +232,11 @@ const handleUpdate = async () => {
     <>
       {editingUser && (
         <EditUserModal
-  user={editingUser}
-  onClose={() => setEditingUser(null)}
-  onSave={handleUpdate}
-/>
-
+          user={editingUser}
+          onClose={() => setEditingUser(null)}
+        />
       )}
+
       <ConfirmationModal
         isOpen={confirmation.isOpen}
         onClose={closeConfirmation}
@@ -274,11 +246,14 @@ const handleUpdate = async () => {
         confirmButtonText={details.btnText}
         confirmButtonColor={details.btnColor}
       />
-      <div className="bg-white shadow rounded-lg p-6 space-y-8">
-        <h2 className="text-xl font-semibold">Users Management</h2>
-        <UserTable title="Active Users" userList={activeUsers} />
+
+      <div className="bg-white border-2 border-black rounded-lg p-6 space-y-8 shadow-xl">
+        <h2 className="text-2xl font-black pb-4 border-b-2 border-black">
+          User Management (Admin)
+        </h2>
+        <UserTable title="Pengguna Aktif" userList={activeUsers} />
         <UserTable
-          title="Banned Users"
+          title="Pengguna Diblokir"
           userList={bannedUsers}
           isBannedList={true}
         />

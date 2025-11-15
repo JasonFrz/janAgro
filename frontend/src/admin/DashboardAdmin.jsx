@@ -7,9 +7,11 @@ import { fetchVouchers } from "../features/voucher/voucherSlice";
 function DashboardAdmin() {
   const dispatch = useDispatch();
 
-  const { users, loading: userLoading, error: userError } = useSelector(
-    (state) => state.users
-  );
+  const {
+    users,
+    loading: userLoading,
+    error: userError,
+  } = useSelector((state) => state.users);
   const { items: produk, loading: produkLoading } = useSelector(
     (state) => state.products
   );
@@ -20,7 +22,6 @@ function DashboardAdmin() {
   const [produkSortAsc, setProdukSortAsc] = useState(true);
   const [userSortAsc, setUserSortAsc] = useState(true);
 
-  // Fetch all data using Redux on mount
   useEffect(() => {
     dispatch(fetchUsers());
     dispatch(fetchProducts());
@@ -31,7 +32,10 @@ function DashboardAdmin() {
     if (stock === 0)
       return { text: "Out of Stock", color: "bg-red-100 text-red-600" };
     if (stock <= 10)
-      return { text: "Stock Running Out", color: "bg-yellow-100 text-yellow-600" };
+      return {
+        text: "Stock Running Out",
+        color: "bg-yellow-100 text-yellow-600",
+      };
     return { text: "Available", color: "bg-green-100 text-green-600" };
   };
 
@@ -42,7 +46,11 @@ function DashboardAdmin() {
 
   const cards = [
     { title: "User Total", count: users?.length || 0, icon: "/icon/group.png" },
-    { title: "Product Total", count: produk?.length || 0, icon: "/icon/product.png" },
+    {
+      title: "Product Total",
+      count: produk?.length || 0,
+      icon: "/icon/product.png",
+    },
     {
       title: "Voucher Total",
       count: vouchers?.length || 0,
@@ -60,7 +68,9 @@ function DashboardAdmin() {
     return [...(users || [])].sort((a, b) => {
       const nameA = (a.username || "").toLowerCase();
       const nameB = (b.username || "").toLowerCase();
-      return userSortAsc ? nameA.localeCompare(nameB) : nameB.localeCompare(nameA);
+      return userSortAsc
+        ? nameA.localeCompare(nameB)
+        : nameB.localeCompare(nameA);
     });
   }, [users, userSortAsc]);
 
@@ -124,7 +134,9 @@ function DashboardAdmin() {
                     >
                       <div>
                         <p className="font-medium text-black">{user.name}</p>
-                        <p className="text-sm text-gray-500">@{user.username}</p>
+                        <p className="text-sm text-gray-500">
+                          @{user.username}
+                        </p>
                       </div>
                       <div className="flex items-center space-x-3">
                         <span

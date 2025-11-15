@@ -7,7 +7,7 @@ function CreateAdminModal({ onClose, onAdminAdded }) {
     username: "",
     email: "",
     password: "",
-    phone: "", // <-- 1. Tambahkan state untuk phone
+    phone: "",
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -69,15 +69,13 @@ function CreateAdminModal({ onClose, onAdminAdded }) {
             className="w-full p-3 border-2 border-gray-300 rounded-lg"
             required
           />
-          {/* ===== 2. TAMBAHKAN INPUT UNTUK PHONE ===== */}
           <input
-            type="tel" // Gunakan type="tel" untuk nomor telepon
+            type="tel" 
             name="phone"
             value={formData.phone}
             onChange={handleChange}
             placeholder="Phone Number (e.g., 08123456789)"
             className="w-full p-3 border-2 border-gray-300 rounded-lg"
-            // Tidak wajib diisi (hapus 'required' jika opsional)
           />
           <input
             type="password"
