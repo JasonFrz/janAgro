@@ -16,15 +16,17 @@ const productsRoutes = require("./src/routes/productsRoutes");
 const voucherRoutes = require("./src/routes/voucherRoutes");
 const adminRoutes = require("./src/routes/adminRoutes");
 const userRoutes = require('./src/routes/userRoutes');
- const cartRoutes = require('./src/routes/cartRoutes');
- const checkoutRoutes = require('./src/routes/checkoutRoutes');
+const cartRoutes = require('./src/routes/cartRoutes');
+const checkoutRoutes = require('./src/routes/checkoutRoutes');
+const rajaRoutes = require("./src/routes/raja.route");
 
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productsRoutes);
 app.use("/api/vouchers", voucherRoutes); 
 app.use("/api/admin", adminRoutes);
 app.use('/api/users', userRoutes);
- app.use('/api/cart', cartRoutes);
+app.use('/api/cart', cartRoutes);
 app.use('/api/checkouts', checkoutRoutes);
+app.use("/api/raja", rajaRoutes);
 
 app.listen(port, () => console.log(`Example app listening on port ${port}!`));
