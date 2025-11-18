@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Trash2, AlertCircle, CheckCircle } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
+import L from "leaflet";
+import  MapComponent  from "../components/MapComponent"
 import axios from "axios";
 import {
   updateCartQuantity,
@@ -85,6 +87,54 @@ const Cart = ({ produk, vouchers }) => {
   const [notification, setNotification] = useState({ message: "", type: "" });
 
   const hasFetched = useRef(false);
+  // For example, your warehouse or store
+  const [mapPos, setMapPos] = useState([-6.2, 106.8]); // initial Point B
+  const [distanceKm, setDistanceKm] = useState(0);
+const warehousePos = L.latLng(-6.2, 106.816666); // fixed Point A
+
+
+
+useEffect(() => {
+  const pointB = L.latLng(mapPos[0], mapPos[1]);
+  const distanceMeters = warehousePos.distanceTo(pointB);
+  setDistanceKm((distanceMeters / 1000).toFixed(2)); // km with 2 decimals
+}, [mapPos]);
+
+  useEffect(() => {
+    fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${mapPos[0]}&lon=${mapPos[1]}`
+    )
+      .then((res) => res.json())
+      .then((data) => setCustomerAddress(data.display_name))
+      .catch(() => setCustomerAddress(""));
+
+
+    axios.put(`${API_URL}/users/update-address/${user._id}`, {
+      address: customerAddress,
+    }, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    .then(res => console.log(res.data))
+    .catch(err => console.error(err));
+
+  }, [mapPos]);
+
+ 
+// useEffect(() => {
+//   const fetchAddress = async () => {
+//     if (!mapPos) return;
+//     try {
+//       const res = await axios.get(
+//         `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${mapPos[0]}&lon=${mapPos[1]}`
+//       );
+//       setCustomerAddress(res.data.display_name);
+//     } catch (err) {
+//       console.error(err);
+//       setCustomerAddress(`${mapPos[0].toFixed(5)}, ${mapPos[1].toFixed(5)}`);
+//     }
+//   };
+//   fetchAddress();
+// }, [mapPos]);
 
   useEffect(() => {
     if (!hasFetched.current && token) {
@@ -154,7 +204,12 @@ const Cart = ({ produk, vouchers }) => {
     (sum, item) => sum + item.quantity,
     0
   );
-  const kurirFee = 10000;
+  // Base fee per km
+  const feePerKm = 10000;
+
+  // Calculate dynamic courier fee based on distance
+  const kurirFee = distanceKm ? Math.ceil(distanceKm) * feePerKm : feePerKm;
+
   const discountAmount = appliedVoucher
     ? (subtotal * appliedVoucher.discountPercentage) / 100
     : 0;
@@ -405,48 +460,67 @@ const Cart = ({ produk, vouchers }) => {
                 </div>
               )}
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Receiver Name
-                  </label>
-                  <input
-                    type="text"
-                    value={customerName}
-                    onChange={(e) => setCustomerName(e.target.value)}
-                    disabled={useProfileName}
-                    className="w-full p-3 border rounded-sm focus:ring-2 focus:ring-black disabled:bg-gray-100"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Full Address
-                  </label>
-                  <textarea
-                    value={customerAddress}
-                    onChange={(e) => setCustomerAddress(e.target.value)}
-                    disabled={useProfileAddress}
-                    className="w-full p-3 border rounded-sm focus:ring-2 focus:ring-black disabled:bg-gray-100"
-                    rows="3"
-                  ></textarea>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Receiver Phone Number
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
-                      +62
-                    </span>
-                    <input
-                      type="tel"
-                      value={customerPhone}
-                      onChange={handlePhoneChange}
-                      disabled={useProfilePhone}
-                      className="w-full pl-12 pr-4 py-3 border rounded-sm focus:ring-2 focus:ring-black disabled:bg-gray-100"
-                    />
-                  </div>
-                </div>
-              </div>
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1">
+      Receiver Name
+    </label>
+    <input
+      type="text"
+      value={customerName}
+      onChange={(e) => setCustomerName(e.target.value)}
+      disabled={useProfileName}
+      className="w-full p-3 border rounded-sm focus:ring-2 focus:ring-black disabled:bg-gray-100"
+    />
+  </div>
+
+<div>
+  <label className="block text-sm font-medium text-gray-700 mb-1">
+    Full Address
+  </label>
+
+  <div className="space-y-2">
+    {/* Map container */}
+    <MapComponent 
+      mapPos={mapPos} 
+      setMapPos={setMapPos} 
+      setDistanceKm={setDistanceKm} 
+    />
+
+    {/* Input box showing selected address */}
+    <input
+      type="text"
+      value={customerAddress}
+      onChange={(e) => setCustomerAddress(e.target.value)}
+      placeholder="Selected address will appear here..."
+      className="w-full p-3 border rounded-sm focus:ring-2 focus:ring-black"
+    />
+  </div>
+
+  {/* Optional: show distance */}
+  <p className="mt-2 text-sm text-gray-600">
+    Distance from warehouse: {distanceKm} km
+  </p>
+</div>
+
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1">
+      Receiver Phone Number
+    </label>
+    <div className="relative">
+      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
+        +62
+      </span>
+      <input
+        type="tel"
+        value={customerPhone}
+        onChange={handlePhoneChange}
+        disabled={useProfilePhone}
+        className="w-full pl-12 pr-4 py-3 border rounded-sm focus:ring-2 focus:ring-black disabled:bg-gray-100"
+      />
+    </div>
+  </div>
+</div>
+
             </div>
           </div>
           <div className="lg:col-span-1">

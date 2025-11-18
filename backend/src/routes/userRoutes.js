@@ -36,6 +36,48 @@ router.get("/test", (req, res) => {
   res.send("File userRoutes.js berhasil dimuat!");
 });
 
+// Update only the address
+router.put(
+  "/update-address/:userId",
+  authenticateToken,
+  async (req, res) => {
+    if (req.user.id !== req.params.userId) {
+      return res.status(403).json({
+        success: false,
+        message: "Akses ditolak: Anda tidak diizinkan untuk mengedit alamat ini.",
+      });
+    }
+
+    try {
+      const { address } = req.body;
+      if (!address) {
+        return res.status(400).json({ success: false, message: "Alamat tidak boleh kosong." });
+      }
+
+      const user = await User.findById(req.params.userId);
+      if (!user) {
+        return res.status(404).json({ success: false, message: "Pengguna tidak ditemukan." });
+      }
+
+      user.address = address;
+      await user.save();
+
+      const userResponse = user.toObject();
+      delete userResponse.password;
+
+      res.status(200).json({
+        success: true,
+        message: "Alamat berhasil diperbarui!",
+        user: userResponse,
+      });
+    } catch (error) {
+      console.error("Error updating address:", error);
+      res.status(500).json({ success: false, message: "Terjadi kesalahan pada server." });
+    }
+  }
+);
+
+
 router.put(
   "/update-avatar/:userId",
   [authenticateToken, upload.single('avatar')], 
