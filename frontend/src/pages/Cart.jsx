@@ -205,7 +205,7 @@ useEffect(() => {
     0
   );
   // Base fee per km
-  const feePerKm = 10000;
+  const feePerKm = 1000;
 
   // Calculate dynamic courier fee based on distance
   const kurirFee = distanceKm ? Math.ceil(distanceKm) * feePerKm : feePerKm;

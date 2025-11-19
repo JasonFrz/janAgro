@@ -13,6 +13,8 @@ router.get("/get-all-users", async (req, res) => {
   }
 });
 
+
+
 router.put("/update-user/:id", async (req, res) => {
   try {
     const { id } = req.params;

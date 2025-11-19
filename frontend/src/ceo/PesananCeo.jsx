@@ -1,5 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { Check, X, Search, ChevronDown } from "lucide-react";
+import { useDispatch, useSelector } from "react-redux";
+import { updateCheckoutStatus, setCheckouts } from "../features/admin/adminSlice";
 
 const StatusBadge = ({ status }) => {
   const statusStyles = {
@@ -39,20 +41,22 @@ function PesananCeo({
   onApproveCancellation,
   onRejectCancellation,
 }) {
+  const dispatch = useDispatch();
+  const adminCheckouts = useSelector((state) => state.admin?.checkouts || []); // read from redux
+
   const [searchTerm, setSearchTerm] = useState("");
   const [activeDropdown, setActiveDropdown] = useState(null);
 
+  // Use Redux checkouts when available, fall back to prop
+  const orders = adminCheckouts.length ? adminCheckouts : (checkouts || []);
+
+  // remove local orders state and sync effects
   useEffect(() => {
-    const handleScroll = () => {
-      if (activeDropdown) setActiveDropdown(null);
-    };
-    if (activeDropdown) {
-      window.addEventListener("scroll", handleScroll, true);
+    // if parent passed checkouts and store is empty, you may want to initialize store
+    if ((!adminCheckouts || adminCheckouts.length === 0) && checkouts && checkouts.length > 0) {
+      dispatch(setCheckouts(checkouts));
     }
-    return () => {
-      window.removeEventListener("scroll", handleScroll, true);
-    };
-  }, [activeDropdown]);
+  }, [adminCheckouts, checkouts, dispatch]);
 
   const pendingReturns = useMemo(
     () => checkouts.filter((o) => o.status === "pengembalian diajukan"), // Status disesuaikan
@@ -88,9 +92,22 @@ function PesananCeo({
     }
   };
 
-  const handleStatusChange = (orderId, newStatus) => {
-    onUpdateOrderStatus(orderId, newStatus);
+  const handleStatusChange = async (orderId, newStatus) => {
     setActiveDropdown(null);
+    const prev = orders.slice();
+
+    // optimistic update in Redux
+    const optimistic = orders.map((o) => (o._id === orderId ? { ...o, status: newStatus } : o));
+    dispatch(setCheckouts(optimistic));
+
+    try {
+      await dispatch(updateCheckoutStatus({ id: orderId, status: newStatus })).unwrap();
+      if (typeof onUpdateOrderStatus === "function") onUpdateOrderStatus(orderId, newStatus);
+    } catch (err) {
+      // rollback on error
+      dispatch(setCheckouts(prev));
+      console.error("Failed to update status:", err);
+    }
   };
 
   const ActionCard = ({ title, count, children }) => (

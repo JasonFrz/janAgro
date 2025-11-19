@@ -159,4 +159,42 @@ router.get("/trigger-success/:orderId", async (req, res) => {
     }
 });
 
+router.put("/:id/status", authenticateToken, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const checkout = await Checkout.findById(id);
+    if (!checkout) return res.status(404).json({ success: false, message: "Checkout not found" });
+
+    // basic validation (adjust allowed statuses as needed)
+    const allowed = ["pending", "diproses", "dikirim", "sampai", "dibatalkan", "selesai", "pengembalian"];
+    if (!allowed.includes(status)) {
+      return res.status(400).json({ success: false, message: "Invalid status value" });
+    }
+
+    // update status
+    checkout.status = status;
+    await checkout.save();
+
+    // If you need to adjust product stock when moving to 'diproses', update here:
+    if (status === "diproses" && Array.isArray(checkout.items)) {
+      for (const it of checkout.items) {
+        if (it.product && it.quantity) {
+          try {
+            await Product.findByIdAndUpdate(it.product, { $inc: { stock: -it.quantity } });
+          } catch (err) {
+            console.warn(`Failed to update stock for product ${it.product}:`, err.message);
+          }
+        }
+      }
+    }
+
+    return res.status(200).json({ success: true, data: checkout });
+  } catch (error) {
+    console.error("Error updating checkout status:", error);
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
 module.exports = router;
