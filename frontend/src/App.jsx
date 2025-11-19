@@ -26,10 +26,11 @@ import {
   updateProduct,
   deleteProduct,
 } from "./features/products/productSlice";
+import { setCredentials } from "./features/user/userSlice";
 
 function App() {
   const [showProfile, setShowProfile] = useState(false);
-  const [user, setUser] = useState(null);
+  // const [user, setUser] = useState(null);    
   const [isAdmin, setIsAdmin] = useState(false);
   const [isPemilik, setIsPemilik] = useState(false);
   const [cart, setCart] = useState([]);
@@ -44,43 +45,46 @@ function App() {
   const { items: produk, status: productStatus } = useSelector(
     (state) => state.products
   );
-  const token = useSelector((state) => state.users.token);
-  const isAuthenticated = useSelector((state) => state.users.isAuthenticated);
+const { user, token, isAuthenticated } = useSelector((state) => state.users);
 
-  useEffect(() => {
-    if (productStatus === "idle") {
-      dispatch(fetchProducts());
-    }
-
-    const fetchUserProfile = async () => {
-      const token = localStorage.getItem("token");
-      if (token) {
+ useEffect(() => {
+    const bootstrapSession = async () => {
+      const storedToken = localStorage.getItem("token");
+      if (storedToken && !token) {
         try {
           const response = await fetch(`${API_URL}/auth/profile`, {
-            headers: { Authorization: `Bearer ${token}` },
+            headers: { Authorization: `Bearer ${storedToken}` },
           });
+
           if (response.ok) {
             const data = await response.json();
-            setUser(data.user);
+            // Ini adalah langkah paling penting:
+            // Mengisi kembali state Redux dengan data user dan token dari localStorage.
+            dispatch(setCredentials({ user: data.user, token: storedToken }));
+ 
           } else {
+            // Jika token tidak valid (misalnya kedaluwarsa), hapus dari localStorage.
             localStorage.removeItem("token");
-            setUser(null);
           }
         } catch (error) {
-          console.error("Error fetching profile:", error);
+          console.error("Gagal memuat sesi:", error);
           localStorage.removeItem("token");
         }
       }
     };
 
-    fetchUserProfile();
-  }, [productStatus, dispatch, API_URL]);
+    bootstrapSession();
+
+    if (productStatus === "idle") {
+      dispatch(fetchProducts());
+    }
+  },  [dispatch, API_URL, productStatus, token]);
 
   useEffect(() => {
     if (user && user.role) {
       const role = user.role.toLowerCase();
       setIsAdmin(role === "admin");
-      setIsPemilik(role === "pemilik");
+      setIsPemilik(role === "owner" || role === "pemilik");
     } else {
       setIsAdmin(false);
       setIsPemilik(false);
@@ -205,29 +209,18 @@ function App() {
     }
   };
 
-  useEffect(() => {
+ useEffect(() => {
     const fetchCart = async () => {
-      const token = localStorage.getItem("token");
-      if (user && token) {
-        console.log("FETCHING CART for user:", user.name);
+      if (user && token) { // Gunakan token dari Redux
         try {
           const response = await axios.get(`${API_URL}/cart`, {
             headers: { Authorization: `Bearer ${token}` },
           });
-          -console.log("RAW RESPONSE from /api/cart:", response);
-
           if (response.data.success) {
-            console.log(
-              "DATA to be set into cart state:",
-              response.data.data.items
-            );
             setCart(response.data.data.items || []);
           }
         } catch (error) {
-          console.error(
-            "Gagal mengambil data keranjang (fetchCart):",
-            error.response || error.message
-          ); // <-- LOG 4: Lihat detail error
+          console.error("Gagal mengambil data keranjang (fetchCart):", error.response || error.message);
           setCart([]);
         }
       } else {
@@ -235,7 +228,7 @@ function App() {
       }
     };
     fetchCart();
-  }, [user]);
+  }, [user, token, API_URL]);
 
   const handleUpdateCartQuantity = async (productId, newQuantity) => {
     const token = localStorage.getItem("token");
@@ -302,7 +295,7 @@ function App() {
     };
 
     fetchCheckouts();
-  }, [user]);
+  }, [user, token, API_URL]); 
 
   const handleCheckout = async (checkoutData) => {
     // TOKEN
@@ -374,34 +367,21 @@ function App() {
       );
     }
   };
-  const handleProfileSave = async (userId, payload) => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      return {
-        success: false,
-        message: "Autentikasi gagal. Silakan masuk lagi.",
-      };
+   const handleProfileSave = async (userId, payload) => {
+    if (!token) { // Ambil token dari Redux
+      return { success: false, message: "Autentikasi gagal. Token tidak tersedia." };
     }
-
     try {
-      const response = await axios.put(
-        `${API_URL}/users/update-profile/${userId}`,
-        payload,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
+      const response = await axios.put(`${API_URL}/users/update-profile/${userId}`, payload, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (response.data.success) {
-        setUser(response.data.user);
+        // Hapus setUser, cukup dispatch ke Redux
+        dispatch(setCredentials({ user: response.data.user, token }));
         return { success: true, message: "Profil berhasil diperbarui!" };
       }
     } catch (error) {
-      return {
-        success: false,
-        message:
-          error.response?.data?.message || "Terjadi kesalahan pada server.",
-      };
+      return { success: false, message: error.response?.data?.message || "Terjadi kesalahan pada server." };
     }
   };
 
@@ -580,6 +560,10 @@ function App() {
     fetchProducts();
   }, []);
 
+   const handleAvatarUpdateSuccess = (updatedUser) => {
+    // Dispatch ke Redux untuk memperbarui state user di seluruh aplikasi
+  dispatch(setCredentials({ user: updatedUser, token: token }));
+  };
   return (
     <div className="min-h-screen bg-white">
       <Navbar
@@ -663,8 +647,8 @@ function App() {
               user ? (
                 <Profile
                   user={user}
-                  onAvatarChange={handleAvatarChange}
                   onProfileSave={handleProfileSave}
+                  onAvatarUpdateSuccess={handleAvatarUpdateSuccess}
                 />
               ) : (
                 <Home API_URL={API_URL} />
@@ -739,7 +723,7 @@ function App() {
         isOpen={showProfile}
         onClose={() => setShowProfile(false)}
         user={user}
-        setUser={setUser}
+        
         setIsAdmin={setIsAdmin}
         setShowProfile={setShowProfile}
         API_URL={API_URL}

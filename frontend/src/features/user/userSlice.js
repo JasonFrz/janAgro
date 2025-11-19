@@ -1,20 +1,11 @@
-// import { createSlice } from "@reduxjs/toolkit";
-
-// const intialState = {
-//   isAuthenticated: false,
-//   token: null,
-//   user: null,
-//   error: null,
-//   status: "idle",
-//   role: null,
-// };
+// src/features/user/userSlice.js
 
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
-
+// --- Bagian AsyncThunk Anda tetap sama ---
 export const fetchUsers = createAsyncThunk(
   "users/get-all-users",
   async (_, { rejectWithValue }) => {
@@ -50,6 +41,8 @@ export const loginUser = createAsyncThunk(
         identifier,
         password,
       });
+      // Simpan token ke localStorage saat login berhasil
+      localStorage.setItem('token', res.data.token); 
       return res.data; // { token, user }
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || "Login failed");
@@ -58,7 +51,8 @@ export const loginUser = createAsyncThunk(
 );
 
 export const logoutUser = createAsyncThunk("users/logoutUser", async () => {
-  // If your backend has logout route, call it here
+  // Hapus token dari localStorage saat logout
+  localStorage.removeItem('token');
   return null;
 });
 
@@ -73,54 +67,77 @@ const userSlice = createSlice({
         token: null,
         user: null,
         successMessage: null,
-  
-        
     },
-    reducers: {},
-    extraReducers: (builder) => {
-        builder.addCase(fetchUsers.pending, (state) => {
-            state.loading = true;
-            state.error = null;
-        });
-        builder.addCase(fetchUsers.fulfilled, (state, action) => {
-            state.loading = false;
-            state.users = action.payload;
-        });
-        
-        builder.addCase(fetchUsers.rejected, (state, action) => {
-            state.loading = false;
-            state.error = action.payload;
-        });
-        builder.addCase(addUser.pending, (state) => {
-            state.loading = true;
-            state.error = null;
-        });
-        builder.addCase(addUser.fulfilled, (state, action) => {
-            state.loading = false;
-            state.users.push(action.payload);
+    // --- PERBAIKAN UTAMA DI SINI ---
+    // Tambahkan reducer untuk action sinkron
+    reducers: {
+        // Reducer ini akan dipanggil dari App.jsx untuk mengisi ulang state
+        setCredentials: (state, action) => {
+            state.user = action.payload.user;
+            state.token = action.payload.token;
             state.isAuthenticated = true;
-            state.successMessage = action.payload.message;
-        });
-        builder.addCase(addUser.rejected, (state, action) => {
-            state.loading = false;
-            state.error = action.payload;
-        });
+        },
+        // Reducer untuk membersihkan state saat logout
+        clearCredentials: (state) => {
+            state.user = null;
+            state.token = null;
+            state.isAuthenticated = false;
+        }
+    },
+    extraReducers: (builder) => {
         builder
-          .addCase(loginUser.pending, (state) => {
-            state.loading = true;
-            state.error = null;
-          })  
-          .addCase(loginUser.rejected, (state, action) => {
-            state.loading = false;
-            state.error = action.payload;
-          })
-          .addCase(loginUser.fulfilled, (state, action) => {
-          state.loading = false;
-          state.user = action.payload.user;
-          state.token = action.payload.token;
-          state.isAuthenticated = true; // ✅ add this line
-        });
+            .addCase(fetchUsers.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(fetchUsers.fulfilled, (state, action) => {
+                state.loading = false;
+                state.users = action.payload;
+            })
+            .addCase(fetchUsers.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
+            .addCase(addUser.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })
+            .addCase(addUser.fulfilled, (state, action) => {
+                state.loading = false;
+                state.users.push(action.payload);
+                // state.isAuthenticated tidak perlu di-set di sini karena register tidak otomatis login
+            })
+            .addCase(addUser.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
+            .addCase(loginUser.pending, (state) => {
+                state.loading = true;
+                state.error = null;
+            })  
+            .addCase(loginUser.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+                state.user = null;
+                state.token = null;
+                state.isAuthenticated = false;
+            })
+            .addCase(loginUser.fulfilled, (state, action) => {
+                state.loading = false;
+                state.user = action.payload.user;
+                state.token = action.payload.token;
+                state.isAuthenticated = true;
+            })
+            // Tambahkan case untuk logoutUser
+            .addCase(logoutUser.fulfilled, (state) => {
+                state.user = null;
+                state.token = null;
+                state.isAuthenticated = false;
+            });
     }
 });
+
+// --- EKSPOR ACTION BARU YANG SUDAH DIBUAT ---
+export const { setCredentials, clearCredentials } = userSlice.actions;
 
 export default userSlice.reducer;

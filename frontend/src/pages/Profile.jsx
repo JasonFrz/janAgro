@@ -1,51 +1,84 @@
-import React, { useState, useRef } from "react";
-import {
-  Camera,
-  User,
-  Mail,
-  Calendar,
-  Edit,
-  AtSign,
-  Phone,
-  MapPin,
-} from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
+import { Camera, User, Mail, Calendar, Edit, AtSign, Phone, MapPin } from "lucide-react";
 import EditProfileModal from "../components/EditProfileModal";
+import axios from "axios";
+
+const API_URL = import.meta.env.VITE_API_URL;
+
 const formatPhoneNumber = (phone) => {
-  if (!phone) return "-";
-  const digits = phone.replace(/\D/g, "");
-  let formatted = "+62 ";
-  if (digits.length > 4) {
-    formatted += digits.substring(0, 4) + "-";
-    if (digits.length > 8) {
-      formatted += digits.substring(4, 8) + "-";
-      formatted += digits.substring(8);
+    if (!phone) return "-";
+    const digits = phone.replace(/\D/g, "");
+    let formatted = "+62 ";
+    if (digits.length > 4) {
+      formatted += digits.substring(0, 4) + "-";
+      if (digits.length > 8) {
+        formatted += digits.substring(4, 8) + "-";
+        formatted += digits.substring(8);
+      } else {
+        formatted += digits.substring(4);
+      }
     } else {
-      formatted += digits.substring(4);
+      formatted += digits;
     }
-  } else {
-    formatted += digits;
-  }
-  return formatted;
+    return formatted;
 };
-const Profile = ({
-  user,
-  onAvatarChange,
-  onProfileSave, 
-}) => {
-  const [preview, setPreview] = useState(user?.avatar || null);
+
+const Profile = ({ user, onProfileSave, onAvatarUpdateSuccess }) => {
+  console.log("Data user yang diterima di Profile:", user);
+  
+  const [preview, setPreview] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const fileInputRef = useRef(null);
+  const [uploadError, setUploadError] = useState('');
 
-  const handleFileChange = (event) => {
+ useEffect(() => {
+    if (user && user.avatar) {
+      const baseUrl = API_URL.replace("/api", ""); 
+      
+      setPreview(`${baseUrl}/${user.avatar}`);
+    } else {
+      setPreview(null);
+    }
+  }, [user]);
+
+  const handleFileChange = async (event) => {
     const file = event.target.files[0];
+    if (!file) return;
+
     if (file && file.type.startsWith("image/")) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const newAvatarUrl = reader.result;
-        setPreview(newAvatarUrl);
-        onAvatarChange(newAvatarUrl);
-      };
-      reader.readAsDataURL(file);
+      const formData = new FormData();
+      formData.append("avatar", file);
+
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) {
+            setUploadError("Autentikasi gagal. Silakan login kembali.");
+            return;
+        }
+
+        const response = await axios.put(
+          `${API_URL}/users/update-avatar/${user._id}`,
+          
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        
+        if (response.data.success) {
+          onAvatarUpdateSuccess(response.data.user); 
+          setUploadError('');
+        }
+      } catch (error) {
+        const message = error.response?.data?.message || "Gagal mengupload gambar.";
+        setUploadError(message);
+        setPreview(user?.avatar ? `${API_URL}/${user.avatar}` : null);
+      }
+    } else {
+        setUploadError("Hanya file gambar yang diizinkan (jpg, png).");
     }
   };
 
@@ -54,18 +87,13 @@ const Profile = ({
   };
 
   if (!user) {
-    return (
-      <div className="pt-24 text-center">
-        Silakan masuk untuk melihat profil Anda.
-      </div>
-    );
+    return <div className="pt-24 text-center">Silakan masuk untuk melihat profil Anda.</div>;
   }
 
   const handleSaveFromModal = async (userId, payload) => {
     const result = await onProfileSave(userId, payload);
     return result;
   };
-
   return (
     <>
       {isModalOpen && (
@@ -87,6 +115,7 @@ const Profile = ({
                 Kelola detail profil dan akun Anda.
               </p>
             </div>
+                 {uploadError && <p className="text-center text-red-500 mb-4">{uploadError}</p>}
             <div className="flex flex-col items-center space-y-4 mb-12">
               <div className="relative">
                 <div className="w-32 h-32 rounded-full bg-gray-100 flex items-center justify-center border-2 border-gray-200 overflow-hidden">
@@ -148,7 +177,7 @@ const Profile = ({
                   <div className="flex-grow">
                     <p className="text-sm text-gray-500">Phone Number</p>
                     <p className="text-black font-medium">
-                      {formatPhoneNumber(user.no_telp || user.noTelp)}
+                       {formatPhoneNumber(user.phone)}
                     </p>
                   </div>
                 </div>
@@ -157,7 +186,7 @@ const Profile = ({
                   <div className="flex-grow">
                     <p className="text-sm text-gray-500">Address</p>
                     <p className="text-black font-medium whitespace-pre-line">
-                      {user.alamat || "Alamat belum diatur"}
+                      {user.address || "Alamat belum diatur"}
                     </p>
                   </div>
                 </div>

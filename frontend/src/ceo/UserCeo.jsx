@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import { Edit, Trash2, UserX, UserCheck } from "lucide-react";
-import ConfirmationModal from "./ConfirmationModalCeo"; 
-import EditUserModalCeo from "./EditUserModalCeo";   
+import { Edit, Trash2, UserX, UserCheck, User, PlusCircle } from "lucide-react";
+import ConfirmationModal from "./ConfirmationModalCeo";
+import EditUserModalCeo from "./EditUserModalCeo";
+import CreateAdminModal from "./CreateAdminModal";
 
 const formatPhoneNumber = (phone) => {
   if (!phone) return "-";
@@ -27,6 +28,7 @@ function UserCeo() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [editingUser, setEditingUser] = useState(null);
+  const [isCreateAdminModalOpen, setCreateAdminModalOpen] = useState(false);
   const [confirmation, setConfirmation] = useState({
     isOpen: false,
     action: null,
@@ -34,6 +36,7 @@ function UserCeo() {
   });
 
   const API_URL = import.meta.env.VITE_API_URL;
+  const BASE_SERVER_URL = API_URL.replace("/api", "");
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -54,6 +57,10 @@ function UserCeo() {
     fetchUsers();
   }, [API_URL]);
 
+  const handleAdminAdded = (newAdmin) => {
+    setUsers((prevUsers) => [newAdmin, ...prevUsers]);
+  };
+
   const handleUpdate = async (id, updatedData) => {
     try {
       const res = await axios.put(
@@ -61,11 +68,7 @@ function UserCeo() {
         updatedData
       );
       if (res.data.success) {
-        setUsers((prev) =>
-          prev.map((u) => (u._id === id ? res.data.data : u))
-        );
-      } else {
-        console.error("Pembaruan gagal:", res.data.message);
+        setUsers((prev) => prev.map((u) => (u._id === id ? res.data.data : u)));
       }
     } catch (err) {
       console.error("Error memperbarui pengguna:", err);
@@ -85,9 +88,7 @@ function UserCeo() {
     try {
       const res = await axios.put(`${API_URL}/admin/toggle-ban/${id}`);
       if (res.data.success) {
-        setUsers((prev) =>
-          prev.map((u) => (u._id === id ? res.data.data : u))
-        );
+        setUsers((prev) => prev.map((u) => (u._id === id ? res.data.data : u)));
       }
     } catch (err) {
       console.error("Error toggling ban:", err);
@@ -97,9 +98,11 @@ function UserCeo() {
   const openConfirmation = (action, user) => {
     setConfirmation({ isOpen: true, action, user });
   };
+
   const closeConfirmation = () => {
     setConfirmation({ isOpen: false, action: null, user: null });
   };
+
   const handleConfirm = () => {
     const { action, user } = confirmation;
     if (action === "delete") handleDelete(user._id);
@@ -107,7 +110,8 @@ function UserCeo() {
     closeConfirmation();
   };
 
-  if (loading) return <div className="text-gray-500 italic">Memuat pengguna...</div>;
+  if (loading)
+    return <div className="text-gray-500 italic">Memuat pengguna...</div>;
   if (error) return <div className="text-red-500">{error}</div>;
 
   const activeUsers = users.filter((u) => !u.isBanned);
@@ -119,9 +123,10 @@ function UserCeo() {
         {title} ({userList.length})
       </h3>
       {userList.length === 0 ? (
-        <p className="text-gray-500 italic">No user in this category.</p>
+        <p className="text-gray-500 italic">
+          Tidak ada pengguna di kategori ini.
+        </p>
       ) : (
-        // ===== PERUBAHAN DI SINI =====
         <div className="overflow-x-auto max-h-96 overflow-y-auto border-2 border-black rounded-lg">
           <table className="min-w-full divide-y-2 divide-gray-300">
             <thead className="bg-gray-50">
@@ -136,6 +141,9 @@ function UserCeo() {
                   Address
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
+                  Role
+                </th>
+                <th className="px-6 py-3 text-left text-xs font-bold text-gray-600 uppercase tracking-wider">
                   Joined
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-bold text-gray-600 uppercase tracking-wider">
@@ -147,24 +155,54 @@ function UserCeo() {
               {userList.map((user) => (
                 <tr key={user._id}>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-bold text-black">
-                      {user.name}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      @{user.username}
+                    <div className="flex items-center">
+                      <div className="flex-shrink-0 h-12 w-12">
+                        {user.avatar ? (
+                          <img
+                            className="h-12 w-12 rounded-full object-cover"
+                            src={`${BASE_SERVER_URL}/${user.avatar}`}
+                            alt={user.name}
+                          />
+                        ) : (
+                          <div className="h-12 w-12 rounded-full bg-gray-200 flex items-center justify-center">
+                            <User className="h-8 w-8 text-gray-500" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="ml-4">
+                        <div className="text-sm font-bold text-black">
+                          {user.name}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          @{user.username}
+                        </div>
+                      </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-600">{user.email}</div>
                     <div className="text-sm text-gray-500">
-                      {formatPhoneNumber(user.no_telp)}
+                      {formatPhoneNumber(user.phone)}
                     </div>
                   </td>
                   <td
                     className="px-6 py-4 text-sm text-gray-600 max-w-xs truncate"
-                    title={user.alamat}
+                    title={user.address}
                   >
-                    {user.alamat || "-"}
+                    {user.address || "-"}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <span
+                      className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full capitalize ${
+                        user.role === "pemilik"
+                          ? "bg-purple-200 text-purple-800"
+                          : user.role === "admin"
+                          ? "bg-blue-200 text-blue-800"
+                          : "bg-green-200 text-green-800"
+                      }`}
+                    >
+                      {user.role}
+                    </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                     {new Date(user.createdAt).toLocaleDateString("id-ID")}
@@ -243,6 +281,12 @@ function UserCeo() {
           onSave={handleUpdate}
         />
       )}
+      {isCreateAdminModalOpen && (
+        <CreateAdminModal
+          onClose={() => setCreateAdminModalOpen(false)}
+          onAdminAdded={handleAdminAdded}
+        />
+      )}
       <ConfirmationModal
         isOpen={confirmation.isOpen}
         onClose={closeConfirmation}
@@ -253,7 +297,16 @@ function UserCeo() {
         confirmButtonColor={details.btnColor}
       />
       <div className="bg-white border-2 border-black rounded-lg p-6 space-y-8 shadow-xl">
-        <h2 className="text-2xl font-black pb-4 border-b-2 border-black">User Management</h2>
+        <div className="flex justify-between items-center pb-4 border-b-2 border-black">
+          <h2 className="text-2xl font-black">User Management</h2>
+          <button
+            onClick={() => setCreateAdminModalOpen(true)}
+            className="flex items-center justify-center px-4 py-2 bg-black text-white font-bold rounded-lg hover:bg-gray-800 transition-colors"
+          >
+            <PlusCircle size={20} className="mr-2" />
+            Create Admin
+          </button>
+        </div>
         <UserTable title="Pengguna Aktif" userList={activeUsers} />
         <UserTable
           title="Pengguna Diblokir"

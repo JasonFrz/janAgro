@@ -44,13 +44,12 @@ function Admin({
         );
       case "users":
         return (
-      <UserAdmin
-        users={users}
-        onUpdate={handleUpdate}
-        onDelete={handleDelete}
-        onToggleBan={handleToggleBan}
-      />
-
+          <UserAdmin
+            users={users}
+            onUpdate={handleUpdate}
+            onDelete={handleDelete}
+            onToggleBan={handleToggleBan}
+          />
         );
       case "produk":
         return (

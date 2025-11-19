@@ -11,6 +11,12 @@ import {
   XCircle,
 } from "lucide-react";
 
+// Definisikan SERVER_URL di atas komponen
+const API_URL = import.meta.env.VITE_API_URL;
+const SERVER_URL = API_URL
+  ? API_URL.replace("/api", "")
+  : "http://localhost:3000";
+
 const ConfirmationModal = ({ order, onConfirm, onCancel }) => {
   if (!order) return null;
   return (
@@ -18,8 +24,8 @@ const ConfirmationModal = ({ order, onConfirm, onCancel }) => {
       <div className="bg-white p-8 rounded-lg shadow-lg text-center max-w-sm animate-fade-in">
         <h2 className="text-xl font-bold mb-4">Complete Order?</h2>
         <p className="text-gray-600 mb-6">
-          Are you sure you want to complete order #
-          {order._id.substring(0, 8)}...? This action cannot be undone.
+          Are you sure you want to complete order #{order._id.substring(0, 8)}
+          ...? This action cannot be undone.
         </p>
         <div className="flex justify-center gap-4">
           <button
@@ -83,10 +89,17 @@ const formatPhoneNumber = (phone) => {
   const digits = String(phone).replace(/\D/g, "");
   let formatted = "+62 ";
   if (digits.length > 4) {
-    formatted += `${digits.substring(0, 4)}-${digits.substring(
-      4,
-      8
-    )}-${digits.substring(8)}`;
+    // Format: +62 812-3456-7890
+    let remaining = digits;
+    if (remaining.length > 4) {
+      formatted += remaining.substring(0, 4) + "-";
+      remaining = remaining.substring(4);
+    }
+    if (remaining.length > 4) {
+      formatted += remaining.substring(0, 4) + "-";
+      remaining = remaining.substring(4);
+    }
+    formatted += remaining;
   } else {
     formatted += digits;
   }
@@ -150,10 +163,11 @@ const Pesanan = ({
     );
   }
 
-  const userCheckouts = checkouts;
+  const userCheckouts = checkouts || [];
 
-  // IMPORTANT: Do not translate these keys as they are used for logic
+  // Status levels for progress bar logic
   const statusLevels = {
+    pending: 0,
     diproses: 1,
     "pembatalan diajukan": 1,
     dikirim: 2,
@@ -205,6 +219,7 @@ const Pesanan = ({
                 const isReturnSuccess =
                   order.status === "pengembalian berhasil";
                 const isCancelled = order.status === "dibatalkan";
+                const currentStatusLevel = statusLevels[order.status] || 0;
 
                 return (
                   <div
@@ -219,7 +234,7 @@ const Pesanan = ({
                         <p className="text-sm text-gray-500">
                           Date:{" "}
                           {new Date(order.createdAt).toLocaleDateString(
-                            "en-US", // Changed locale for English date format
+                            "en-US",
                             {
                               day: "numeric",
                               month: "long",
@@ -242,30 +257,29 @@ const Pesanan = ({
                         className="absolute top-6 left-0 h-1 bg-black -translate-y-1/2 transition-all duration-500"
                         style={{
                           width: `${
-                            ((statusLevels[order.status] || 1) - 1) * 33.3
+                            currentStatusLevel > 0
+                              ? (currentStatusLevel - 1) * 33.3
+                              : 0
                           }%`,
                         }}
                       ></div>
                       <TrackerStep
                         icon={<Package />}
                         label="Processed"
-                        isActive={
-                          order.status === "diproses" ||
-                          order.status === "pembatalan diajukan"
-                        }
-                        isCompleted={statusLevels[order.status] >= 1}
+                        isActive={currentStatusLevel === 1}
+                        isCompleted={currentStatusLevel >= 1}
                       />
                       <TrackerStep
                         icon={<Truck />}
                         label="Shipped"
-                        isActive={order.status === "dikirim"}
-                        isCompleted={statusLevels[order.status] >= 2}
+                        isActive={currentStatusLevel === 2}
+                        isCompleted={currentStatusLevel >= 2}
                       />
                       <TrackerStep
                         icon={<CheckCircle />}
                         label="Delivered"
-                        isActive={order.status === "sampai"}
-                        isCompleted={statusLevels[order.status] >= 3}
+                        isActive={currentStatusLevel === 3}
+                        isCompleted={currentStatusLevel >= 3}
                       />
                       <TrackerStep
                         icon={isCancelled ? <XCircle /> : <PackageCheck />}
@@ -276,15 +290,21 @@ const Pesanan = ({
                             ? "Cancelled"
                             : "Completed"
                         }
-                        isActive={
-                          order.status === "selesai" ||
-                          isReturnSuccess ||
-                          isCancelled
-                        }
-                        isCompleted={statusLevels[order.status] >= 4}
+                        isActive={currentStatusLevel === 4}
+                        isCompleted={currentStatusLevel >= 4}
                       />
                     </div>
 
+                    {order.status === "pending" && (
+                      <div className="text-center border-t border-b py-6 my-6 bg-blue-50 text-blue-800">
+                        <h3 className="font-semibold mb-4">
+                          Your order is waiting for payment.
+                        </h3>
+                        <p className="text-sm">
+                          Please complete your payment via the Midtrans page.
+                        </p>
+                      </div>
+                    )}
                     {order.status === "diproses" && (
                       <div className="text-center border-t border-b py-6 my-6 bg-gray-50">
                         <h3 className="font-semibold text-black mb-4">
@@ -300,7 +320,7 @@ const Pesanan = ({
                     )}
                     {order.status === "pembatalan diajukan" && (
                       <div className="text-center border-t border-b py-6 my-6 bg-yellow-50 text-yellow-800 flex items-center justify-center gap-3">
-                        <AlertCircle size={20} />
+                        <AlertCircle size={20} />{" "}
                         <p>Awaiting cancellation approval from admin.</p>
                       </div>
                     )}
@@ -325,9 +345,9 @@ const Pesanan = ({
                         </div>
                       </div>
                     )}
-                    {order.status === "pengembalian" && ( // Note: This status is "pengembalian" in code, not "pengembalian diajukan"
+                    {order.status === "pengembalian diajukan" && (
                       <div className="text-center border-t border-b py-6 my-6 bg-yellow-50 text-yellow-800 flex items-center justify-center gap-3">
-                        <AlertCircle size={20} />
+                        <AlertCircle size={20} />{" "}
                         <p>
                           Awaiting return approval (max. 2x24 hour process).
                         </p>
@@ -335,14 +355,14 @@ const Pesanan = ({
                     )}
                     {isReturnSuccess && (
                       <div className="text-center border-t border-b py-6 my-6 bg-green-50 text-green-800 flex items-center justify-center gap-3">
-                        <CheckCircle size={20} />
+                        <CheckCircle size={20} />{" "}
                         <p>Your return request has been approved.</p>
                       </div>
                     )}
                     {order.status === "pengembalian ditolak" && (
                       <div className="text-center border-t border-b py-6 my-6 bg-red-50 text-red-800">
                         <div className="flex items-center justify-center gap-3 mb-4">
-                          <XCircle size={20} />
+                          <XCircle size={20} />{" "}
                           <p>Your return request was rejected.</p>
                         </div>
                         <button
@@ -372,8 +392,18 @@ const Pesanan = ({
                                 className="flex flex-col sm:flex-row gap-4 justify-between sm:items-center border-b pb-4 last:border-b-0"
                               >
                                 <div className="flex gap-4">
-                                  <div className="w-16 h-16 bg-gray-100 rounded-md flex items-center justify-center text-3xl flex-shrink-0">
-                                    {item.image}
+                                  <div className="w-16 h-16 bg-gray-100 rounded-md flex-shrink-0 overflow-hidden">
+                                    {item.image ? (
+                                      <img
+                                        src={`${SERVER_URL}/${item.image}`}
+                                        alt={item.name}
+                                        className="w-full h-full object-cover"
+                                      />
+                                    ) : (
+                                      <div className="w-full h-full flex items-center justify-center text-3xl">
+                                        🪴
+                                      </div>
+                                    )}
                                   </div>
                                   <div>
                                     <p className="font-bold text-black">
