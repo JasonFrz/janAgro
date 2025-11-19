@@ -33,6 +33,50 @@ const formatDate = (dateString) => {
   });
 };
 
+// New: StatusButton component — uses the centralized handleStatusChange (passed as onChange)
+const StatusButton = ({ orderId, currentStatus, targetStatus, label, onChange }) => {
+  const [loading, setLoading] = useState(false);
+  const isActive = currentStatus === targetStatus;
+
+  const statusColorClasses = {
+    diproses: "bg-yellow-500 text-white border-yellow-500 hover:bg-yellow-600",
+    dikirim: "bg-blue-600 text-white border-blue-600 hover:bg-blue-700",
+    sampai: "bg-green-600 text-white border-green-600 hover:bg-green-700",
+    selesai: "bg-green-700 text-white border-green-700 hover:bg-green-800",
+  };
+  const activeClasses = statusColorClasses[targetStatus] || "bg-black text-white border-black";
+  const inactiveClasses = "bg-white text-gray-500 border-gray-300 hover:border-black";
+
+  const handleClick = async (e) => {
+    e && e.stopPropagation();
+    if (isActive || loading) return;
+    if (typeof onChange !== "function") {
+      console.warn("StatusButton: onChange handler not provided");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // delegate to centralized handler (which performs optimistic update + dispatch)
+      await onChange(orderId, targetStatus);
+    } catch (err) {
+      console.error("Status change failed:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleClick}
+      disabled={isActive || loading}
+      className={`w-full px-3 py-2 text-sm rounded-sm border transition ${isActive ? activeClasses : inactiveClasses}`}
+    >
+      {loading ? "Updating..." : label}
+    </button>
+  );
+};
+
 function PesananCeo({
   checkouts,
   onUpdateOrderStatus,
@@ -58,24 +102,25 @@ function PesananCeo({
     }
   }, [adminCheckouts, checkouts, dispatch]);
 
+  // change pending lists to use orders (Redux-backed) instead of prop 'checkouts'
   const pendingReturns = useMemo(
-    () => checkouts.filter((o) => o.status === "pengembalian diajukan"), // Status disesuaikan
-    [checkouts]
+    () => orders.filter((o) => o.status === "pengembalian diajukan"),
+    [orders]
   );
   const pendingCancellations = useMemo(
-    () => checkouts.filter((o) => o.status === "pembatalan diajukan"),
-    [checkouts]
+    () => orders.filter((o) => o.status === "pembatalan diajukan"),
+    [orders]
   );
 
   const filteredCheckouts = useMemo(
     () =>
-      checkouts.filter(
+      orders.filter(
         (order) =>
           (order.nama && order.nama.toLowerCase().includes(searchTerm.toLowerCase())) ||
-          (order._id && order._id.toLowerCase().includes(searchTerm.toLowerCase())) || // Gunakan _id
+          (order._id && order._id.toLowerCase().includes(searchTerm.toLowerCase())) ||
           (order.status && order.status.toLowerCase().includes(searchTerm.toLowerCase()))
       ),
-    [checkouts, searchTerm]
+    [orders, searchTerm]
   );
 
   const handleDropdownToggle = (e, order) => {
@@ -93,10 +138,10 @@ function PesananCeo({
   };
 
   const handleStatusChange = async (orderId, newStatus) => {
+    // kept for backward compatibility — now replaced by StatusButton usage
     setActiveDropdown(null);
     const prev = orders.slice();
 
-    // optimistic update in Redux
     const optimistic = orders.map((o) => (o._id === orderId ? { ...o, status: newStatus } : o));
     dispatch(setCheckouts(optimistic));
 
@@ -104,7 +149,6 @@ function PesananCeo({
       await dispatch(updateCheckoutStatus({ id: orderId, status: newStatus })).unwrap();
       if (typeof onUpdateOrderStatus === "function") onUpdateOrderStatus(orderId, newStatus);
     } catch (err) {
-      // rollback on error
       dispatch(setCheckouts(prev));
       console.error("Failed to update status:", err);
     }
@@ -199,11 +243,21 @@ function PesananCeo({
       {activeDropdown && (
         <>
           <div className="fixed inset-0 z-20" onClick={() => setActiveDropdown(null)}></div>
-          <div style={{ position: "absolute", top: `${activeDropdown.top + 2}px`, left: `${activeDropdown.left}px`, }} className="w-48 bg-white border-2 border-black rounded-md shadow-2xl z-30">
-            <a onClick={() => handleStatusChange(activeDropdown.order._id, "diproses")} className="block px-4 py-2 text-sm text-black hover:bg-gray-100 cursor-pointer">Diproses</a>
-            <a onClick={() => handleStatusChange(activeDropdown.order._id, "dikirim")} className="block px-4 py-2 text-sm text-black hover:bg-gray-100 cursor-pointer">Dikirim</a>
-            <a onClick={() => handleStatusChange(activeDropdown.order._id, "sampai")} className="block px-4 py-2 text-sm text-black hover:bg-gray-100 cursor-pointer">Sampai</a>
-            <a onClick={() => handleStatusChange(activeDropdown.order._id, "selesai")} className="block px-4 py-2 text-sm text-black hover:bg-gray-100 cursor-pointer">Selesai</a>
+
+          {/* Replaced simple anchor list with admin-style StatusButton components */}
+          <div style={{ position: "absolute", top: `${activeDropdown.top + 2}px`, left: `${activeDropdown.left}px`, }} className="w-48 bg-white border-2 border-black rounded-md shadow-2xl z-30 p-2 space-y-2">
+            {/* determine current status from latest orders array */}
+            {(() => {
+              const current = orders.find((o) => o._id === activeDropdown.order._id)?.status || activeDropdown.order.status;
+              return (
+                <>
+                  <StatusButton orderId={activeDropdown.order._id} currentStatus={current} targetStatus="diproses" label="Diproses" onChange={handleStatusChange} />
+                  <StatusButton orderId={activeDropdown.order._id} currentStatus={current} targetStatus="dikirim" label="Dikirim" onChange={handleStatusChange} />
+                  <StatusButton orderId={activeDropdown.order._id} currentStatus={current} targetStatus="sampai" label="Sampai" onChange={handleStatusChange} />
+                  <StatusButton orderId={activeDropdown.order._id} currentStatus={current} targetStatus="selesai" label="Selesai" onChange={handleStatusChange} />
+                </>
+              );
+            })()}
           </div>
         </>
       )}
