@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, Trash2, AlertCircle, CheckCircle } from "lucide-react";
 import { useSelector, useDispatch } from "react-redux";
 import L from "leaflet";
-import  MapComponent  from "../components/MapComponent"
+import MapComponent from "../components/MapComponent";
 import axios from "axios";
 import {
   updateCartQuantity,
@@ -13,7 +13,7 @@ import {
 } from "../features/cart/cartSlice";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
-const SERVER_URL = API_URL.replace("/api", "");
+// const SERVER_URL = API_URL.replace("/api", ""); // Tidak diperlukan lagi untuk gambar Cloudinary
 
 const Notification = ({ message, type, onClose }) => {
   useEffect(() => {
@@ -90,15 +90,13 @@ const Cart = ({ produk, vouchers }) => {
   // For example, your warehouse or store
   const [mapPos, setMapPos] = useState([-6.2, 106.8]); // initial Point B
   const [distanceKm, setDistanceKm] = useState(0);
-const warehousePos = L.latLng(-6.2, 106.816666); // fixed Point A
+  const warehousePos = L.latLng(-6.2, 106.816666); // fixed Point A
 
-
-
-useEffect(() => {
-  const pointB = L.latLng(mapPos[0], mapPos[1]);
-  const distanceMeters = warehousePos.distanceTo(pointB);
-  setDistanceKm((distanceMeters / 1000).toFixed(2)); // km with 2 decimals
-}, [mapPos]);
+  useEffect(() => {
+    const pointB = L.latLng(mapPos[0], mapPos[1]);
+    const distanceMeters = warehousePos.distanceTo(pointB);
+    setDistanceKm((distanceMeters / 1000).toFixed(2)); // km with 2 decimals
+  }, [mapPos]);
 
   useEffect(() => {
     fetch(
@@ -108,7 +106,8 @@ useEffect(() => {
       .then((data) => setCustomerAddress(data.display_name))
       .catch(() => setCustomerAddress(""));
 
-
+    // Opsional: Update alamat user saat map berubah (hati-hati ini akan mengupdate DB setiap map geser)
+    /* 
     axios.put(`${API_URL}/users/update-address/${user._id}`, {
       address: customerAddress,
     }, {
@@ -116,25 +115,8 @@ useEffect(() => {
     })
     .then(res => console.log(res.data))
     .catch(err => console.error(err));
-
+    */
   }, [mapPos]);
-
- 
-// useEffect(() => {
-//   const fetchAddress = async () => {
-//     if (!mapPos) return;
-//     try {
-//       const res = await axios.get(
-//         `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${mapPos[0]}&lon=${mapPos[1]}`
-//       );
-//       setCustomerAddress(res.data.display_name);
-//     } catch (err) {
-//       console.error(err);
-//       setCustomerAddress(`${mapPos[0].toFixed(5)}, ${mapPos[1].toFixed(5)}`);
-//     }
-//   };
-//   fetchAddress();
-// }, [mapPos]);
 
   useEffect(() => {
     if (!hasFetched.current && token) {
@@ -165,9 +147,7 @@ useEffect(() => {
         setUseProfilePhone(isChecked);
         if (isChecked) {
           if (!userPhone) {
-            setError(
-              "Your profile phone number is empty. Please add it first."
-            );
+            setError("Your profile phone number is empty. Please add it first.");
             return;
           }
           setCustomerPhone(userPhone);
@@ -344,9 +324,10 @@ useEffect(() => {
                       className="flex items-center gap-4 border-b pb-4 last:border-b-0 last:pb-0"
                     >
                       <div className="w-20 h-20 bg-gray-100 rounded-sm flex-shrink-0 overflow-hidden">
+                        {/* --- 1. UPDATE GAMBAR CLOUDINARY DISINI --- */}
                         {item.image ? (
                           <img
-                            src={`${SERVER_URL}/${item.image}`}
+                            src={item.image} // Langsung pakai URL Cloudinary
                             alt={item.name}
                             className="w-full h-full object-cover"
                           />
@@ -460,69 +441,71 @@ useEffect(() => {
                 </div>
               )}
               <div className="space-y-4">
-  <div>
-    <label className="block text-sm font-medium text-gray-700 mb-1">
-      Receiver Name
-    </label>
-    <input
-      type="text"
-      value={customerName}
-      onChange={(e) => setCustomerName(e.target.value)}
-      disabled={useProfileName}
-      className="w-full p-3 border rounded-sm focus:ring-2 focus:ring-black disabled:bg-gray-100"
-    />
-  </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Receiver Name
+                  </label>
+                  <input
+                    type="text"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                    disabled={useProfileName}
+                    className="w-full p-3 border rounded-sm focus:ring-2 focus:ring-black disabled:bg-gray-100"
+                  />
+                </div>
 
-<div>
-  <label className="block text-sm font-medium text-gray-700 mb-1">
-    Full Address
-  </label>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Full Address
+                  </label>
 
-  <div className="space-y-2">
-    {/* Map container */}
-    <MapComponent 
-      mapPos={mapPos} 
-      setMapPos={setMapPos} 
-      setDistanceKm={setDistanceKm} 
-    />
+                  {/* --- 2. MAP UI FIXED / STICKY --- */}
+                  <div className="sticky top-24 z-20 bg-white shadow-lg rounded-lg overflow-hidden mb-4 border border-gray-200">
+                    <div className="h-64 w-full relative">
+                        <MapComponent
+                          mapPos={mapPos}
+                          setMapPos={setMapPos}
+                          setDistanceKm={setDistanceKm}
+                        />
+                    </div>
+                    <div className="p-3 bg-gray-50 border-t text-xs text-gray-600 flex justify-between items-center">
+                        <span>Drag marker to set location</span>
+                        <span className="font-bold">Distance: {distanceKm} km</span>
+                    </div>
+                  </div>
+                  {/* ----------------------------------- */}
 
-    {/* Input box showing selected address */}
-    <input
-      type="text"
-      value={customerAddress}
-      onChange={(e) => setCustomerAddress(e.target.value)}
-      placeholder="Selected address will appear here..."
-      className="w-full p-3 border rounded-sm focus:ring-2 focus:ring-black"
-    />
-  </div>
+                  <input
+                    type="text"
+                    value={customerAddress}
+                    onChange={(e) => setCustomerAddress(e.target.value)}
+                    placeholder="Selected address will appear here..."
+                    className="w-full p-3 border rounded-sm focus:ring-2 focus:ring-black mt-2"
+                  />
+                </div>
 
-  {/* Optional: show distance */}
-  <p className="mt-2 text-sm text-gray-600">
-    Distance from warehouse: {distanceKm} km
-  </p>
-</div>
-
-  <div>
-    <label className="block text-sm font-medium text-gray-700 mb-1">
-      Receiver Phone Number
-    </label>
-    <div className="relative">
-      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
-        +62
-      </span>
-      <input
-        type="tel"
-        value={customerPhone}
-        onChange={handlePhoneChange}
-        disabled={useProfilePhone}
-        className="w-full pl-12 pr-4 py-3 border rounded-sm focus:ring-2 focus:ring-black disabled:bg-gray-100"
-      />
-    </div>
-  </div>
-</div>
-
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Receiver Phone Number
+                  </label>
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm">
+                      +62
+                    </span>
+                    <input
+                      type="tel"
+                      value={customerPhone}
+                      onChange={handlePhoneChange}
+                      disabled={useProfilePhone}
+                      className="w-full pl-12 pr-4 py-3 border rounded-sm focus:ring-2 focus:ring-black disabled:bg-gray-100"
+                    />
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
+          
+          {/* Kolom Kanan - Order Summary */}
           <div className="lg:col-span-1">
             <div className="bg-white p-6 rounded-sm border sticky top-24 space-y-6">
               <h2 className="text-xl font-bold text-center mb-4">
