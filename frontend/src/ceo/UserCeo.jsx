@@ -36,7 +36,7 @@ function UserCeo() {
   });
 
   const API_URL = import.meta.env.VITE_API_URL;
-  const BASE_SERVER_URL = API_URL.replace("/api", "");
+  // const BASE_SERVER_URL = API_URL.replace("/api", ""); // HAPUS INI
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -157,10 +157,11 @@ function UserCeo() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="flex-shrink-0 h-12 w-12">
+                        {/* --- PERUBAHAN DI SINI --- */}
                         {user.avatar ? (
                           <img
                             className="h-12 w-12 rounded-full object-cover"
-                            src={`${BASE_SERVER_URL}/${user.avatar}`}
+                            src={user.avatar} // Langsung pakai URL Cloudinary
                             alt={user.name}
                           />
                         ) : (

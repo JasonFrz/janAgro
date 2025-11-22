@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import { Plus, X, Upload, Edit, Trash2 } from "lucide-react";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
-const SERVER_URL = API_URL.replace("/api", "");
+// Tidak perlu lagi SERVER_URL untuk gambar Cloudinary
+// const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+// const SERVER_URL = API_URL.replace("/api", "");
 
 function ProdukAdmin({ produk = [], onAdd, onUpdate, onDelete }) {
   const [form, setForm] = useState({
@@ -16,6 +17,7 @@ function ProdukAdmin({ produk = [], onAdd, onUpdate, onDelete }) {
     const file = e.target.files[0];
     if (file && (file.type === "image/png" || file.type === "image/jpeg")) {
       setImageFile(file);
+      // Untuk file baru dari komputer, kita buat local preview URL
       setImagePreview(URL.createObjectURL(file));
       setForm({ ...form, image: "" });
     } else {
@@ -42,8 +44,10 @@ function ProdukAdmin({ produk = [], onAdd, onUpdate, onDelete }) {
     formData.append("detail", form.detail);
 
     if (imageFile) {
+      // Jika ada file baru yang diupload
       formData.append("image", imageFile);
     } else if (form.image) {
+      // Jika menggunakan gambar lama (URL String)
       formData.append("image", form.image);
     }
 
@@ -77,13 +81,21 @@ function ProdukAdmin({ produk = [], onAdd, onUpdate, onDelete }) {
 
   const handleEdit = (p) => {
     setForm({
-      name: p.name, category: p.category, price: p.price, stock: p.stock,
-      description: p.description || "", detail: p.detail || "", image: p.image || "",
+      name: p.name, 
+      category: p.category, 
+      price: p.price, 
+      stock: p.stock,
+      description: p.description || "", 
+      detail: p.detail || "", 
+      image: p.image || "",
     });
     setEditingId(p._id);
     setImageFile(null);
+
+    // --- PERUBAHAN DI SINI ---
+    // Langsung gunakan URL dari database karena itu adalah URL Cloudinary
     if (p.image) {
-      setImagePreview(`${SERVER_URL}/${p.image}`);
+      setImagePreview(p.image); 
     } else {
       setImagePreview(null);
     }
@@ -154,7 +166,12 @@ function ProdukAdmin({ produk = [], onAdd, onUpdate, onDelete }) {
                   {produk.map((p) => (
                     <tr key={p._id} className="border-t">
                       <td className="p-2 border w-24">
-                        {p.image ? (<img src={`${SERVER_URL}/${p.image}`} alt={p.name} className="w-16 h-16 object-cover rounded mx-auto"/>) : (<div className="w-16 h-16 bg-gray-200 rounded mx-auto flex items-center justify-center text-xs text-gray-500">No Image</div>)}
+                        {/* --- PERUBAHAN DI SINI --- */}
+                        {p.image ? (
+                            <img src={p.image} alt={p.name} className="w-16 h-16 object-cover rounded mx-auto"/>
+                        ) : (
+                            <div className="w-16 h-16 bg-gray-200 rounded mx-auto flex items-center justify-center text-xs text-gray-500">No Image</div>
+                        )}
                       </td>
                       <td className="p-2 border">{p.name}</td>
                       <td className="p-2 border">{p.category}</td>

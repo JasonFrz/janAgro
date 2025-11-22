@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { Plus, X, Edit, Trash2, Upload } from "lucide-react";
 
+// API URL tetap dibutuhkan untuk request ke backend
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
-const SERVER_URL = API_URL.replace("/api", "");
 
 function ProdukCeo({ produk = [], onAdd, onUpdate, onDelete }) {
   const [form, setForm] = useState({
@@ -16,6 +16,7 @@ function ProdukCeo({ produk = [], onAdd, onUpdate, onDelete }) {
     const file = e.target.files[0];
     if (file && (file.type === "image/png" || file.type === "image/jpeg")) {
       setImageFile(file);
+      // Preview lokal untuk file yang baru dipilih dari komputer
       setImagePreview(URL.createObjectURL(file));
       setForm({ ...form, image: "" });
     } else {
@@ -41,10 +42,11 @@ function ProdukCeo({ produk = [], onAdd, onUpdate, onDelete }) {
     formData.append("detail", form.detail);
 
     if (imageFile) {
-      // Jika ada file baru, kirim file
+      // Jika ada file baru yang diupload (binary)
       formData.append("image", imageFile);
     } else if (form.image) {
-      // Jika sedang edit dan tidak ganti gambar, kirim path lama
+      // Jika mode edit dan gambar tidak diubah (kirim URL lama string)
+      // Backend sebaiknya mengecek: jika req.file ada -> pakai req.file.path, jika tidak -> pakai req.body.image
       formData.append("image", form.image);
     }
 
@@ -72,13 +74,21 @@ function ProdukCeo({ produk = [], onAdd, onUpdate, onDelete }) {
 
   const handleEdit = (p) => {
     setForm({
-      name: p.name, category: p.category, price: p.price, stock: p.stock,
-      description: p.description || "", detail: p.detail || "", image: p.image || "",
+      name: p.name, 
+      category: p.category, 
+      price: p.price, 
+      stock: p.stock,
+      description: p.description || "", 
+      detail: p.detail || "", 
+      image: p.image || "",
     });
     setEditingId(p._id);
     setImageFile(null);
+    
+    // PERUBAHAN DISINI:
+    // Karena Cloudinary menyimpan URL lengkap (https://...), kita pakai langsung.
     if (p.image) {
-      setImagePreview(`${SERVER_URL}/${p.image}`);
+      setImagePreview(p.image); 
     } else {
       setImagePreview(null);
     }
@@ -118,6 +128,7 @@ function ProdukCeo({ produk = [], onAdd, onUpdate, onDelete }) {
               <label className="block text-sm font-bold mb-1">Gambar Produk (PNG/JPG)</label>
               <div className="flex items-center gap-4">
                 <div className="w-24 h-24 flex items-center justify-center border-2 border-black rounded bg-gray-100 overflow-hidden">
+                  {/* Preview Image: Bisa berupa URL (Cloudinary) atau Blob (Upload baru) */}
                   {imagePreview ? (<img src={imagePreview} alt="Pratinjau" className="w-full h-full object-cover"/>) : (<span className="text-gray-400 text-sm">Pratinjau</span>)}
                 </div>
                 <div>
@@ -175,7 +186,12 @@ function ProdukCeo({ produk = [], onAdd, onUpdate, onDelete }) {
                   produk.map((p) => (
                     <tr key={p._id} className="border-b-2 border-gray-300">
                       <td className="p-3 border-x-2 border-black">
-                        {p.image ? (<img src={`${SERVER_URL}/${p.image}`} alt={p.name} className="w-16 h-16 object-cover rounded"/>) : (<div className="w-16 h-16 bg-gray-200 rounded flex items-center justify-center text-xs text-gray-500">No Image</div>)}
+                        {/* PERUBAHAN DISINI: src langsung menggunakan p.image */}
+                        {p.image ? (
+                          <img src={p.image} alt={p.name} className="w-16 h-16 object-cover rounded"/>
+                        ) : (
+                          <div className="w-16 h-16 bg-gray-200 rounded flex items-center justify-center text-xs text-gray-500">No Image</div>
+                        )}
                       </td>
                       <td className="p-3 border-x-2 border-black font-semibold">{p.name}</td>
                       <td className="p-3 border-x-2 border-black">{p.category}</td>

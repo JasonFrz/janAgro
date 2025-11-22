@@ -10,8 +10,7 @@ import {
   Truck,
 } from "lucide-react";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
-const SERVER_URL = API_URL.replace("/api", "");
+
 
 const Notification = ({ message, type }) => {
   if (!message) return null;
@@ -191,9 +190,9 @@ const filteredProduk = produk.filter((item) => {
                 }`}
               >
                 <div className="relative h-56 bg-gray-100 flex items-center justify-center overflow-hidden">
-                  {item.image ? (
+                   {item.image ? (
                     <img
-                      src={`${SERVER_URL}/${item.image}`}
+                      src={item.image} 
                       alt={item.name}
                       className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
                     />

@@ -24,18 +24,18 @@ const formatPhoneNumber = (phone) => {
 };
 
 const Profile = ({ user, onProfileSave, onAvatarUpdateSuccess }) => {
-  console.log("Data user yang diterima di Profile:", user);
+  // console.log("Data user yang diterima di Profile:", user);
   
   const [preview, setPreview] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const fileInputRef = useRef(null);
   const [uploadError, setUploadError] = useState('');
 
- useEffect(() => {
+  // --- PERUBAHAN DI SINI ---
+  // Menggunakan user.avatar langsung karena URL Cloudinary sudah lengkap (absolute)
+  useEffect(() => {
     if (user && user.avatar) {
-      const baseUrl = API_URL.replace("/api", ""); 
-      
-      setPreview(`${baseUrl}/${user.avatar}`);
+      setPreview(user.avatar);
     } else {
       setPreview(null);
     }
@@ -46,6 +46,9 @@ const Profile = ({ user, onProfileSave, onAvatarUpdateSuccess }) => {
     if (!file) return;
 
     if (file && file.type.startsWith("image/")) {
+      // Opsi: Tampilkan preview lokal segera sebelum upload selesai (agar terasa cepat)
+      // setPreview(URL.createObjectURL(file)); 
+
       const formData = new FormData();
       formData.append("avatar", file);
 
@@ -56,9 +59,9 @@ const Profile = ({ user, onProfileSave, onAvatarUpdateSuccess }) => {
             return;
         }
 
+        // Request ke backend (yang akan upload ke Cloudinary)
         const response = await axios.put(
           `${API_URL}/users/update-avatar/${user._id}`,
-          
           formData,
           {
             headers: {
@@ -69,13 +72,20 @@ const Profile = ({ user, onProfileSave, onAvatarUpdateSuccess }) => {
         );
         
         if (response.data.success) {
+          // Update state global di parent component (App.jsx / Layout)
           onAvatarUpdateSuccess(response.data.user); 
+          
+          // Update preview lokal dengan URL baru dari Cloudinary
+          setPreview(response.data.user.avatar); 
           setUploadError('');
         }
       } catch (error) {
+        console.error("Upload error:", error);
         const message = error.response?.data?.message || "Gagal mengupload gambar.";
         setUploadError(message);
-        setPreview(user?.avatar ? `${API_URL}/${user.avatar}` : null);
+        
+        // Kembalikan preview ke gambar lama jika gagal
+        setPreview(user?.avatar || null);
       }
     } else {
         setUploadError("Hanya file gambar yang diizinkan (jpg, png).");
@@ -94,6 +104,7 @@ const Profile = ({ user, onProfileSave, onAvatarUpdateSuccess }) => {
     const result = await onProfileSave(userId, payload);
     return result;
   };
+
   return (
     <>
       {isModalOpen && (
@@ -115,7 +126,9 @@ const Profile = ({ user, onProfileSave, onAvatarUpdateSuccess }) => {
                 Kelola detail profil dan akun Anda.
               </p>
             </div>
-                 {uploadError && <p className="text-center text-red-500 mb-4">{uploadError}</p>}
+            
+            {uploadError && <p className="text-center text-red-500 mb-4">{uploadError}</p>}
+            
             <div className="flex flex-col items-center space-y-4 mb-12">
               <div className="relative">
                 <div className="w-32 h-32 rounded-full bg-gray-100 flex items-center justify-center border-2 border-gray-200 overflow-hidden">
@@ -146,6 +159,7 @@ const Profile = ({ user, onProfileSave, onAvatarUpdateSuccess }) => {
               </div>
               <h2 className="text-2xl font-semibold text-black">{user.name}</h2>
             </div>
+
             <div className="border-t border-gray-200 pt-8">
               <h3 className="text-xl font-semibold text-black mb-6">
                 Informasi Profil
@@ -168,7 +182,7 @@ const Profile = ({ user, onProfileSave, onAvatarUpdateSuccess }) => {
                 <div className="flex items-center p-4 bg-gray-50 rounded-lg">
                   <Mail className="text-gray-400 mr-4 flex-shrink-0" size={20} />
                   <div className="flex-grow">
-                    <p className="text-sm text-gray-500">Address</p>
+                    <p className="text-sm text-gray-500">Email</p>
                     <p className="text-black font-medium">{user.email}</p>
                   </div>
                 </div>

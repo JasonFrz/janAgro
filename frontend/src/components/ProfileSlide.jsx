@@ -17,8 +17,6 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-const API_URL = import.meta.env.VITE_API_URL;
-
 const ProfileSlide = ({ isOpen, onClose }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -548,17 +546,15 @@ const ProfileSlide = ({ isOpen, onClose }) => {
   );
 
   const renderProfileView = () => {
-    // Buat URL gambar yang benar
-    const baseUrl = API_URL ? API_URL.replace("/api", "") : '';
-    const avatarUrl = user?.avatar ? `${baseUrl}/${user.avatar}` : null;
-
     return (
       <div className="space-y-6">
         <div className="text-center">
           <div className="w-20 h-20 bg-gray-900 rounded-full mx-auto mb-4 flex items-center justify-center overflow-hidden border-2 border-gray-200">
-            {avatarUrl ? (
+            {/* --- PERUBAHAN DI SINI --- */}
+            {/* Langsung gunakan user.avatar karena URL Cloudinary sudah lengkap */}
+            {user?.avatar ? (
               <img
-                src={avatarUrl}
+                src={user.avatar}
                 alt="User Avatar"
                 className="w-full h-full object-cover"
               />
