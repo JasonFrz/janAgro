@@ -22,6 +22,7 @@
     "jsonwebtoken": "^9.0.2",
     "midtrans": "^1.0.7",
     "midtrans-client": "^1.4.3",
+    "mongodb": "^7.0.0",
     "mongoose": "^8.19.2",
     "multer": "^2.0.2"
   },
