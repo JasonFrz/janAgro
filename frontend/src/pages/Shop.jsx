@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchProducts } from "../features/products/productSlice";
+// Tambahkan import fetchCart dari slice cart Anda
+import { fetchCart } from "../features/cart/cartSlice"; 
 import {
   Search,
   ShoppingCart,
@@ -9,8 +11,6 @@ import {
   CheckCircle,
   Truck,
 } from "lucide-react";
-
-
 
 const Notification = ({ message, type }) => {
   if (!message) return null;
@@ -27,24 +27,39 @@ const Notification = ({ message, type }) => {
   );
 };
 
-const Shop = ({ user, onAddToCart, cartCount }) => {
+const Shop = ({ user, onAddToCart }) => {
   const dispatch = useDispatch();
 
+  // 1. Ambil data produk
   const {
     items: produk,
     status: productStatus,
     error,
   } = useSelector((state) => state.products);
 
+  // 2. Ambil data cart dari Redux untuk menghitung badge secara real-time
+  const { items: cartItems } = useSelector((state) => state.cart);
+
+  // Hitung total quantity barang di keranjang
+  const totalCartItems = cartItems.reduce((total, item) => total + item.quantity, 0);
+
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [notification, setNotification] = useState(null);
 
+  // Fetch Produk saat load
   useEffect(() => {
     if (productStatus === "idle") {
       dispatch(fetchProducts());
     }
   }, [productStatus, dispatch]);
+
+  // 3. Fetch Cart saat load (agar angka badge sinkron saat halaman di-refresh)
+  useEffect(() => {
+    if (user) {
+      dispatch(fetchCart());
+    }
+  }, [dispatch, user]);
 
   useEffect(() => {
     if (notification) {
@@ -57,6 +72,8 @@ const Shop = ({ user, onAddToCart, cartCount }) => {
 
   const handleAddToCartClick = async (productId) => {
     const productToAdd = produk.find((p) => p._id === productId);
+    
+    // Cek Stok Frontend
     if (productToAdd && productToAdd.stock === 0) {
       setNotification({
         type: "error",
@@ -65,6 +82,7 @@ const Shop = ({ user, onAddToCart, cartCount }) => {
       return;
     }
 
+    // Cek Login
     if (!user) {
       setNotification({
         type: "error",
@@ -73,28 +91,35 @@ const Shop = ({ user, onAddToCart, cartCount }) => {
       return;
     }
 
+    // Eksekusi fungsi onAddToCart (yang seharusnya melakukan dispatch ke Redux)
     const resultMessage = await onAddToCart(productId);
+    
+    // Jika berhasil, fetch cart ulang untuk memastikan badge update (opsional jika Redux state sudah update otomatis)
+    if (!resultMessage.toLowerCase().includes("gagal")) {
+       dispatch(fetchCart());
+    }
+
     const messageType = resultMessage.toLowerCase().includes("gagal")
       ? "error"
       : "success";
 
     setNotification({ type: messageType, message: resultMessage });
   };
-const filteredProduk = produk.filter((item) => {
-  const itemCategory = item.category?.toLowerCase() || "";
-  const itemName = item.name?.toLowerCase() || "";
-  const search = searchQuery?.toLowerCase() || "";
-  const selected = selectedCategory?.toLowerCase() || "all";
 
-  const matchesCategory =
-    selected === "all" || itemCategory === selected;
+  const filteredProduk = produk.filter((item) => {
+    const itemCategory = item.category?.toLowerCase() || "";
+    const itemName = item.name?.toLowerCase() || "";
+    const search = searchQuery?.toLowerCase() || "";
+    const selected = selectedCategory?.toLowerCase() || "all";
 
-  const matchesSearch =
-    itemName.includes(search) || itemCategory.includes(search);
+    const matchesCategory =
+      selected === "all" || itemCategory === selected;
 
-  return matchesCategory && matchesSearch;
-});
+    const matchesSearch =
+      itemName.includes(search) || itemCategory.includes(search);
 
+    return matchesCategory && matchesSearch;
+  });
 
   if (productStatus === "loading" || productStatus === "idle")
     return (
@@ -114,6 +139,7 @@ const filteredProduk = produk.filter((item) => {
     <>
       <Notification message={notification?.message} type={notification?.type} />
 
+      {/* ICON KERANJANG & BADGE */}
       <div className="fixed top-24 right-4 sm:right-8 z-30 flex flex-col gap-4">
         <Link
           to="/cart"
@@ -121,12 +147,15 @@ const filteredProduk = produk.filter((item) => {
           aria-label="Buka Keranjang"
         >
           <ShoppingCart size={24} className="text-black" />
-          {cartCount > 0 && (
-            <span className="absolute -top-2 -right-2 w-6 h-6 bg-black text-white text-xs font-bold rounded-full flex items-center justify-center border-2 border-white">
-              {cartCount}
+          
+          {/* Badge Angka Dinamis dari Redux */}
+          {totalCartItems > 0 && (
+            <span className="absolute -top-2 -right-2 w-6 h-6 bg-black text-white text-xs font-bold rounded-full flex items-center justify-center border-2 border-white animate-bounce-short">
+              {totalCartItems}
             </span>
           )}
         </Link>
+        
         {user && (
           <Link
             to="/pesanan"

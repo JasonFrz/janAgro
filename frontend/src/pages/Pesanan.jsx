@@ -11,11 +11,9 @@ import {
   XCircle,
 } from "lucide-react";
 
-// Definisikan SERVER_URL di atas komponen
-const API_URL = import.meta.env.VITE_API_URL;
-const SERVER_URL = API_URL
-  ? API_URL.replace("/api", "")
-  : "http://localhost:3000";
+// SERVER_URL tidak lagi dibutuhkan untuk gambar Cloudinary
+// const API_URL = import.meta.env.VITE_API_URL;
+// const SERVER_URL = API_URL ? API_URL.replace("/api", "") : "http://localhost:3000";
 
 const ConfirmationModal = ({ order, onConfirm, onCancel }) => {
   if (!order) return null;
@@ -393,9 +391,10 @@ const Pesanan = ({
                               >
                                 <div className="flex gap-4">
                                   <div className="w-16 h-16 bg-gray-100 rounded-md flex-shrink-0 overflow-hidden">
+                                    {/* --- PERUBAHAN DI SINI: Gunakan item.image langsung --- */}
                                     {item.image ? (
                                       <img
-                                        src={`${SERVER_URL}/${item.image}`}
+                                        src={item.image}
                                         alt={item.name}
                                         className="w-full h-full object-cover"
                                       />

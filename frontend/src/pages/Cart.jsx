@@ -13,7 +13,6 @@ import {
 } from "../features/cart/cartSlice";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
-// const SERVER_URL = API_URL.replace("/api", ""); // Tidak diperlukan lagi untuk gambar Cloudinary
 
 const Notification = ({ message, type, onClose }) => {
   useEffect(() => {
@@ -87,15 +86,14 @@ const Cart = ({ produk, vouchers }) => {
   const [notification, setNotification] = useState({ message: "", type: "" });
 
   const hasFetched = useRef(false);
-  // For example, your warehouse or store
-  const [mapPos, setMapPos] = useState([-6.2, 106.8]); // initial Point B
+  const [mapPos, setMapPos] = useState([-6.2, 106.8]);
   const [distanceKm, setDistanceKm] = useState(0);
-  const warehousePos = L.latLng(-6.2, 106.816666); // fixed Point A
+  const warehousePos = L.latLng(-6.2, 106.816666);
 
   useEffect(() => {
     const pointB = L.latLng(mapPos[0], mapPos[1]);
     const distanceMeters = warehousePos.distanceTo(pointB);
-    setDistanceKm((distanceMeters / 1000).toFixed(2)); // km with 2 decimals
+    setDistanceKm((distanceMeters / 1000).toFixed(2));
   }, [mapPos]);
 
   useEffect(() => {
@@ -105,17 +103,6 @@ const Cart = ({ produk, vouchers }) => {
       .then((res) => res.json())
       .then((data) => setCustomerAddress(data.display_name))
       .catch(() => setCustomerAddress(""));
-
-    // Opsional: Update alamat user saat map berubah (hati-hati ini akan mengupdate DB setiap map geser)
-    /* 
-    axios.put(`${API_URL}/users/update-address/${user._id}`, {
-      address: customerAddress,
-    }, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-    .then(res => console.log(res.data))
-    .catch(err => console.error(err));
-    */
   }, [mapPos]);
 
   useEffect(() => {
@@ -147,7 +134,9 @@ const Cart = ({ produk, vouchers }) => {
         setUseProfilePhone(isChecked);
         if (isChecked) {
           if (!userPhone) {
-            setError("Your profile phone number is empty. Please add it first.");
+            setError(
+              "Your profile phone number is empty. Please add it first."
+            );
             return;
           }
           setCustomerPhone(userPhone);
@@ -184,10 +173,8 @@ const Cart = ({ produk, vouchers }) => {
     (sum, item) => sum + item.quantity,
     0
   );
-  // Base fee per km
-  const feePerKm = 1000;
 
-  // Calculate dynamic courier fee based on distance
+  const feePerKm = 1000;
   const kurirFee = distanceKm ? Math.ceil(distanceKm) * feePerKm : feePerKm;
 
   const discountAmount = appliedVoucher
@@ -213,22 +200,31 @@ const Cart = ({ produk, vouchers }) => {
     }
   };
 
+  const handleDecreaseQuantity = (item) => {
+    if (item.quantity > 1) {
+      dispatch(
+        updateCartQuantity({
+          productId: item._id,
+          quantity: item.quantity - 1,
+        })
+      );
+    } else {
+      dispatch(removeCartItem(item._id));
+    }
+  };
+
   const handleCheckoutClick = async () => {
     setError("");
     if (!user) {
-      setError("Please log in to proceed with checkout.");
+      setError("Please log in.");
       return;
     }
     if (!customerName || !customerAddress || !customerPhone) {
-      setError("Please fill in all delivery details.");
-      return;
-    }
-    if (customerPhone.length < 8 || customerPhone.length > 15) {
-      setError("Phone number must be between 8 to 15 digits.");
+      setError("Data incomplete.");
       return;
     }
     if (totalQuantity === 0) {
-      setError("Your cart is empty.");
+      setError("Cart empty.");
       return;
     }
 
@@ -250,50 +246,53 @@ const Cart = ({ produk, vouchers }) => {
       const response = await axios.post(
         `${API_URL}/checkouts/create`,
         checkoutData,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-      const transactionToken = response.data.token;
-      if (!transactionToken) throw new Error("Transaction token not received.");
+
+      const { token: transactionToken, orderId } = response.data;
+
+      if (!transactionToken || !orderId) throw new Error("Transaction failed.");
 
       window.snap.pay(transactionToken, {
-        onSuccess: (result) => {
-          console.log("success", result);
-          dispatch(clearCart());
-          setNotification({
-            message: "Payment successful! Your order is being processed.",
-            type: "success",
-          });
-          setTimeout(() => navigate("/pesanan"), 2000);
+        onSuccess: async (result) => {
+          console.log("Payment Success! Verifying...", result);
+
+          try {
+            await axios.post(
+              `${API_URL}/checkouts/verify-payment/${orderId}`,
+              {},
+              { headers: { Authorization: `Bearer ${token}` } }
+            );
+            console.log("Verification success. Stock updated.");
+
+            // 4. Update UI
+            dispatch(clearCart());
+            setNotification({
+              message: "Payment successful! Order processed.",
+              type: "success",
+            });
+            setTimeout(() => navigate("/pesanan"), 2000);
+          } catch (verifyError) {
+            console.error("Verification failed:", verifyError);
+            navigate("/pesanan");
+          }
         },
         onPending: (result) => {
-          console.log("pending", result);
-          setNotification({
-            message: "Waiting for your payment.",
-            type: "info",
-          });
+          console.log("Pending:", result);
+          setNotification({ message: "Waiting for payment.", type: "info" });
           setTimeout(() => navigate("/pesanan"), 2000);
         },
         onError: (result) => {
-          console.log("error", result);
-          setError("Payment failed. Please try again.");
+          console.log("Error:", result);
+          setError("Payment failed.");
         },
-        onClose: () => {
-          console.log(
-            "customer closed the popup without finishing the payment"
-          );
-        },
+        onClose: () => console.log("Closed"),
       });
     } catch (err) {
-      console.error("Kesalahan checkout:", err);
-      setError(
-        err.response?.data?.message ||
-          "An error occurred while processing your order."
-      );
+      console.error(err);
+      setError("Failed to process checkout.");
     }
   };
-
   return (
     <div className="min-h-screen bg-gray-50 pt-24">
       {notification.message && (
@@ -324,10 +323,9 @@ const Cart = ({ produk, vouchers }) => {
                       className="flex items-center gap-4 border-b pb-4 last:border-b-0 last:pb-0"
                     >
                       <div className="w-20 h-20 bg-gray-100 rounded-sm flex-shrink-0 overflow-hidden">
-                        {/* --- 1. UPDATE GAMBAR CLOUDINARY DISINI --- */}
                         {item.image ? (
                           <img
-                            src={item.image} // Langsung pakai URL Cloudinary
+                            src={item.image}
                             alt={item.name}
                             className="w-full h-full object-cover"
                           />
@@ -344,16 +342,10 @@ const Cart = ({ produk, vouchers }) => {
                         </p>
                       </div>
                       <div className="flex items-center gap-2 border rounded-sm">
+                        {/* BUTTON MINUS DENGAN LOGIKA HAPUS */}
                         <button
-                          onClick={() =>
-                            dispatch(
-                              updateCartQuantity({
-                                productId: item._id,
-                                quantity: item.quantity - 1,
-                              })
-                            )
-                          }
-                          disabled={item.quantity <= 1 || loading}
+                          onClick={() => handleDecreaseQuantity(item)}
+                          disabled={loading}
                           className="px-3 py-1 hover:bg-gray-100 disabled:opacity-50"
                         >
                           -
@@ -401,8 +393,11 @@ const Cart = ({ produk, vouchers }) => {
                 </div>
               )}
             </div>
+
+            {/* Bagian Form Address (Sama) */}
             <div className="bg-white p-6 rounded-sm border">
               <h2 className="text-xl font-bold mb-4">Delivery Details</h2>
+              {/* ... (Konten Address sama dengan kode Anda sebelumnya) ... */}
               {user && (
                 <div className="space-y-2 mb-4 p-3 bg-gray-50 rounded-md border">
                   <label className="flex items-center gap-2 cursor-pointer text-sm">
@@ -453,28 +448,25 @@ const Cart = ({ produk, vouchers }) => {
                     className="w-full p-3 border rounded-sm focus:ring-2 focus:ring-black disabled:bg-gray-100"
                   />
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Full Address
                   </label>
-
-                  {/* --- 2. MAP UI FIXED / STICKY --- */}
                   <div className="sticky top-24 z-20 bg-white shadow-lg rounded-lg overflow-hidden mb-4 border border-gray-200">
                     <div className="h-64 w-full relative">
-                        <MapComponent
-                          mapPos={mapPos}
-                          setMapPos={setMapPos}
-                          setDistanceKm={setDistanceKm}
-                        />
+                      <MapComponent
+                        mapPos={mapPos}
+                        setMapPos={setMapPos}
+                        setDistanceKm={setDistanceKm}
+                      />
                     </div>
                     <div className="p-3 bg-gray-50 border-t text-xs text-gray-600 flex justify-between items-center">
-                        <span>Drag marker to set location</span>
-                        <span className="font-bold">Distance: {distanceKm} km</span>
+                      <span>Drag marker to set location</span>
+                      <span className="font-bold">
+                        Distance: {distanceKm} km
+                      </span>
                     </div>
                   </div>
-                  {/* ----------------------------------- */}
-
                   <input
                     type="text"
                     value={customerAddress}
@@ -483,7 +475,6 @@ const Cart = ({ produk, vouchers }) => {
                     className="w-full p-3 border rounded-sm focus:ring-2 focus:ring-black mt-2"
                   />
                 </div>
-
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Receiver Phone Number
@@ -504,7 +495,7 @@ const Cart = ({ produk, vouchers }) => {
               </div>
             </div>
           </div>
-          
+
           {/* Kolom Kanan - Order Summary */}
           <div className="lg:col-span-1">
             <div className="bg-white p-6 rounded-sm border sticky top-24 space-y-6">

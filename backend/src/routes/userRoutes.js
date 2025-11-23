@@ -19,22 +19,20 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// 3. Konfigurasi Storage (Perbaikan pada params)
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: async (req, file) => {
     return {
-      folder: 'user', // Nama folder di Cloudinary
-      format: file.mimetype.split('/')[1], // paksa format sesuai file asli (jpg/png)
-      public_id: `avatar-${req.user.id}-${Date.now()}`, // Custom nama file agar rapi
+      folder: 'user', 
+      format: file.mimetype.split('/')[1],
+      public_id: `avatar-${req.user.id}-${Date.now()}`,
     };
   },
 });
 
-// 4. Middleware Upload dengan Error Handling
 const upload = multer({
   storage: storage,
-  limits: { fileSize: 2 * 1024 * 1024 }, // 2MB
+  limits: { fileSize: 2 * 1024 * 1024 }, 
   fileFilter: (req, file, cb) => {
     if (file.mimetype === "image/jpeg" || file.mimetype === "image/png" || file.mimetype === "image/jpg") {
       cb(null, true);
@@ -44,22 +42,17 @@ const upload = multer({
   },
 });
 
-// --- ROUTE UPDATE AVATAR ---
 router.put(
   "/update-avatar/:userId",
   authenticateToken, 
-  // Wrapper middleware untuk menangkap error Multer/Cloudinary
   (req, res, next) => {
     upload.single('avatar')(req, res, (err) => {
       if (err instanceof multer.MulterError) {
-        // Error spesifik Multer (misal file terlalu besar)
         return res.status(400).json({ success: false, message: `Multer Error: ${err.message}` });
       } else if (err) {
-        // Error dari Cloudinary atau file filter
         console.error("Upload Error:", err);
         return res.status(500).json({ success: false, message: `Upload Gagal: ${err.message}` });
       }
-      // Jika sukses, lanjut ke controller
       next();
     });
   },
@@ -80,7 +73,6 @@ router.put(
         return res.status(404).json({ success: false, message: "Pengguna tidak ditemukan." });
       }
 
-      // Simpan URL Cloudinary
       user.avatar = req.file.path;
       await user.save();
       
@@ -140,8 +132,6 @@ router.put(
   }
 );
 
-// --- UPDATE PROFILE (DATA TEXT) ---
-// Note: Anda punya duplikat route ini di kode asli, saya hapus salah satunya.
 router.put(
   "/update-profile/:userId",
   authenticateToken,
@@ -159,7 +149,6 @@ router.put(
         return res.status(404).json({ success: false, message: "Pengguna tidak ditemukan." });
       }
       
-      // Validasi Password Lama
       const isMatch = await comparePassword(currentPassword, user.password);
       if (!isMatch) {
         return res.status(400).json({ success: false, message: "Password saat ini salah." });
@@ -197,7 +186,6 @@ router.put(
   }
 );
 
-// --- GET ALL USERS ---
 router.get("/get-all-users", async (req, res) => {
   try {
     const users = await User.find().sort({ createdAt: -1 });

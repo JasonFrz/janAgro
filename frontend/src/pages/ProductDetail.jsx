@@ -9,8 +9,9 @@ import {
   Truck,
 } from "lucide-react";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
-const SERVER_URL = API_URL.replace("/api", "");
+// SERVER_URL tidak lagi dibutuhkan untuk gambar Cloudinary
+// const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+// const SERVER_URL = API_URL.replace("/api", "");
 
 const Notification = ({ message, type }) => {
   if (!message) return null;
@@ -26,6 +27,7 @@ const Notification = ({ message, type }) => {
     </div>
   );
 };
+
 const StarRating = ({ rating }) => (
   <div className="flex items-center">
     {[...Array(5)].map((_, index) => (
@@ -61,7 +63,6 @@ const ProductDetail = ({
     }
   }, [notification]);
 
-  // 2. Perbaiki logika notifikasi agar andal dengan fungsi async
   const handleAddToCartClick = async (productId) => {
     if (product.stock === 0) {
       setNotification({
@@ -130,11 +131,13 @@ const ProductDetail = ({
             <ArrowLeft size={20} /> Kembali ke Toko
           </Link>
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
-            {/* 3. PERBAIKAN UTAMA DI SINI */}
+            
             <div className="lg:col-span-2 flex items-center justify-center bg-gray-100 rounded-sm h-96 overflow-hidden">
+              {/* --- PERUBAHAN DI SINI --- */}
+              {/* Langsung gunakan product.image (Cloudinary URL) */}
               {product.image ? (
                 <img
-                  src={`${SERVER_URL}/${product.image}`}
+                  src={product.image}
                   alt={product.name}
                   className="w-full h-full object-cover"
                 />
@@ -239,8 +242,13 @@ const ProductDetail = ({
                   const reviewUser = users.find((u) => u.id === review.userId);
                   return (
                     <div key={review.id} className="flex gap-4 border-b pb-8">
-                      <div className="w-12 h-12 rounded-full bg-gray-200 flex-shrink-0 flex items-center justify-center font-bold text-gray-500">
-                        {reviewUser ? reviewUser.name.charAt(0) : "A"}
+                      <div className="w-12 h-12 rounded-full bg-gray-200 flex-shrink-0 flex items-center justify-center font-bold text-gray-500 overflow-hidden">
+                         {/* Optional: Jika user avatar juga dari cloudinary */}
+                        {reviewUser?.avatar ? (
+                             <img src={reviewUser.avatar} alt="avatar" className="w-full h-full object-cover"/>
+                        ) : (
+                             reviewUser ? reviewUser.name.charAt(0) : "A"
+                        )}
                       </div>
                       <div className="flex-1">
                         <div className="flex items-center justify-between">
@@ -261,6 +269,7 @@ const ProductDetail = ({
                         <p className="text-gray-700 mt-2">{review.comment}</p>
                         {review.imageUrl && (
                           <div className="mt-4">
+                            {/* Gambar review biasanya sudah URL lengkap, jadi aman */}
                             <img
                               src={review.imageUrl}
                               alt="Ulasan produk"

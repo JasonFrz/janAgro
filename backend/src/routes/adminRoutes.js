@@ -18,39 +18,32 @@ router.get("/get-all-users", async (req, res) => {
 router.put("/update-user/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const updateData = req.body; // Data dari modal edit
+    const updateData = req.body; 
 
-    // 1. Cari pengguna terlebih dahulu, bukan langsung update
     const user = await User.findById(id);
     if (!user) {
       return res.status(404).json({ success: false, message: "Pengguna tidak ditemukan" });
     }
 
-    // 2. Perbarui field non-password secara manual
     user.name = updateData.name || user.name;
     user.username = updateData.username || user.username;
     user.email = updateData.email || user.email;
-    user.phone = updateData.phone; // Bisa jadi string kosong
-    user.address = updateData.address; // Bisa jadi string kosong
+    user.phone = updateData.phone; 
+    user.address = updateData.address; 
 
-    // 3. Periksa apakah ada password baru yang dikirim dan tidak kosong
     if (updateData.password && updateData.password.trim() !== "") {
-      // Jika ada, HASH password baru tersebut sebelum disimpan
       user.password = await hashPassword(updateData.password);
       console.log("Password baru sedang di-hash untuk pengguna:", user.username);
     }
 
-    // 4. Simpan semua perubahan ke database
     const updatedUser = await user.save();
 
-    // Hapus password dari objek respons untuk keamanan
     const userResponse = updatedUser.toObject();
     delete userResponse.password;
 
     res.status(200).json({ success: true, data: userResponse });
 
   } catch (error) {
-    // Menangani error jika username/email duplikat
     if (error.code === 11000) {
       return res.status(400).json({
         success: false,
@@ -120,7 +113,6 @@ router.post("/create-admin", async (req, res) => {
       });
     }
 
-    // Pastikan hashPassword adalah sebuah fungsi sebelum memanggilnya
     if (typeof hashPassword !== 'function') {
         console.error("hashPassword is not a function!", hashPassword);
         return res.status(500).json({ success: false, message: "Server configuration error." });
