@@ -12,7 +12,8 @@ import {
 import {
   fetchCheckouts,
   updateCheckoutStatus,
-} from "../features/admin/adminSlice"; // matches your earlier usage
+  decideCancellation,
+} from "../features/admin/adminSlice"; 
 
 // --- helpers ---
 const formatPhoneNumber = (phone) => {
@@ -52,7 +53,7 @@ const StatusBadge = ({ status }) => {
   );
 };
 
-// --- Status button component (uses dispatch) ---
+// --- Status button component ---
 const StatusButton = ({ orderId, currentStatus, targetStatus, label, onUpdate }) => {
   const [loading, setLoading] = useState(false);
   const isActive = currentStatus === targetStatus;
@@ -73,7 +74,6 @@ const StatusButton = ({ orderId, currentStatus, targetStatus, label, onUpdate })
     try {
       await onUpdate(orderId, targetStatus);
     } catch (err) {
-      // parent handles failed dispatch rollback (if any)
       console.error("Status update failed:", err);
     } finally {
       setLoading(false);
@@ -95,22 +95,18 @@ const StatusButton = ({ orderId, currentStatus, targetStatus, label, onUpdate })
 const SettingAdmin = () => {
   const dispatch = useDispatch();
   const { checkouts = [], loading = false, error = null } = useSelector((state) => state.admin || {});
-
-  // local optimistic copy for immediate UI feedback (syncs from redux)
   const [orders, setOrders] = useState(() => [...(checkouts || [])]);
+  const [expandedOrderId, setExpandedOrderId] = useState(null);
+  const [filterStatus, setFilterStatus] = useState("all");
+  const [notification, setNotification] = useState(""); // <--- span notification
 
   useEffect(() => {
-    // fetch checkouts on mount
     dispatch(fetchCheckouts());
   }, [dispatch]);
 
-  // sync local optimistic copy whenever redux checkouts change
   useEffect(() => {
     setOrders([...checkouts]);
   }, [checkouts]);
-
-  const [expandedOrderId, setExpandedOrderId] = useState(null);
-  const [filterStatus, setFilterStatus] = useState("all");
 
   const sortedCheckouts = useMemo(() => {
     return [...orders].sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
@@ -122,27 +118,18 @@ const SettingAdmin = () => {
     );
   }, [sortedCheckouts, filterStatus]);
 
-  // derive returns & cancellations (if you have separate arrays in state later, pick them instead)
-  const returns = useMemo(() => orders.filter((o) => o.status === "pengembalian"), [orders]);
-  const cancellations = useMemo(() => orders.filter((o) => ["pembatalan diajukan", "dibatalkan"].includes(o.status)), [orders]);
-
   const toggleExpand = (orderId) =>
     setExpandedOrderId(expandedOrderId === orderId ? null : orderId);
 
-  // wrapper to dispatch update and optimistically update UI
   const handleUpdateStatus = async (orderId, targetStatus) => {
-    // keep copy to rollback if needed
     const prev = [...orders];
     setOrders((prevOrders) => prevOrders.map((o) => (o._id === orderId ? { ...o, status: targetStatus } : o)));
     try {
-      // dispatch thunk (returns a promise)
       const res = await dispatch(updateCheckoutStatus({ id: orderId, status: targetStatus })).unwrap();
-      // merging server updated object to local orders
       if (res && res._id) {
         setOrders((prevOrders) => prevOrders.map((o) => (o._id === res._id ? { ...o, ...res } : o)));
       }
     } catch (err) {
-      // rollback on error
       console.error("Failed to update checkout status:", err);
       setOrders(prev);
       throw err;
@@ -151,11 +138,69 @@ const SettingAdmin = () => {
 
   const handleApproveReturn = (orderId) => handleUpdateStatus(orderId, "pengembalian berhasil");
   const handleRejectReturn = (orderId) => handleUpdateStatus(orderId, "pengembalian ditolak");
-  const handleApproveCancellation = (orderId) => handleUpdateStatus(orderId, "dibatalkan");
-  const handleRejectCancellation = (orderId) => handleUpdateStatus(orderId, "diproses"); // or whatever your flow dictates
+  
+  const refresh = () => {
+    dispatch(fetchCheckouts()).unwrap().then(() => {
+      setOrders(prev => [...prev]); // force UI sync
+    });
+  };
+
+
+
+  // --- CANCELLATION LOGIC ---
+const handleApproveCancellation = async (orderId) => {
+  try {
+    // Optimistically remove the order from UI
+    setOrders(prevOrders => prevOrders.filter(o => o._id !== orderId));
+
+    await dispatch(decideCancellation({ orderId, decision: "approve" })).unwrap();
+
+    setNotification("Cancellation approved!");
+    setTimeout(() => setNotification(""), 3000);
+    refresh();
+  } catch (err) {
+    console.error("Approval failed:", err);
+    setNotification("Failed to approve cancellation.");
+    setTimeout(() => setNotification(""), 3000);
+    // Revert UI
+    dispatch(fetchCheckouts());
+  }
+};
+
+const handleRejectCancellation = async (orderId) => {
+  try {
+    // Optimistically update the order status in UI
+    setOrders(prevOrders =>
+      prevOrders.map(o =>
+        o._id === orderId
+          ? { ...o, status: o.previousStatus || "diproses" }
+          : o
+      )
+    );
+
+    await dispatch(decideCancellation({ orderId, decision: "reject" })).unwrap();
+
+    setNotification("Cancellation rejected!");
+    setTimeout(() => setNotification(""), 3000);
+    refresh();
+  } catch (err) {
+    console.error("Rejection failed:", err);
+    setNotification("Failed to reject cancellation.");
+    setTimeout(() => setNotification(""), 3000);
+    // Revert UI
+    dispatch(fetchCheckouts());
+  }
+};
+
 
   return (
     <div className="bg-white shadow rounded-lg p-6 space-y-8">
+      {notification && (
+        <div className="bg-black text-white px-4 py-2 rounded-md text-center font-medium">
+          {notification}
+        </div>
+      )}
+
       <div className="flex flex-col sm:flex-row justify-between sm:items-center border-b pb-4 gap-4">
         <div>
           <h2 className="text-2xl font-bold mb-2">Order Management</h2>
@@ -204,10 +249,6 @@ const SettingAdmin = () => {
               "dibatalkan",
             ].includes(order.status);
 
-            // If return/cancel requests were stored separately in your system, merge logic here.
-            const returnRequest = (order.returnRequest) || returns.find((r) => r.orderId === order._id);
-            const cancelRequest = (order.cancelRequest) || cancellations.find((c) => c.orderId === order._id);
-
             return (
               <div key={order._id} className="border rounded-lg overflow-hidden">
                 <div
@@ -249,88 +290,52 @@ const SettingAdmin = () => {
                   <div className="p-6 bg-white border-t animate-fade-in">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                       <div className="md:col-span-2">
-                        {cancelRequest &&
-                          ["pembatalan diajukan", "dibatalkan"].includes(order.status) && (
-                            <div className="mb-6 p-4 bg-purple-50 border-l-4 border-purple-400">
-                              <h4 className="font-bold text-purple-800 mb-3 flex items-center gap-2">
-                                <ShoppingCart size={18} /> Cancellation Submission
-                              </h4>
-                              <div className="text-sm text-purple-700 space-y-3">
-                                <div>
-                                  <p className="font-semibold">Alasan:</p>
-                                  <p className="whitespace-pre-wrap italic">"{cancelRequest.reason || cancelRequest.notes || "-"}"</p>
-                                </div>
-                              </div>
-                              {order.status === "pembatalan diajukan" && (
-                                <div className="mt-4 flex gap-3">
-                                  <button
-                                    onClick={() => handleRejectCancellation(order._id)}
-                                    className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-red-600 text-white rounded-md text-sm font-semibold hover:bg-red-700"
-                                  >
-                                    <X size={16} /> Tolak
-                                  </button>
-                                  <button
-                                    onClick={() => handleApproveCancellation(order._id)}
-                                    className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-green-600 text-white rounded-md text-sm font-semibold hover:bg-green-700"
-                                  >
-                                    <Check size={16} /> Setujui
-                                  </button>
-                                </div>
-                              )}
+                        {order.status === "pembatalan diajukan" && (
+                          <div className="mb-6 p-4 bg-purple-50 border-l-4 border-purple-400">
+                            <h4 className="font-bold text-purple-800 mb-3 flex items-center gap-2">
+                              <ShoppingCart size={18} /> Cancellation Submission
+                            </h4>
+                            <div className="text-sm text-purple-700 space-y-3">
+                              <p className="italic">Reason: {order.cancelRequest?.reason || "-"}</p>
                             </div>
-                          )}
+                            <div className="mt-4 flex gap-3">
+                              <button
+                                onClick={() => handleRejectCancellation(order._id)}
+                                className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-red-600 text-white rounded-md text-sm font-semibold hover:bg-red-700"
+                              >
+                                <X size={16} /> Tolak
+                              </button>
+                              <button
+                                onClick={() => handleApproveCancellation(order._id)}
+                                className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-green-600 text-white rounded-md text-sm font-semibold hover:bg-green-700"
+                              >
+                                <Check size={16} /> Setujui
+                              </button>
+                            </div>
+                          </div>
+                        )}
 
-                        {returnRequest && (
+                        {/* Return request section */}
+                        {order.status === "pengembalian" && (
                           <div className="mb-6 p-4 bg-yellow-50 border-l-4 border-yellow-400">
                             <h4 className="font-bold text-yellow-800 mb-3 flex items-center gap-2">
                               <AlertCircle size={18} /> Return submission details
                             </h4>
-                            <div className="text-sm text-yellow-700 space-y-3">
-                              <div>
-                                <p className="font-semibold">Reason:</p>
-                                <p className="whitespace-pre-wrap italic">"{returnRequest.reason || returnRequest.notes || "-"}"</p>
-                              </div>
-                              <div>
-                                <p className="font-semibold">Proof in-Video:</p>
-                                <div className="flex flex-wrap gap-2 mt-1">
-                                  {(returnRequest.videos || []).length > 0 ? (
-                                    returnRequest.videos.map((v) => (
-                                      <span key={v} className="text-2xl">📹</span>
-                                    ))
-                                  ) : (
-                                    <span className="text-xs text-gray-500">No video proof</span>
-                                  )}
-                                </div>
-                              </div>
-                              <div>
-                                <p className="font-semibold">Photo Proof:</p>
-                                <div className="flex flex-wrap gap-2 mt-1">
-                                  {(returnRequest.photos || []).length > 0 ? (
-                                    returnRequest.photos.map((p) => (
-                                      <span key={p} className="text-2xl">📸</span>
-                                    ))
-                                  ) : (
-                                    <span className="text-xs text-gray-500">No photo proof</span>
-                                  )}
-                                </div>
-                              </div>
+                            <p className="italic">{order.returnRequest?.reason || "-"}</p>
+                            <div className="mt-4 flex gap-3">
+                              <button
+                                onClick={() => handleRejectReturn(order._id)}
+                                className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-red-600 text-white rounded-md text-sm font-semibold hover:bg-red-700"
+                              >
+                                <X size={16} /> Reject
+                              </button>
+                              <button
+                                onClick={() => handleApproveReturn(order._id)}
+                                className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-green-600 text-white rounded-md text-sm font-semibold hover:bg-green-700"
+                              >
+                                <Check size={16} /> Accept
+                              </button>
                             </div>
-                            {order.status === "pengembalian" && (
-                              <div className="mt-4 flex gap-3">
-                                <button
-                                  onClick={() => handleRejectReturn(order._id)}
-                                  className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-red-600 text-white rounded-md text-sm font-semibold hover:bg-red-700"
-                                >
-                                  <X size={16} /> Reject
-                                </button>
-                                <button
-                                  onClick={() => handleApproveReturn(order._id)}
-                                  className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-green-600 text-white rounded-md text-sm font-semibold hover:bg-green-700"
-                                >
-                                  <Check size={16} /> Accept
-                                </button>
-                              </div>
-                            )}
                           </div>
                         )}
 
@@ -371,22 +376,14 @@ const SettingAdmin = () => {
                           </div>
                         </div>
 
-                        {isOrderFinal ? (
-                          <div className="mt-6 p-3 bg-gray-100 rounded-md text-center">
-                            <p className="text-sm font-medium text-gray-700">Pesanan ini sudah final.</p>
-                          </div>
-                        ) : (
+                        {!isOrderFinal && !["pengembalian", "pembatalan diajukan"].includes(order.status) && (
                           <>
-                            {!["pengembalian", "pembatalan diajukan"].includes(order.status) && (
-                              <>
-                                <h4 className="font-semibold mb-3 mt-6">Update Status</h4>
-                                <div className="flex gap-2">
-                                  <StatusButton orderId={order._id} currentStatus={order.status} targetStatus="diproses" label="Processed" onUpdate={handleUpdateStatus} />
-                                  <StatusButton orderId={order._id} currentStatus={order.status} targetStatus="dikirim" label="Sent" onUpdate={handleUpdateStatus} />
-                                  <StatusButton orderId={order._id} currentStatus={order.status} targetStatus="sampai" label="Arrived" onUpdate={handleUpdateStatus} />
-                                </div>
-                              </>
-                            )}
+                            <h4 className="font-semibold mb-3 mt-6">Update Status</h4>
+                            <div className="flex gap-2">
+                              <StatusButton orderId={order._id} currentStatus={order.status} targetStatus="diproses" label="Processed" onUpdate={handleUpdateStatus} />
+                              <StatusButton orderId={order._id} currentStatus={order.status} targetStatus="dikirim" label="Sent" onUpdate={handleUpdateStatus} />
+                              <StatusButton orderId={order._id} currentStatus={order.status} targetStatus="sampai" label="Arrived" onUpdate={handleUpdateStatus} />
+                            </div>
                           </>
                         )}
                       </div>

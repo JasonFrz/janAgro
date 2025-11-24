@@ -7,6 +7,10 @@ const Product = require("../models/Product");
 const { authenticateToken } = require("../middleware/authenticate");
 const snap = require('../config/midtrans');
 
+const Cancellation = require("../models/Cancellation");
+
+
+
 const handleSuccessfulTransaction = async (checkout) => {
   if (checkout.status === 'diproses') return;
 
@@ -42,6 +46,84 @@ const handleSuccessfulTransaction = async (checkout) => {
   );
   console.log(`   -> Cart cleared for user ${checkout.userId}`);
 };
+
+// // CANCEL CHECKOUT — NO AUTH
+// router.put("/cancel/:orderId", async (req, res) => {
+//   try {
+//     const orderId = req.params.orderId;
+//     const { reason } = req.body || { reason: "No reason provided" };
+
+//     const checkout = await Checkout.findById(orderId);
+//     if (!checkout) {
+//       return res.status(404).json({ message: "Checkout not found" });
+//     }
+
+//     if (checkout.status === "dibatalkan") {
+//       return res
+//         .status(400)
+//         .json({ message: "Checkout already cancelled" });
+//     }
+
+//     checkout.status = "dibatalkan";
+//     await checkout.save();
+
+//     await Cancellation.create({
+//       orderId,
+//       reason
+//     });
+
+//     return res.json({
+//       message: "Checkout cancelled successfully",
+//       checkout
+//     });
+//   } catch (error) {
+//     console.error("Cancellation Error:", error);
+//     return res.status(500).json({
+//       message: "Internal server error",
+//       error: error.message
+//     });
+//   }
+// });
+
+
+router.put("/cancel/decision/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { decision } = req.body; // "approve" or "reject"
+
+    const order = await Checkout.findById(id);
+    if (!order) return res.status(404).json({ success: false, message: "Order not found" });
+
+    if (decision === "approve") {
+      // Delete the order if approved
+      await Checkout.findByIdAndDelete(id);
+      return res.status(200).json({ success: true, message: "Cancellation approved", deleted: true });
+    } else {
+      // Just mark as rejected if rejected
+      order.status = "diproses"; // or whatever the previous status should be
+      await order.save();
+      return res.status(200).json({ success: true, message: "Cancellation rejected", deleted: false, order });
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+
+
+router.get("/all", authenticateToken, async (req, res) => {
+  try {
+    // optionally check if the user is admin
+    // if (!req.user.isAdmin) return res.status(403).json({ message: "Forbidden" });
+
+    const checkouts = await Checkout.find({}).sort({ createdAt: -1 });
+    res.status(200).json({ success: true, data: checkouts });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error fetching all orders" });
+  }
+});
+
 
 router.post("/create", authenticateToken, async (req, res) => {
   try {
@@ -118,17 +200,7 @@ router.post("/create", authenticateToken, async (req, res) => {
   }
 });
 
-router.get("/all", authenticateToken, async (req, res) => {
-  try {
-    // optionally check if the user is admin
-    // if (!req.user.isAdmin) return res.status(403).json({ message: "Forbidden" });
 
-    const checkouts = await Checkout.find({}).sort({ createdAt: -1 });
-    res.status(200).json({ success: true, data: checkouts });
-  } catch (error) {
-    res.status(500).json({ success: false, message: "Error fetching all orders" });
-  }
-});
 
 router.post("/verify-payment/:orderId", authenticateToken, async (req, res) => {
     try {

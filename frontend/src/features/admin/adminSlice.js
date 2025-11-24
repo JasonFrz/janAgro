@@ -98,6 +98,29 @@ export const updateCheckoutStatus = createAsyncThunk(
   }
 );
 
+
+export const decideCancellation = createAsyncThunk(
+  "admin/decideCancellation",
+  async ({ orderId, decision }, { rejectWithValue }) => {
+    try {
+      const res = await fetch(`http://localhost:3000/api/checkouts/cancel/decision/${orderId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ decision }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) return rejectWithValue(data);
+
+      return { orderId, decision, deleted: data.deleted, order: data.order, message: data.message };
+    } catch (err) {
+      return rejectWithValue({ message: err.message });
+    }
+  }
+);
+
+
+
 const adminSlice = createSlice({
   name: "admin",
   initialState: {
@@ -178,6 +201,20 @@ const adminSlice = createSlice({
       .addCase(fetchCheckouts.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+      .addCase(decideCancellation.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(decideCancellation.fulfilled, (state, action) => {
+        state.loading = false;
+        state.checkouts = state.checkouts.map((o) => 
+          o._id === action.payload._id ? action.payload : o
+        );
+      })
+      .addCase(decideCancellation.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload?.message || "Failed to process cancellation";
       });
   },
 });

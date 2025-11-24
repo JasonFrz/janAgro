@@ -2,6 +2,36 @@ const express = require("express");
 const router = express.Router();
 const User = require("../models/User");
 const { hashPassword } = require("../functions/passwordHasing");
+const Checkout = require("../models/Checkout");
+
+
+router.put("/checkout/cancel/:orderId", async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const { decision } = req.body; // "approve" or "reject"
+
+    const checkout = await Checkout.findById(orderId);
+    if (!checkout) return res.status(404).json({ success: false, message: "Order not found" });
+
+    if (checkout.status !== "pembatalan diajukan") {
+      return res.status(400).json({ success: false, message: "No cancellation request to process" });
+    }
+
+    if (decision === "approve") {
+      checkout.status = "dibatalkan";
+    } else if (decision === "reject") {
+      checkout.status = "diproses";
+    } else {
+      return res.status(400).json({ success: false, message: "Invalid decision" });
+    }
+
+    await checkout.save();
+    res.status(200).json({ success: true, data: checkout });
+  } catch (error) {
+    console.error("Admin cancellation error:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
 
 router.get("/get-all-users", async (req, res) => {
   try {

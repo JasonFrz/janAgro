@@ -10,6 +10,8 @@ import {
   AlertCircle,
   XCircle,
 } from "lucide-react";
+import { useDispatch } from "react-redux";
+import { requestOrderCancellation } from "../features/cart/checkoutSlice";
 
 // SERVER_URL tidak lagi dibutuhkan untuk gambar Cloudinary
 // const API_URL = import.meta.env.VITE_API_URL;
@@ -132,6 +134,8 @@ const TrackerStep = ({ icon, label, isActive, isCompleted }) => {
   );
 };
 
+
+
 const Pesanan = ({
   checkouts,
   user,
@@ -141,6 +145,7 @@ const Pesanan = ({
 }) => {
   const [confirmingOrder, setConfirmingOrder] = useState(null);
   const [cancellingOrder, setCancellingOrder] = useState(null);
+  const dispatch = useDispatch();
 
   if (!user) {
     return (
@@ -181,10 +186,24 @@ const Pesanan = ({
     onConfirmFinished(orderId);
     setConfirmingOrder(null);
   };
-  const handleSubmitCancellation = (orderId, reason) => {
-    onRequestCancellation(orderId, reason);
-    setCancellingOrder(null);
-  };
+ 
+const handleSubmitCancellation = async (orderId, reason) => {
+  const resultAction = await dispatch(
+    requestOrderCancellation({ orderId, reason })
+  );
+
+  if (requestOrderCancellation.fulfilled.match(resultAction)) {
+    alert("Cancellation submitted!");
+    window.location.reload();
+  } else {
+    alert(resultAction.payload || "Failed to request cancellation");
+  }
+
+  setCancellingOrder(null);
+};
+
+
+
 
   return (
     <>

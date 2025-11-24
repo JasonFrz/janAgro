@@ -10,8 +10,8 @@ const CancellationSchema = new mongoose.Schema(
     reason: { type: String, required: true },
     status: {
       type: String,
-      enum: ["diajukan", "disetujui", "ditolak"],
-      default: "diajukan",
+      enum: ["pembatalan diajukan", "disetujui", "ditolak"],
+      default: "pembatalan diajukan",
     },
     processedAt: { type: Date, default: null },
   },
