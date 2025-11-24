@@ -1,10 +1,13 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { Check, X, Search, ChevronDown } from "lucide-react";
+import { Check, X, Search, ChevronDown, FileText } from "lucide-react"; // Tambahkan FileText
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom"; // Tambahkan useNavigate
 import {
   updateCheckoutStatus,
   setCheckouts,
 } from "../features/admin/adminSlice";
+
+// --- Helper Components ---
 
 const StatusBadge = ({ status }) => {
   const statusStyles = {
@@ -93,6 +96,8 @@ const StatusButton = ({
   );
 };
 
+// --- Main Component ---
+
 function PesananCeo({
   checkouts,
   onUpdateOrderStatus,
@@ -102,6 +107,7 @@ function PesananCeo({
   onRejectCancellation,
 }) {
   const dispatch = useDispatch();
+  const navigate = useNavigate(); // Hook navigasi
   const adminCheckouts = useSelector((state) => state.admin?.checkouts || []);
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -201,12 +207,10 @@ function PesananCeo({
         <div>
           <p className="font-bold text-black">
             Order #{order._id.substring(0, 8)}
-          </p>{" "}
-          {/* Gunakan _id */}
+          </p>
           <p className="text-sm text-gray-600">{order.nama}</p>
         </div>
-        <p className="text-sm font-mono">{formatDate(order.createdAt)}</p>{" "}
-        {/* Gunakan createdAt */}
+        <p className="text-sm font-mono">{formatDate(order.createdAt)}</p>
       </div>
       <div className="mt-2 flex space-x-2">
         <button
@@ -227,7 +231,18 @@ function PesananCeo({
 
   return (
     <div className="space-y-8">
-      <h2 className="text-3xl font-black">Order & Request Management</h2>
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <h2 className="text-3xl font-black">Order & Request Management</h2>
+
+        <button
+          onClick={() => navigate("/laporan-order-ceo")}
+          className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition shadow-md font-bold"
+        >
+          <FileText size={20} />
+          <span>Laporan Pesanan</span>
+        </button>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <ActionCard title="Return Requests" count={pendingReturns.length}>
           {pendingReturns.map((order) => (
@@ -253,6 +268,7 @@ function PesananCeo({
           ))}
         </ActionCard>
       </div>
+
       <div className="bg-white text-black shadow-lg rounded-lg p-6 border-2 border-black">
         <div className="flex flex-col sm:flex-row justify-between items-center mb-6 pb-4 border-b-2 border-black">
           <h2 className="text-2xl font-bold mb-4 sm:mb-0">

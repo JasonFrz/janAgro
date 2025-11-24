@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom"; // 1. Import useNavigate
 import {
   ChevronDown,
   ChevronUp,
@@ -13,7 +14,7 @@ import {
   fetchCheckouts,
   updateCheckoutStatus,
   decideCancellation,
-} from "../features/admin/adminSlice"; 
+} from "../features/admin/adminSlice";
 
 // --- helpers ---
 const formatPhoneNumber = (phone) => {
@@ -45,8 +46,9 @@ const StatusBadge = ({ status }) => {
   };
   return (
     <span
-      className={`px-2 py-1 text-xs font-medium rounded-full capitalize ${statusStyles[status] || "bg-gray-100 text-gray-800"
-        }`}
+      className={`px-2 py-1 text-xs font-medium rounded-full capitalize ${
+        statusStyles[status] || "bg-gray-100 text-gray-800"
+      }`}
     >
       {status}
     </span>
@@ -54,7 +56,13 @@ const StatusBadge = ({ status }) => {
 };
 
 // --- Status button component ---
-const StatusButton = ({ orderId, currentStatus, targetStatus, label, onUpdate }) => {
+const StatusButton = ({
+  orderId,
+  currentStatus,
+  targetStatus,
+  label,
+  onUpdate,
+}) => {
   const [loading, setLoading] = useState(false);
   const isActive = currentStatus === targetStatus;
 
@@ -65,7 +73,8 @@ const StatusButton = ({ orderId, currentStatus, targetStatus, label, onUpdate })
   };
   const activeClasses =
     statusColorClasses[targetStatus] || "bg-black text-white border-black";
-  const inactiveClasses = "bg-white text-gray-500 border border-gray-300 hover:border-black";
+  const inactiveClasses =
+    "bg-white text-gray-500 border border-gray-300 hover:border-black";
 
   const handleClick = async (e) => {
     e.stopPropagation();
@@ -84,7 +93,9 @@ const StatusButton = ({ orderId, currentStatus, targetStatus, label, onUpdate })
     <button
       onClick={handleClick}
       disabled={isActive || loading}
-      className={`px-3 py-1 text-xs rounded-full transition ${isActive ? activeClasses : inactiveClasses}`}
+      className={`px-3 py-1 text-xs rounded-full transition ${
+        isActive ? activeClasses : inactiveClasses
+      }`}
     >
       {loading ? "Updating..." : label}
     </button>
@@ -94,11 +105,16 @@ const StatusButton = ({ orderId, currentStatus, targetStatus, label, onUpdate })
 // --- Main component ---
 const SettingAdmin = () => {
   const dispatch = useDispatch();
-  const { checkouts = [], loading = false, error = null } = useSelector((state) => state.admin || {});
+  const navigate = useNavigate(); // 2. Inisialisasi navigate
+  const {
+    checkouts = [],
+    loading = false,
+    error = null,
+  } = useSelector((state) => state.admin || {});
   const [orders, setOrders] = useState(() => [...(checkouts || [])]);
   const [expandedOrderId, setExpandedOrderId] = useState(null);
   const [filterStatus, setFilterStatus] = useState("all");
-  const [notification, setNotification] = useState(""); // <--- span notification
+  const [notification, setNotification] = useState("");
 
   useEffect(() => {
     dispatch(fetchCheckouts());
@@ -109,7 +125,9 @@ const SettingAdmin = () => {
   }, [checkouts]);
 
   const sortedCheckouts = useMemo(() => {
-    return [...orders].sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
+    return [...orders].sort(
+      (a, b) => new Date(b.tanggal) - new Date(a.tanggal)
+    );
   }, [orders]);
 
   const filteredCheckouts = useMemo(() => {
@@ -123,11 +141,19 @@ const SettingAdmin = () => {
 
   const handleUpdateStatus = async (orderId, targetStatus) => {
     const prev = [...orders];
-    setOrders((prevOrders) => prevOrders.map((o) => (o._id === orderId ? { ...o, status: targetStatus } : o)));
+    setOrders((prevOrders) =>
+      prevOrders.map((o) =>
+        o._id === orderId ? { ...o, status: targetStatus } : o
+      )
+    );
     try {
-      const res = await dispatch(updateCheckoutStatus({ id: orderId, status: targetStatus })).unwrap();
+      const res = await dispatch(
+        updateCheckoutStatus({ id: orderId, status: targetStatus })
+      ).unwrap();
       if (res && res._id) {
-        setOrders((prevOrders) => prevOrders.map((o) => (o._id === res._id ? { ...o, ...res } : o)));
+        setOrders((prevOrders) =>
+          prevOrders.map((o) => (o._id === res._id ? { ...o, ...res } : o))
+        );
       }
     } catch (err) {
       console.error("Failed to update checkout status:", err);
@@ -136,62 +162,59 @@ const SettingAdmin = () => {
     }
   };
 
-  const handleApproveReturn = (orderId) => handleUpdateStatus(orderId, "pengembalian berhasil");
-  const handleRejectReturn = (orderId) => handleUpdateStatus(orderId, "pengembalian ditolak");
-  
+  const handleApproveReturn = (orderId) =>
+    handleUpdateStatus(orderId, "pengembalian berhasil");
+  const handleRejectReturn = (orderId) =>
+    handleUpdateStatus(orderId, "pengembalian ditolak");
+
   const refresh = () => {
-    dispatch(fetchCheckouts()).unwrap().then(() => {
-      setOrders(prev => [...prev]); // force UI sync
-    });
+    dispatch(fetchCheckouts())
+      .unwrap()
+      .then(() => {
+        setOrders((prev) => [...prev]);
+      });
   };
 
-
-
   // --- CANCELLATION LOGIC ---
-const handleApproveCancellation = async (orderId) => {
-  try {
-    // Optimistically remove the order from UI
-    setOrders(prevOrders => prevOrders.filter(o => o._id !== orderId));
+  const handleApproveCancellation = async (orderId) => {
+    try {
+      setOrders((prevOrders) => prevOrders.filter((o) => o._id !== orderId));
+      await dispatch(
+        decideCancellation({ orderId, decision: "approve" })
+      ).unwrap();
+      setNotification("Cancellation approved!");
+      setTimeout(() => setNotification(""), 3000);
+      refresh();
+    } catch (err) {
+      console.error("Approval failed:", err);
+      setNotification("Failed to approve cancellation.");
+      setTimeout(() => setNotification(""), 3000);
+      dispatch(fetchCheckouts());
+    }
+  };
 
-    await dispatch(decideCancellation({ orderId, decision: "approve" })).unwrap();
-
-    setNotification("Cancellation approved!");
-    setTimeout(() => setNotification(""), 3000);
-    refresh();
-  } catch (err) {
-    console.error("Approval failed:", err);
-    setNotification("Failed to approve cancellation.");
-    setTimeout(() => setNotification(""), 3000);
-    // Revert UI
-    dispatch(fetchCheckouts());
-  }
-};
-
-const handleRejectCancellation = async (orderId) => {
-  try {
-    // Optimistically update the order status in UI
-    setOrders(prevOrders =>
-      prevOrders.map(o =>
-        o._id === orderId
-          ? { ...o, status: o.previousStatus || "diproses" }
-          : o
-      )
-    );
-
-    await dispatch(decideCancellation({ orderId, decision: "reject" })).unwrap();
-
-    setNotification("Cancellation rejected!");
-    setTimeout(() => setNotification(""), 3000);
-    refresh();
-  } catch (err) {
-    console.error("Rejection failed:", err);
-    setNotification("Failed to reject cancellation.");
-    setTimeout(() => setNotification(""), 3000);
-    // Revert UI
-    dispatch(fetchCheckouts());
-  }
-};
-
+  const handleRejectCancellation = async (orderId) => {
+    try {
+      setOrders((prevOrders) =>
+        prevOrders.map((o) =>
+          o._id === orderId
+            ? { ...o, status: o.previousStatus || "diproses" }
+            : o
+        )
+      );
+      await dispatch(
+        decideCancellation({ orderId, decision: "reject" })
+      ).unwrap();
+      setNotification("Cancellation rejected!");
+      setTimeout(() => setNotification(""), 3000);
+      refresh();
+    } catch (err) {
+      console.error("Rejection failed:", err);
+      setNotification("Failed to reject cancellation.");
+      setTimeout(() => setNotification(""), 3000);
+      dispatch(fetchCheckouts());
+    }
+  };
 
   return (
     <div className="bg-white shadow rounded-lg p-6 space-y-8">
@@ -204,9 +227,20 @@ const handleRejectCancellation = async (orderId) => {
       <div className="flex flex-col sm:flex-row justify-between sm:items-center border-b pb-4 gap-4">
         <div>
           <h2 className="text-2xl font-bold mb-2">Order Management</h2>
-          <p className="text-gray-500">Manage and Update customer order status</p>
+          <p className="text-gray-500">
+            Manage and Update customer order status
+          </p>
         </div>
         <div className="flex items-center gap-4">
+          <button
+            onClick={() => navigate("/laporan-order-admin")}
+            className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-md hover:bg-gray-800 transition text-sm"
+          >
+            <FileText size={18} />
+            Laporan Order
+          </button>
+        
+
           <select
             value={filterStatus}
             onChange={(e) => setFilterStatus(e.target.value)}
@@ -250,39 +284,54 @@ const handleRejectCancellation = async (orderId) => {
             ].includes(order.status);
 
             return (
-              <div key={order._id} className="border rounded-lg overflow-hidden">
+              <div
+                key={order._id}
+                className="border rounded-lg overflow-hidden"
+              >
                 <div
-                  className="bg-gray-50 p-4 flex flex-col md:flex-row justify-between items-start md:items-center cursor-pointer hover:bg-gray-100"
+                  className="bg-gray-5 p-4 flex flex-col md:flex-row justify-between items-start md:items-center cursor-pointer hover:bg-gray-100"
                   onClick={() => toggleExpand(order._id)}
                   role="button"
                   tabIndex={0}
                 >
                   <div className="flex-1">
-                    <p className="font-bold text-sm text-black">ORDER #{order._id}</p>
+                    <p className="font-bold text-sm text-black">
+                      ORDER #{order._id}
+                    </p>
                     <p className="text-xs text-gray-500">
                       {order.tanggal
                         ? new Date(order.tanggal).toLocaleString("id-ID", {
-                          dateStyle: "full",
-                          timeStyle: "short",
-                        })
+                            dateStyle: "full",
+                            timeStyle: "short",
+                          })
                         : "-"}
                     </p>
                   </div>
 
                   <div className="flex-1 mt-2 md:mt-0">
-                    <p className="text-sm font-medium text-black">{order.nama || "-"}</p>
-                    <p className="text-xs text-gray-500">{formatPhoneNumber(order.noTelpPenerima)}</p>
+                    <p className="text-sm font-medium text-black">
+                      {order.nama || "-"}
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      {formatPhoneNumber(order.noTelpPenerima)}
+                    </p>
                   </div>
 
                   <div className="flex-1 text-left md:text-right mt-2 md:mt-0">
-                    <p className="text-sm font-semibold text-black">Rp {(order.totalHarga || 0).toLocaleString("id-ID")}</p>
+                    <p className="text-sm font-semibold text-black">
+                      Rp {(order.totalHarga || 0).toLocaleString("id-ID")}
+                    </p>
                     <div className="mt-1">
                       <StatusBadge status={order.status} />
                     </div>
                   </div>
 
                   <div className="ml-4 flex-shrink-0">
-                    {expandedOrderId === order._id ? <ChevronUp className="text-gray-500" /> : <ChevronDown className="text-gray-500" />}
+                    {expandedOrderId === order._id ? (
+                      <ChevronUp className="text-gray-500" />
+                    ) : (
+                      <ChevronDown className="text-gray-500" />
+                    )}
                   </div>
                 </div>
 
@@ -296,17 +345,23 @@ const handleRejectCancellation = async (orderId) => {
                               <ShoppingCart size={18} /> Cancellation Submission
                             </h4>
                             <div className="text-sm text-purple-700 space-y-3">
-                              <p className="italic">Reason: {order.cancelRequest?.reason || "-"}</p>
+                              <p className="italic">
+                                Reason: {order.cancelRequest?.reason || "-"}
+                              </p>
                             </div>
                             <div className="mt-4 flex gap-3">
                               <button
-                                onClick={() => handleRejectCancellation(order._id)}
+                                onClick={() =>
+                                  handleRejectCancellation(order._id)
+                                }
                                 className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-red-600 text-white rounded-md text-sm font-semibold hover:bg-red-700"
                               >
                                 <X size={16} /> Tolak
                               </button>
                               <button
-                                onClick={() => handleApproveCancellation(order._id)}
+                                onClick={() =>
+                                  handleApproveCancellation(order._id)
+                                }
                                 className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-green-600 text-white rounded-md text-sm font-semibold hover:bg-green-700"
                               >
                                 <Check size={16} /> Setujui
@@ -319,9 +374,12 @@ const handleRejectCancellation = async (orderId) => {
                         {order.status === "pengembalian" && (
                           <div className="mb-6 p-4 bg-yellow-50 border-l-4 border-yellow-400">
                             <h4 className="font-bold text-yellow-800 mb-3 flex items-center gap-2">
-                              <AlertCircle size={18} /> Return submission details
+                              <AlertCircle size={18} /> Return submission
+                              details
                             </h4>
-                            <p className="italic">{order.returnRequest?.reason || "-"}</p>
+                            <p className="italic">
+                              {order.returnRequest?.reason || "-"}
+                            </p>
                             <div className="mt-4 flex gap-3">
                               <button
                                 onClick={() => handleRejectReturn(order._id)}
@@ -342,12 +400,24 @@ const handleRejectCancellation = async (orderId) => {
                         <h4 className="font-semibold mb-3">Items Ordered</h4>
                         <div className="space-y-3">
                           {(order.items || []).map((item) => (
-                            <div key={item._id || item.id || Math.random()} className="flex justify-between items-center text-sm border-b pb-2">
+                            <div
+                              key={item._id || item.id || Math.random()}
+                              className="flex justify-between items-center text-sm border-b pb-2"
+                            >
                               <div>
-                                <p className="font-medium text-black">{item.name}</p>
-                                <p className="text-gray-500">Qty: {item.quantity}</p>
+                                <p className="font-medium text-black">
+                                  {item.name}
+                                </p>
+                                <p className="text-gray-500">
+                                  Qty: {item.quantity}
+                                </p>
                               </div>
-                              <p className="text-gray-700">Rp {(item.price * item.quantity).toLocaleString("id-ID")}</p>
+                              <p className="text-gray-700">
+                                Rp{" "}
+                                {(item.price * item.quantity).toLocaleString(
+                                  "id-ID"
+                                )}
+                              </p>
                             </div>
                           ))}
                         </div>
@@ -358,44 +428,88 @@ const handleRejectCancellation = async (orderId) => {
                         <div className="space-y-2 text-sm">
                           <div className="flex justify-between">
                             <span className="text-gray-600">Subtotal:</span>
-                            <span className="font-medium">Rp {(order.subtotal || 0).toLocaleString("id-ID")}</span>
+                            <span className="font-medium">
+                              Rp {(order.subtotal || 0).toLocaleString("id-ID")}
+                            </span>
                           </div>
                           {order.diskon > 0 && (
                             <div className="flex justify-between text-green-600">
-                              <span>Diskon ({order.kodeVoucher || "-" }):</span>
-                              <span className="font-medium">- Rp {order.diskon.toLocaleString("id-ID")}</span>
+                              <span>Diskon ({order.kodeVoucher || "-"}):</span>
+                              <span className="font-medium">
+                                - Rp {order.diskon.toLocaleString("id-ID")}
+                              </span>
                             </div>
                           )}
                           <div className="flex justify-between">
                             <span className="text-gray-600">Kurir:</span>
-                            <span className="font-medium">Rp {(order.kurir?.biaya || 0).toLocaleString("id-ID")}</span>
+                            <span className="font-medium">
+                              Rp{" "}
+                              {(order.kurir?.biaya || 0).toLocaleString(
+                                "id-ID"
+                              )}
+                            </span>
                           </div>
                           <div className="flex justify-between font-bold text-base border-t pt-2 mt-2">
                             <span>Total:</span>
-                            <span>Rp {(order.totalHarga || 0).toLocaleString("id-ID")}</span>
+                            <span>
+                              Rp{" "}
+                              {(order.totalHarga || 0).toLocaleString("id-ID")}
+                            </span>
                           </div>
                         </div>
 
-                        {!isOrderFinal && !["pengembalian", "pembatalan diajukan"].includes(order.status) && (
-                          <>
-                            <h4 className="font-semibold mb-3 mt-6">Update Status</h4>
-                            <div className="flex gap-2">
-                              <StatusButton orderId={order._id} currentStatus={order.status} targetStatus="diproses" label="Processed" onUpdate={handleUpdateStatus} />
-                              <StatusButton orderId={order._id} currentStatus={order.status} targetStatus="dikirim" label="Sent" onUpdate={handleUpdateStatus} />
-                              <StatusButton orderId={order._id} currentStatus={order.status} targetStatus="sampai" label="Arrived" onUpdate={handleUpdateStatus} />
-                            </div>
-                          </>
-                        )}
+                        {!isOrderFinal &&
+                          !["pengembalian", "pembatalan diajukan"].includes(
+                            order.status
+                          ) && (
+                            <>
+                              <h4 className="font-semibold mb-3 mt-6">
+                                Update Status
+                              </h4>
+                              <div className="flex gap-2">
+                                <StatusButton
+                                  orderId={order._id}
+                                  currentStatus={order.status}
+                                  targetStatus="diproses"
+                                  label="Processed"
+                                  onUpdate={handleUpdateStatus}
+                                />
+                                <StatusButton
+                                  orderId={order._id}
+                                  currentStatus={order.status}
+                                  targetStatus="dikirim"
+                                  label="Sent"
+                                  onUpdate={handleUpdateStatus}
+                                />
+                                <StatusButton
+                                  orderId={order._id}
+                                  currentStatus={order.status}
+                                  targetStatus="sampai"
+                                  label="Arrived"
+                                  onUpdate={handleUpdateStatus}
+                                />
+                              </div>
+                            </>
+                          )}
                       </div>
                     </div>
 
                     <div className="border-t mt-6 pt-4">
                       <h4 className="font-semibold mb-2">Shipping Details</h4>
-                      <p className="text-sm text-black font-medium">{order.nama}</p>
-                      <p className="text-sm text-gray-600">{formatPhoneNumber(order.noTelpPenerima)}</p>
-                      <p className="text-sm text-gray-600 whitespace-pre-line">{order.alamat}</p>
+                      <p className="text-sm text-black font-medium">
+                        {order.nama}
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        {formatPhoneNumber(order.noTelpPenerima)}
+                      </p>
+                      <p className="text-sm text-gray-600 whitespace-pre-line">
+                        {order.alamat}
+                      </p>
                       <p className="text-sm text-gray-600 mt-2">
-                        Metode Pembayaran: <span className="font-medium text-black">{order.metodePembayaran}</span>
+                        Metode Pembayaran:{" "}
+                        <span className="font-medium text-black">
+                          {order.metodePembayaran}
+                        </span>
                       </p>
                     </div>
                   </div>

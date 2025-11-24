@@ -16,6 +16,8 @@ import Cart from "./pages/Cart";
 import Pesanan from "./pages/Pesanan";
 import Review from "./pages/Review";
 import LaporanPesanan from "./laporan/LaporanPesanan";
+import LaporanPesananAdmin from "./admin/laporanAdmin/LaporanPesananAdmin";
+import LaporanPesananCeo from "./ceo/laporanCeo/LaporanPesananCeo";
 import PengembalianBarang from "./pages/PengembalianBarang";
 import "./index.css";
 import axios from "axios";
@@ -705,10 +707,20 @@ const { user, token, isAuthenticated } = useSelector((state) => state.users);
             }
           />
           <Route
-            path="/laporan"
+            path="/laporan-order-admin"
             element={
-              isAdmin || isPemilik ? (
-                <LaporanPesanan checkouts={checkouts} />
+              isAdmin ? ( 
+                <LaporanPesananAdmin checkouts={checkouts} />
+              ) : (
+                <Home API_URL={API_URL} />
+              )
+            }
+          />
+          <Route
+            path="/laporan-order-ceo"
+            element={
+              isPemilik ? ( 
+                <LaporanPesananCeo checkouts={checkouts} />
               ) : (
                 <Home API_URL={API_URL} />
               )
