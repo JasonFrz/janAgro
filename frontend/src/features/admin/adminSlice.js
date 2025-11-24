@@ -16,6 +16,23 @@ export const fetchUsers = createAsyncThunk(
   }
 );
 
+export const fetchCheckouts = createAsyncThunk(
+  "admin/fetchCheckouts",
+  async (_, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("token");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+      const response = await axios.get(`${API_URL}/checkouts/all`, { headers });
+      return response.data.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || err.message);
+    }
+  }
+);
+
+
+
 // THUNK: Memperbarui pengguna
 export const editUser = createAsyncThunk(
   "admin/editUser",
@@ -149,6 +166,18 @@ const adminSlice = createSlice({
       .addCase(updateCheckoutStatus.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || action.error?.message;
+      })
+      .addCase(fetchCheckouts.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchCheckouts.fulfilled, (state, action) => {
+        state.loading = false;
+        state.checkouts = action.payload;
+      })
+      .addCase(fetchCheckouts.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       });
   },
 });

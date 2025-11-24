@@ -118,6 +118,18 @@ router.post("/create", authenticateToken, async (req, res) => {
   }
 });
 
+router.get("/all", authenticateToken, async (req, res) => {
+  try {
+    // optionally check if the user is admin
+    // if (!req.user.isAdmin) return res.status(403).json({ message: "Forbidden" });
+
+    const checkouts = await Checkout.find({}).sort({ createdAt: -1 });
+    res.status(200).json({ success: true, data: checkouts });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Error fetching all orders" });
+  }
+});
+
 router.post("/verify-payment/:orderId", authenticateToken, async (req, res) => {
     try {
         const { orderId } = req.params;
