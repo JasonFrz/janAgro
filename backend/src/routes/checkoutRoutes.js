@@ -46,7 +46,7 @@ const handleSuccessfulTransaction = async (checkout) => {
 router.post("/create", authenticateToken, async (req, res) => {
   try {
     const userId = req.user.id;
-    const { totalHarga, items, nama, alamat, noTelpPenerima } = req.body;
+    const { totalHarga, items, nama, alamat, noTelpPenerima, diskon, kurir } = req.body;
 
     const checkoutItems = items.map(item => ({ 
       product: item._id, 
@@ -71,20 +71,28 @@ router.post("/create", authenticateToken, async (req, res) => {
       quantity: item.quantity,
       name: item.name.substring(0, 50),
     }));
-    
-    if (req.body.kurir && req.body.kurir.biaya > 0) {
+    if (kurir && kurir.biaya > 0) {
         itemDetails.push({ 
             id: 'SHIPPING_FEE', 
-            price: Math.round(req.body.kurir.biaya), 
+            price: Math.round(kurir.biaya), 
             quantity: 1, 
             name: 'Courier Fee' 
+        });
+    }
+
+    if (diskon && diskon > 0) {
+        itemDetails.push({
+            id: 'VOUCHER_DISCOUNT',
+            price: -Math.round(diskon),
+            quantity: 1,
+            name: 'Discount Voucher'
         });
     }
 
     const parameter = {
       transaction_details: {
         order_id: savedCheckout._id.toString(),
-        gross_amount: Math.round(totalHarga),
+        gross_amount: Math.round(totalHarga), 
       },
       item_details: itemDetails,
       customer_details: {
@@ -105,7 +113,8 @@ router.post("/create", authenticateToken, async (req, res) => {
 
   } catch (error) {
     console.error("Error creating transaction:", error);
-    res.status(500).json({ success: false, message: "Server error during checkout creation." });
+    const errorMessage = error.ApiResponse ? JSON.stringify(error.ApiResponse) : error.message;
+    res.status(500).json({ success: false, message: "Server error: " + errorMessage });
   }
 });
 
@@ -119,7 +128,6 @@ router.post("/verify-payment/:orderId", authenticateToken, async (req, res) => {
             return res.status(200).json({ success: true, message: "Already processed" });
         }
 
-        // Cek ke Midtrans Server
         const midtransStatus = await snap.transaction.status(orderId);
         const transactionStatus = midtransStatus.transaction_status;
         const fraudStatus = midtransStatus.fraud_status;

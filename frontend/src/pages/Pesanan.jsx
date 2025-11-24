@@ -391,7 +391,6 @@ const Pesanan = ({
                               >
                                 <div className="flex gap-4">
                                   <div className="w-16 h-16 bg-gray-100 rounded-md flex-shrink-0 overflow-hidden">
-                                    {/* --- PERUBAHAN DI SINI: Gunakan item.image langsung --- */}
                                     {item.image ? (
                                       <img
                                         src={item.image}

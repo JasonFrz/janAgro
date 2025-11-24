@@ -627,8 +627,8 @@ const { user, token, isAuthenticated } = useSelector((state) => state.users);
             }
           />
           <Route
-            path="/review/:productId"
-            element={<ReviewWrapper produk={produk} API_URL={API_URL} />}
+           path="/review/:productId"
+    element={<ReviewWrapper />}
           />
           <Route
             path="/pengembalian-barang/:orderId"
@@ -763,21 +763,8 @@ const ProductDetailWrapper = ({
   );
 };
 
-const ReviewWrapper = ({ produk, onAddReview, API_URL }) => {
-  const { productId } = useParams();
-  const productToReview = produk.find((p) => p._id === productId);
-
-  if (produk.length === 0) {
-    return <div>Loading product...</div>;
-  }
-
-  return (
-    <Review
-      product={productToReview}
-      onAddReview={onAddReview}
-      API_URL={API_URL}
-    />
-  );
+const ReviewWrapper = () => {
+  return <Review />;
 };
 
 const PengembalianBarangWrapper = ({ checkouts, onSubmitReturn, API_URL }) => {

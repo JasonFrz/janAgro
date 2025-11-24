@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link} from "react-router-dom"; // Tambah useParams
+import axios from "axios"; // Tambah axios
 import {
   Star,
   ArrowLeft,
@@ -7,11 +8,10 @@ import {
   AlertCircle,
   CheckCircle,
   Truck,
+  PlayCircle 
 } from "lucide-react";
 
-// SERVER_URL tidak lagi dibutuhkan untuk gambar Cloudinary
-// const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
-// const SERVER_URL = API_URL.replace("/api", "");
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
 const Notification = ({ message, type }) => {
   if (!message) return null;
@@ -44,7 +44,6 @@ const StarRating = ({ rating }) => (
 
 const ProductDetail = ({
   product,
-  reviews,
   users,
   user,
   onAddToCart,
@@ -53,6 +52,27 @@ const ProductDetail = ({
   const [ratingFilter, setRatingFilter] = useState(0);
   const [mediaFilter, setMediaFilter] = useState("all");
   const [notification, setNotification] = useState(null);
+  
+  const [reviewsList, setReviewsList] = useState([]);
+  const [loadingReviews, setLoadingReviews] = useState(true);
+
+  useEffect(() => {
+    const fetchReviews = async () => {
+      if (!product?._id) return;
+      try {
+        const response = await axios.get(`${API_URL}/reviews/product/${product._id}`);
+        if (response.data.success) {
+          setReviewsList(response.data.data);
+        }
+      } catch (error) {
+        console.error("Gagal mengambil review:", error);
+      } finally {
+        setLoadingReviews(false);
+      }
+    };
+
+    fetchReviews();
+  }, [product]);
 
   useEffect(() => {
     if (notification) {
@@ -86,24 +106,23 @@ const ProductDetail = ({
     setNotification({ type: messageType, message: resultMessage });
   };
 
-  const filteredReviews = reviews
-    .filter((r) => r.productId === product._id)
+  const filteredReviews = reviewsList
     .filter((r) => ratingFilter === 0 || r.rating === ratingFilter)
     .filter(
       (r) =>
         mediaFilter === "all" ||
-        (mediaFilter === "dengan-media" && r.imageUrl) ||
-        (mediaFilter === "tanpa-media" && !r.imageUrl)
+        (mediaFilter === "dengan-media" && r.media && r.media.length > 0) ||
+        (mediaFilter === "tanpa-media" && (!r.media || r.media.length === 0))
     );
 
   return (
     <>
       <Notification message={notification?.message} type={notification?.type} />
+      
       <div className="fixed top-24 right-4 sm:right-8 z-30 flex flex-col gap-4">
         <Link
           to="/cart"
           className="relative bg-white p-4 rounded-full shadow-lg border transition-transform hover:scale-110"
-          aria-label="Buka Keranjang"
         >
           <ShoppingCart size={24} className="text-black" />
           {cartCount > 0 && (
@@ -116,12 +135,12 @@ const ProductDetail = ({
           <Link
             to="/pesanan"
             className="relative bg-white p-4 rounded-full shadow-lg border transition-transform hover:scale-110"
-            aria-label="Lacak Pesanan"
           >
             <Truck size={24} className="text-black" />
           </Link>
         )}
       </div>
+
       <div className="min-h-screen bg-white pt-24">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <Link
@@ -130,11 +149,9 @@ const ProductDetail = ({
           >
             <ArrowLeft size={20} /> Kembali ke Toko
           </Link>
+
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
-            
-            <div className="lg:col-span-2 flex items-center justify-center bg-gray-100 rounded-sm h-96 overflow-hidden">
-              {/* --- PERUBAHAN DI SINI --- */}
-              {/* Langsung gunakan product.image (Cloudinary URL) */}
+            <div className="lg:col-span-2 flex items-center justify-center bg-gray-100 rounded-sm h-96 overflow-hidden border">
               {product.image ? (
                 <img
                   src={product.image}
@@ -175,8 +192,10 @@ const ProductDetail = ({
               </button>
             </div>
           </div>
+
           <div className="mt-16 border-t pt-12">
-            <h2 className="text-3xl font-bold mb-4">Ulasan Produk</h2>
+            <h2 className="text-3xl font-bold mb-4">Ulasan Produk ({reviewsList.length})</h2>
+            
             <div className="flex flex-col md:flex-row gap-4 mb-8 p-4 border rounded-sm">
               <div className="flex-1">
                 <label className="block text-sm font-medium mb-2">
@@ -221,70 +240,87 @@ const ProductDetail = ({
                         : "bg-white text-gray-700 border-gray-300 hover:border-black"
                     }`}
                   >
-                    Dengan Media
-                  </button>
-                  <button
-                    onClick={() => setMediaFilter("tanpa-media")}
-                    className={`px-4 py-2 text-sm rounded-sm border transition ${
-                      mediaFilter === "tanpa-media"
-                        ? "bg-black text-white border-black"
-                        : "bg-white text-gray-700 border-gray-300 hover:border-black"
-                    }`}
-                  >
-                    Tanpa Media
+                    Dengan Foto/Video
                   </button>
                 </div>
               </div>
             </div>
-            {filteredReviews.length > 0 ? (
+
+            {loadingReviews ? (
+              <p>Memuat ulasan...</p>
+            ) : filteredReviews.length > 0 ? (
               <div className="space-y-8">
-                {filteredReviews.map((review) => {
-                  const reviewUser = users.find((u) => u.id === review.userId);
-                  return (
-                    <div key={review.id} className="flex gap-4 border-b pb-8">
-                      <div className="w-12 h-12 rounded-full bg-gray-200 flex-shrink-0 flex items-center justify-center font-bold text-gray-500 overflow-hidden">
-                         {/* Optional: Jika user avatar juga dari cloudinary */}
-                        {reviewUser?.avatar ? (
-                             <img src={reviewUser.avatar} alt="avatar" className="w-full h-full object-cover"/>
-                        ) : (
-                             reviewUser ? reviewUser.name.charAt(0) : "A"
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="font-semibold">
-                              {reviewUser ? reviewUser.name : "Anonim"}
-                            </p>
-                            <StarRating rating={review.rating} />
-                          </div>
-                          <p className="text-sm text-gray-500">
-                            {new Date(review.date).toLocaleDateString("id-ID", {
-                              year: "numeric",
-                              month: "long",
-                              day: "numeric",
-                            })}
-                          </p>
-                        </div>
-                        <p className="text-gray-700 mt-2">{review.comment}</p>
-                        {review.imageUrl && (
-                          <div className="mt-4">
-                            {/* Gambar review biasanya sudah URL lengkap, jadi aman */}
-                            <img
-                              src={review.imageUrl}
-                              alt="Ulasan produk"
-                              className="max-w-xs rounded-md border"
-                            />
-                          </div>
-                        )}
-                      </div>
+                {filteredReviews.map((review) => (
+                  <div key={review._id} className="flex gap-4 border-b pb-8 last:border-b-0">
+                    <div className="w-12 h-12 rounded-full bg-gray-200 flex-shrink-0 flex items-center justify-center font-bold text-gray-500 overflow-hidden border">
+                      {review.userAvatar ? (
+                        <img
+                          src={review.userAvatar}
+                          alt="avatar"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        review.userName.charAt(0).toUpperCase()
+                      )}
                     </div>
-                  );
-                })}
+
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-2">
+                        <div>
+                          <p className="font-semibold text-gray-900">
+                            {review.userName}
+                          </p>
+                          <StarRating rating={review.rating} />
+                        </div>
+                        <p className="text-sm text-gray-500">
+                          {new Date(review.createdAt).toLocaleDateString("id-ID", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          })}
+                        </p>
+                      </div>
+                      
+                      <p className="text-gray-700 mt-2 mb-4 leading-relaxed">
+                        {review.comment}
+                      </p>
+
+                      {review.media && review.media.length > 0 && (
+                        <div className="flex gap-3 overflow-x-auto pb-2">
+                          {review.media.map((item, idx) => (
+                            <div key={idx} className="relative w-32 h-32 flex-shrink-0 bg-black rounded-md overflow-hidden border">
+                              {item.type === 'video' ? (
+                                <div className="relative w-full h-full group">
+                                  <video 
+                                    src={item.url} 
+                                    className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition"
+                                    controls 
+                                  />
+                                  <div className="absolute top-2 right-2 text-white pointer-events-none">
+                                     <PlayCircle size={20} className="drop-shadow-md"/>
+                                  </div>
+                                </div>
+                              ) : (
+                                <a href={item.url} target="_blank" rel="noopener noreferrer">
+                                  <img
+                                    src={item.url}
+                                    alt={`Review media ${idx}`}
+                                    className="w-full h-full object-cover hover:scale-105 transition-transform cursor-zoom-in"
+                                  />
+                                </a>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : (
-              <p className="text-gray-500 bg-gray-50 p-6 rounded-sm">
-                Tidak ada ulasan yang cocok dengan filter Anda.
+              <p className="text-gray-500 bg-gray-50 p-6 rounded-sm text-center">
+                Belum ada ulasan atau tidak ada yang cocok dengan filter.
               </p>
             )}
           </div>

@@ -18,6 +18,7 @@
     const userRoutes = require('./src/routes/userRoutes');
     const cartRoutes = require('./src/routes/cartRoutes');
     const checkoutRoutes = require('./src/routes/checkoutRoutes');
+    const reviewRoutes = require("./src/routes/reviewRoutes");
 
     app.use("/api/auth", authRoutes);
     app.use("/api/products", productsRoutes);
@@ -26,6 +27,7 @@
     app.use('/api/users', userRoutes);
     app.use('/api/cart', cartRoutes);
     app.use('/api/checkouts', checkoutRoutes);
+    app.use("/api/reviews", reviewRoutes);
 
 
     app.listen(port, () => console.log(`Example app listening on port ${port}!`));
