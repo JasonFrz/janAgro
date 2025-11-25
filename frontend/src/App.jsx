@@ -19,6 +19,7 @@ import LaporanPesanan from "./laporan/LaporanPesanan";
 import LaporanPesananAdmin from "./admin/laporanAdmin/LaporanPesananAdmin";
 import LaporanPesananCeo from "./ceo/laporanCeo/LaporanPesananCeo";
 import LaporanUserBaruCeo from "./ceo/laporanCeo/LaporanUserBaruCeo";
+import LaporanUserSetiaCeo from "./ceo/laporanCeo/LaporanUserSetiaCeo";
 import PengembalianBarang from "./pages/PengembalianBarang";
 import "./index.css";
 import axios from "axios";

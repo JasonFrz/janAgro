@@ -30,17 +30,13 @@ ChartJS.register(
 const LaporanUserBaruCeo = () => {
   const dispatch = useDispatch();
   const { userReportData, loading } = useSelector((state) => state.admin);
-
-  // Filter States
-  const [filterType, setFilterType] = useState("yearly"); // 'yearly' | 'monthly' | 'daily'
-
+  const [filterType, setFilterType] = useState("yearly"); 
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedDate, setSelectedDate] = useState(
     new Date().toISOString().split("T")[0]
   );
 
-  // Fetch data ketika filter berubah
   useEffect(() => {
     let params = {};
     if (filterType === "yearly") {
@@ -59,7 +55,6 @@ const LaporanUserBaruCeo = () => {
     dispatch(fetchUserReport(params));
   }, [dispatch, filterType, selectedYear, selectedMonth, selectedDate]);
 
-  // --- CHART LOGIC ---
   const chartData = useMemo(() => {
     const data = userReportData || [];
     let labels = [];
@@ -67,7 +62,6 @@ const LaporanUserBaruCeo = () => {
     let labelText = "";
 
     if (filterType === "yearly") {
-      // Tampilkan 12 Bulan
       labels = [
         "Jan",
         "Feb",
@@ -89,7 +83,6 @@ const LaporanUserBaruCeo = () => {
       });
       labelText = `Registrasi User Tahun ${selectedYear}`;
     } else if (filterType === "monthly") {
-      // Tampilkan Hari dalam Bulan (1 - 31)
       const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
       labels = Array.from({ length: daysInMonth }, (_, i) => i + 1);
       counts = Array(daysInMonth).fill(0);
@@ -99,7 +92,6 @@ const LaporanUserBaruCeo = () => {
       });
       labelText = `Registrasi User Bulan ${selectedMonth}/${selectedYear}`;
     } else {
-      // Daily: Tampilkan Jam (00 - 23)
       labels = Array.from({ length: 24 }, (_, i) => `${i}:00`);
       counts = Array(24).fill(0);
       data.forEach((user) => {
@@ -123,7 +115,6 @@ const LaporanUserBaruCeo = () => {
     };
   }, [userReportData, filterType, selectedYear, selectedMonth, selectedDate]);
 
-  // --- PDF EXPORT ---
   const handleExportPDF = () => {
     const doc = new jsPDF();
     const tableColumn = ["No", "Nama", "Username", "Role", "Tanggal Join"];
@@ -146,7 +137,6 @@ const LaporanUserBaruCeo = () => {
       tableRows.push(rowData);
     });
 
-    // Generate Title
     let titleText = "";
     if (filterType === "daily")
       titleText = `Harian (${new Date(selectedDate).toLocaleDateString(
@@ -218,7 +208,6 @@ const LaporanUserBaruCeo = () => {
           35
         );
 
-        // Footer Signature
         if (data.pageNumber === doc.internal.getNumberOfPages()) {
           const pageHeight = doc.internal.pageSize.getHeight();
           const pageWidth = doc.internal.pageSize.getWidth();
@@ -281,7 +270,6 @@ const LaporanUserBaruCeo = () => {
   return (
     <div className="bg-white min-h-screen pt-24 text-black font-sans">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 space-y-8">
-        {/* Header */}
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center border-b-4 border-black pb-4 gap-4">
           <div>
             <h1 className="text-4xl font-black uppercase tracking-tight">
@@ -300,7 +288,6 @@ const LaporanUserBaruCeo = () => {
           </Link>
         </header>
 
-        {/* Filter Controls */}
         <div className="bg-white border-2 border-black p-6 rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
           <div className="flex flex-col md:flex-row justify-between items-end md:items-center mb-6 border-b-2 border-gray-200 pb-4">
             <h2 className="text-xl font-bold flex items-center gap-2">
@@ -328,7 +315,6 @@ const LaporanUserBaruCeo = () => {
           </div>
 
           <div className="flex flex-wrap gap-4 items-center">
-            {/* Inputs based on Filter Type */}
             {filterType === "daily" && (
               <div className="flex flex-col">
                 <label className="text-xs font-bold uppercase mb-1">
@@ -401,15 +387,11 @@ const LaporanUserBaruCeo = () => {
           </div>
         ) : (
           <>
-            {/* Chart Section */}
             <div className="bg-white border-2 border-black p-6 rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
               <div className="h-80 w-full">
                 <Bar data={chartData} options={chartOptions} />
               </div>
             </div>
-
-            {/* Table Section */}
-            {/* PERBAIKAN: Menambahkan max-height dan sticky header */}
             <div className="bg-white border-2 border-black rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
               <div className="p-4 border-b-2 border-black bg-gray-50 flex justify-between items-center">
                 <h3 className="text-lg font-black uppercase flex items-center gap-2">
@@ -419,7 +401,6 @@ const LaporanUserBaruCeo = () => {
                   Total: {userReportData.length}
                 </span>
               </div>
-              {/* Container Scrollable */}
               <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
                 <table className="w-full text-left border-collapse relative">
                   <thead className="bg-black text-white sticky top-0 z-10 shadow-md">

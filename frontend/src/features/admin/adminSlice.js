@@ -3,9 +3,6 @@ import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
-// --- EXISTING THUNKS ---
-
-// THUNK: Mengambil semua pengguna (Untuk Manajemen User)
 export const fetchUsers = createAsyncThunk(
   "admin/fetchUsers",
   async (_, { rejectWithValue }) => {
@@ -18,7 +15,6 @@ export const fetchUsers = createAsyncThunk(
   }
 );
 
-// THUNK: Fetch operational checkouts (Harian/Semua)
 export const fetchCheckouts = createAsyncThunk(
   "admin/fetchCheckouts",
   async (_, { rejectWithValue }) => {
@@ -34,7 +30,6 @@ export const fetchCheckouts = createAsyncThunk(
   }
 );
 
-// THUNK: Fetch CEO Report (Laporan Pesanan/Keuangan)
 export const fetchCeoReport = createAsyncThunk(
   "admin/fetchCeoReport",
   async ({ year, month }, { rejectWithValue }) => {
@@ -54,8 +49,6 @@ export const fetchCeoReport = createAsyncThunk(
   }
 );
 
-// --- NEW THUNK: Fetch User Report (Laporan User Baru) ---
-// Pastikan route backend '/users/user-report' sudah dibuat di routes/user.js
 export const fetchUserReport = createAsyncThunk(
   "admin/fetchUserReport",
   async (params, { rejectWithValue }) => {
@@ -63,7 +56,6 @@ export const fetchUserReport = createAsyncThunk(
       const token = localStorage.getItem("token");
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
       
-      // params berisi { year, month, day } dari komponen UI
       const response = await axios.get(`${API_URL}/users/user-report`, { 
         headers,
         params 
@@ -76,7 +68,22 @@ export const fetchUserReport = createAsyncThunk(
   }
 );
 
-// THUNK: Memperbarui pengguna
+export const fetchLoyalUsersReport = createAsyncThunk(
+  "admin/fetchLoyalUsersReport",
+  async (_, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("token");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      
+      const response = await axios.get(`${API_URL}/checkouts/loyal-users-report`, { headers });
+      
+      return response.data.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || err.message);
+    }
+  }
+);
+
 export const editUser = createAsyncThunk(
   "admin/editUser",
   async ({ id, userData }, { rejectWithValue }) => {
@@ -91,7 +98,6 @@ export const editUser = createAsyncThunk(
   }
 );
 
-// THUNK: Menghapus pengguna
 export const deleteUser = createAsyncThunk(
   "admin/deleteUser",
   async (id, { rejectWithValue }) => {
@@ -104,7 +110,6 @@ export const deleteUser = createAsyncThunk(
   }
 );
 
-// THUNK: Mengubah status ban
 export const toggleBanUser = createAsyncThunk(
   "admin/toggleBanUser",
   async (id, { rejectWithValue }) => {
@@ -117,7 +122,6 @@ export const toggleBanUser = createAsyncThunk(
   }
 );
 
-// THUNK: Update checkout status
 export const updateCheckoutStatus = createAsyncThunk(
   "admin/updateCheckoutStatus",
   async ({ id, status }, { rejectWithValue }) => {
@@ -161,10 +165,11 @@ export const decideCancellation = createAsyncThunk(
 const adminSlice = createSlice({
   name: "admin",
   initialState: {
-    users: [], // Data User Manajemen (UserCeo.jsx)
-    checkouts: [], // Data Pesanan Operasional
-    ceoReportData: [], // Data Laporan Pesanan (LaporanPesananCeo.jsx)
-    userReportData: [], // NEW: Data Laporan User Baru (LaporanUserBaruCeo.jsx)
+    users: [], 
+    checkouts: [], 
+    ceoReportData: [], 
+    userReportData: [], 
+    loyalUsersData: [],
     loading: false,
     error: null,
   },
@@ -175,7 +180,6 @@ const adminSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // --- Fetch Users (Management) ---
       .addCase(fetchUsers.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -188,8 +192,6 @@ const adminSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-
-      // --- Fetch Checkouts (Operational) ---
       .addCase(fetchCheckouts.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -202,8 +204,6 @@ const adminSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-
-      // --- Fetch CEO Report (Laporan Pesanan) ---
       .addCase(fetchCeoReport.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -216,40 +216,45 @@ const adminSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-
-      // --- NEW: Fetch User Report (Laporan User) ---
       .addCase(fetchUserReport.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(fetchUserReport.fulfilled, (state, action) => {
         state.loading = false;
-        state.userReportData = action.payload; // Simpan ke state khusus laporan user
+        state.userReportData = action.payload;
       })
       .addCase(fetchUserReport.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
-
-      // --- Edit User ---
+      .addCase(fetchLoyalUsersReport.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchLoyalUsersReport.fulfilled, (state, action) => {
+        state.loading = false;
+        state.loyalUsersData = action.payload;
+      })
+      .addCase(fetchLoyalUsersReport.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
       .addCase(editUser.fulfilled, (state, action) => {
         const index = state.users.findIndex(u => u._id === action.payload._id);
         if (index !== -1) {
           state.users[index] = action.payload;
         }
       })
-      // --- Delete User ---
       .addCase(deleteUser.fulfilled, (state, action) => {
         state.users = state.users.filter(u => u._id !== action.payload);
       })
-      // --- Toggle Ban ---
       .addCase(toggleBanUser.fulfilled, (state, action) => {
         const index = state.users.findIndex(u => u._id === action.payload._id);
         if (index !== -1) {
           state.users[index] = action.payload;
         }
       })
-      // --- Update Checkout Status ---
       .addCase(updateCheckoutStatus.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -258,8 +263,6 @@ const adminSlice = createSlice({
         state.loading = false;
         const updated = action.payload;
         if (!updated) return;
-        
-        // Update di list operational
         const idx = state.checkouts.findIndex(c => c._id === updated._id);
         if (idx !== -1) {
           state.checkouts[idx] = { ...state.checkouts[idx], ...updated };
@@ -271,7 +274,6 @@ const adminSlice = createSlice({
         state.loading = false;
         state.error = action.payload || action.error?.message;
       })
-      // --- Decide Cancellation ---
       .addCase(decideCancellation.pending, (state) => {
         state.loading = true;
         state.error = null;

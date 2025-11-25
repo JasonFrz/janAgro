@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchLoyalUsersReport } from "../../features/admin/adminSlice";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { janAgroLogoBase64 } from "./logoBase64"; // Pastikan path benar
+import { janAgroLogoBase64 } from "./logoBase64"; 
 
 const LaporanUserSetiaCeo = () => {
   const dispatch = useDispatch();
@@ -26,7 +26,6 @@ const LaporanUserSetiaCeo = () => {
     const tableRows = [];
 
     loyalUsersData.forEach((user, index) => {
-      // Logika sederhana untuk mengambil barang unik yang dibeli
       const uniqueItems = [...new Set(user.allItems.map(item => item.name))].slice(0, 5).join(", ");
       
       const rowData = [
@@ -67,7 +66,6 @@ const LaporanUserSetiaCeo = () => {
     doc.save(`laporan_user_setia_${fullDate}.pdf`);
   };
 
-  // Helper untuk mengelompokkan item agar tidak duplikat di UI detail
   const groupItems = (items) => {
     const grouped = {};
     items.forEach(item => {
@@ -91,7 +89,6 @@ const LaporanUserSetiaCeo = () => {
     <div className="bg-white min-h-screen pt-24 text-black font-sans pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         
-        {/* Header */}
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center border-b-4 border-black pb-4 gap-4">
           <div>
             <h1 className="text-4xl font-black uppercase tracking-tight">Top Loyal Customers</h1>
@@ -121,7 +118,6 @@ const LaporanUserSetiaCeo = () => {
             <div className="space-y-6">
                 {loyalUsersData.map((user, index) => (
                     <div key={user._id} className="border-2 border-black rounded-lg overflow-hidden shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all hover:-translate-y-1">
-                        {/* User Summary Row */}
                         <div 
                             className="p-6 bg-white flex flex-col md:flex-row items-center justify-between gap-6 cursor-pointer hover:bg-gray-50"
                             onClick={() => toggleExpand(user._id)}
@@ -168,7 +164,6 @@ const LaporanUserSetiaCeo = () => {
                             </div>
                         </div>
 
-                        {/* Expanded Details (Purchase History Summary) */}
                         {expandedUser === user._id && (
                             <div className="bg-gray-100 border-t-2 border-black p-6 animate-fade-in">
                                 <h4 className="font-bold text-lg mb-4 flex items-center gap-2">

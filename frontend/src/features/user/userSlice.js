@@ -5,7 +5,6 @@ import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
-// --- Bagian AsyncThunk Anda tetap sama ---
 export const fetchUsers = createAsyncThunk(
   "users/get-all-users",
   async (_, { rejectWithValue }) => {
@@ -41,9 +40,8 @@ export const loginUser = createAsyncThunk(
         identifier,
         password,
       });
-      // Simpan token ke localStorage saat login berhasil
       localStorage.setItem('token', res.data.token); 
-      return res.data; // { token, user }
+      return res.data; 
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || "Login failed");
     }
@@ -51,7 +49,6 @@ export const loginUser = createAsyncThunk(
 );
 
 export const logoutUser = createAsyncThunk("users/logoutUser", async () => {
-  // Hapus token dari localStorage saat logout
   localStorage.removeItem('token');
   return null;
 });
@@ -68,16 +65,12 @@ const userSlice = createSlice({
         user: null,
         successMessage: null,
     },
-    // --- PERBAIKAN UTAMA DI SINI ---
-    // Tambahkan reducer untuk action sinkron
     reducers: {
-        // Reducer ini akan dipanggil dari App.jsx untuk mengisi ulang state
         setCredentials: (state, action) => {
             state.user = action.payload.user;
             state.token = action.payload.token;
             state.isAuthenticated = true;
         },
-        // Reducer untuk membersihkan state saat logout
         clearCredentials: (state) => {
             state.user = null;
             state.token = null;
@@ -105,7 +98,6 @@ const userSlice = createSlice({
             .addCase(addUser.fulfilled, (state, action) => {
                 state.loading = false;
                 state.users.push(action.payload);
-                // state.isAuthenticated tidak perlu di-set di sini karena register tidak otomatis login
             })
             .addCase(addUser.rejected, (state, action) => {
                 state.loading = false;
@@ -128,7 +120,6 @@ const userSlice = createSlice({
                 state.token = action.payload.token;
                 state.isAuthenticated = true;
             })
-            // Tambahkan case untuk logoutUser
             .addCase(logoutUser.fulfilled, (state) => {
                 state.user = null;
                 state.token = null;
@@ -137,7 +128,6 @@ const userSlice = createSlice({
     }
 });
 
-// --- EKSPOR ACTION BARU YANG SUDAH DIBUAT ---
 export const { setCredentials, clearCredentials } = userSlice.actions;
 
 export default userSlice.reducer;
