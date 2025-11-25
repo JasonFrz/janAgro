@@ -1,0 +1,512 @@
+import React, { useState, useEffect, useMemo } from "react";
+import { Link } from "react-router-dom";
+import { Bar } from "react-chartjs-2";
+import { ArrowLeft, FileText, Calendar, Users } from "lucide-react";
+import jsPDF from "jspdf";
+import autoTable from "jspdf-autotable";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchUserReport } from "../../features/admin/adminSlice";
+import { janAgroLogoBase64 } from "./logoBase64";
+
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend,
+} from "chart.js";
+
+ChartJS.register(
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  Title,
+  Tooltip,
+  Legend
+);
+
+const LaporanUserBaruCeo = () => {
+  const dispatch = useDispatch();
+  const { userReportData, loading } = useSelector((state) => state.admin);
+
+  // Filter States
+  const [filterType, setFilterType] = useState("yearly"); // 'yearly' | 'monthly' | 'daily'
+
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+  const [selectedDate, setSelectedDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
+
+  // Fetch data ketika filter berubah
+  useEffect(() => {
+    let params = {};
+    if (filterType === "yearly") {
+      params = { year: selectedYear };
+    } else if (filterType === "monthly") {
+      params = { year: selectedYear, month: selectedMonth };
+    } else if (filterType === "daily") {
+      const dateObj = new Date(selectedDate);
+      params = {
+        year: dateObj.getFullYear(),
+        month: dateObj.getMonth() + 1,
+        day: dateObj.getDate(),
+      };
+    }
+
+    dispatch(fetchUserReport(params));
+  }, [dispatch, filterType, selectedYear, selectedMonth, selectedDate]);
+
+  // --- CHART LOGIC ---
+  const chartData = useMemo(() => {
+    const data = userReportData || [];
+    let labels = [];
+    let counts = [];
+    let labelText = "";
+
+    if (filterType === "yearly") {
+      // Tampilkan 12 Bulan
+      labels = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "Mei",
+        "Jun",
+        "Jul",
+        "Agu",
+        "Sep",
+        "Okt",
+        "Nov",
+        "Des",
+      ];
+      counts = Array(12).fill(0);
+      data.forEach((user) => {
+        const m = new Date(user.createdAt).getMonth();
+        counts[m]++;
+      });
+      labelText = `Registrasi User Tahun ${selectedYear}`;
+    } else if (filterType === "monthly") {
+      // Tampilkan Hari dalam Bulan (1 - 31)
+      const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
+      labels = Array.from({ length: daysInMonth }, (_, i) => i + 1);
+      counts = Array(daysInMonth).fill(0);
+      data.forEach((user) => {
+        const d = new Date(user.createdAt).getDate();
+        counts[d - 1]++;
+      });
+      labelText = `Registrasi User Bulan ${selectedMonth}/${selectedYear}`;
+    } else {
+      // Daily: Tampilkan Jam (00 - 23)
+      labels = Array.from({ length: 24 }, (_, i) => `${i}:00`);
+      counts = Array(24).fill(0);
+      data.forEach((user) => {
+        const h = new Date(user.createdAt).getHours();
+        counts[h]++;
+      });
+      labelText = `Registrasi User Tanggal ${selectedDate}`;
+    }
+
+    return {
+      labels,
+      datasets: [
+        {
+          label: "User Baru",
+          data: counts,
+          backgroundColor: "rgba(0, 0, 0, 0.8)", // Hitam
+          borderColor: "rgba(0, 0, 0, 1)",
+          borderWidth: 1,
+        },
+      ],
+    };
+  }, [userReportData, filterType, selectedYear, selectedMonth, selectedDate]);
+
+  // --- PDF EXPORT ---
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    const tableColumn = ["No", "Nama", "Username", "Role", "Tanggal Join"];
+    const tableRows = [];
+
+    userReportData.forEach((user, index) => {
+      const rowData = [
+        index + 1,
+        user.name,
+        user.username,
+        user.role.charAt(0).toUpperCase() + user.role.slice(1),
+        new Date(user.createdAt).toLocaleDateString("id-ID", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      ];
+      tableRows.push(rowData);
+    });
+
+    // Generate Title
+    let titleText = "";
+    if (filterType === "daily")
+      titleText = `Harian (${new Date(selectedDate).toLocaleDateString(
+        "id-ID",
+        { dateStyle: "full" }
+      )})`;
+    else if (filterType === "monthly")
+      titleText = `Bulanan (${selectedMonth}/${selectedYear})`;
+    else titleText = `Tahunan (${selectedYear})`;
+
+    autoTable(doc, {
+      head: [tableColumn],
+      body: tableRows,
+      startY: 45,
+      margin: { top: 45 },
+      theme: "grid",
+      styles: {
+        font: "helvetica",
+        fontSize: 9,
+        cellPadding: 2,
+        textColor: [0, 0, 0],
+      },
+      headStyles: {
+        fillColor: [0, 0, 0],
+        textColor: [255, 255, 255],
+        fontStyle: "bold",
+      },
+      didDrawPage: function (data) {
+        const logoWidth = 22;
+        const logoHeight = 22;
+        const margin = data.settings.margin.left;
+
+        try {
+          doc.addImage(
+            janAgroLogoBase64,
+            "JPEG",
+            margin,
+            10,
+            logoWidth,
+            logoHeight,
+            undefined,
+            "FAST"
+          );
+        } catch (e) {}
+
+        doc.setFontSize(14);
+        doc.setFont("helvetica", "bold");
+        doc.text("PT. Jan Agro Nusantara", margin + logoWidth + 5, 16);
+        doc.setFontSize(10);
+        doc.text(
+          `Laporan User Baru - ${titleText}`,
+          margin + logoWidth + 5,
+          22
+        );
+
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "normal");
+        doc.text(
+          "Email: janagronusantara@gmail.com | Telepon: (031) 123-4567",
+          margin + logoWidth + 5,
+          27
+        );
+        doc.setDrawColor(0, 0, 0);
+        doc.setLineWidth(1);
+        doc.line(
+          margin,
+          35,
+          doc.internal.pageSize.getWidth() - data.settings.margin.right,
+          35
+        );
+
+        // Footer Signature
+        if (data.pageNumber === doc.internal.getNumberOfPages()) {
+          const pageHeight = doc.internal.pageSize.getHeight();
+          const pageWidth = doc.internal.pageSize.getWidth();
+          let finalY = data.cursor.y + 20;
+          if (finalY + 40 > pageHeight) {
+            doc.addPage();
+            finalY = 40;
+          }
+
+          doc.setFontSize(10);
+          const signatureX = pageWidth - data.settings.margin.right;
+          doc.text(
+            `Surabaya, ${new Date().toLocaleDateString("id-ID", {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })}`,
+            signatureX,
+            finalY,
+            { align: "right" }
+          );
+          doc.setFont("helvetica", "bold");
+          doc.text("J.Alamsjah,S.H", signatureX, finalY + 25, {
+            align: "right",
+          });
+          doc.setLineWidth(0.5);
+          doc.line(signatureX - 30, finalY + 26, signatureX, finalY + 26);
+          doc.setFont("helvetica", "normal");
+          doc.text("Ceo & Founder", signatureX, finalY + 32, {
+            align: "right",
+          });
+        }
+      },
+    });
+    doc.save(`laporan_user_${filterType}_${new Date().getTime()}.pdf`);
+  };
+
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      title: {
+        display: true,
+        text: `Grafik Pertumbuhan User`,
+        font: { size: 16, weight: "bold" },
+        color: "#000",
+      },
+    },
+    scales: {
+      x: { grid: { display: false }, ticks: { color: "#000" } },
+      y: {
+        beginAtZero: true,
+        ticks: { stepSize: 1, color: "#000" },
+        grid: { color: "#e5e5e5" },
+      },
+    },
+  };
+
+  return (
+    <div className="bg-white min-h-screen pt-24 text-black font-sans">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 space-y-8">
+        {/* Header */}
+        <header className="flex flex-col md:flex-row justify-between items-start md:items-center border-b-4 border-black pb-4 gap-4">
+          <div>
+            <h1 className="text-4xl font-black uppercase tracking-tight">
+              Laporan User Baru
+            </h1>
+            <p className="text-gray-600 font-medium mt-1">
+              Analisis pertumbuhan pengguna platform.
+            </p>
+          </div>
+          <Link
+            to="/ceo"
+            className="group flex items-center bg-black text-white px-5 py-2.5 rounded-lg font-bold hover:bg-gray-800 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)] hover:translate-x-[2px] hover:translate-y-[2px]"
+          >
+            <ArrowLeft className="mr-2 h-5 w-5 group-hover:-translate-x-1 transition-transform" />
+            KEMBALI KE CEO
+          </Link>
+        </header>
+
+        {/* Filter Controls */}
+        <div className="bg-white border-2 border-black p-6 rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+          <div className="flex flex-col md:flex-row justify-between items-end md:items-center mb-6 border-b-2 border-gray-200 pb-4">
+            <h2 className="text-xl font-bold flex items-center gap-2">
+              <Calendar className="h-6 w-6" /> Filter Laporan
+            </h2>
+            <div className="flex bg-gray-100 p-1 rounded-md border border-black mt-4 md:mt-0">
+              {["daily", "monthly", "yearly"].map((type) => (
+                <button
+                  key={type}
+                  onClick={() => setFilterType(type)}
+                  className={`px-4 py-1.5 rounded text-sm font-bold transition-all ${
+                    filterType === type
+                      ? "bg-black text-white shadow-md"
+                      : "text-gray-600 hover:text-black"
+                  }`}
+                >
+                  {type === "daily"
+                    ? "Harian"
+                    : type === "monthly"
+                    ? "Bulanan"
+                    : "Tahunan"}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-4 items-center">
+            {/* Inputs based on Filter Type */}
+            {filterType === "daily" && (
+              <div className="flex flex-col">
+                <label className="text-xs font-bold uppercase mb-1">
+                  Pilih Tanggal
+                </label>
+                <input
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  className="border-2 border-black rounded px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-black"
+                />
+              </div>
+            )}
+
+            {(filterType === "monthly" || filterType === "yearly") && (
+              <div className="flex flex-col">
+                <label className="text-xs font-bold uppercase mb-1">
+                  Tahun
+                </label>
+                <select
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                  className="border-2 border-black rounded px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-black min-w-[100px]"
+                >
+                  {Array.from(
+                    { length: 5 },
+                    (_, i) => new Date().getFullYear() - i
+                  ).map((y) => (
+                    <option key={y} value={y}>
+                      {y}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {filterType === "monthly" && (
+              <div className="flex flex-col">
+                <label className="text-xs font-bold uppercase mb-1">
+                  Bulan
+                </label>
+                <select
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+                  className="border-2 border-black rounded px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-black min-w-[150px]"
+                >
+                  {Array.from({ length: 12 }, (_, i) => (
+                    <option key={i + 1} value={i + 1}>
+                      {new Date(0, i).toLocaleString("id-ID", {
+                        month: "long",
+                      })}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <button
+              onClick={handleExportPDF}
+              className="ml-auto bg-green-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-green-700 transition-all border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] flex items-center gap-2"
+            >
+              <FileText size={20} /> Export PDF
+            </button>
+          </div>
+        </div>
+
+        {loading ? (
+          <div className="flex justify-center items-center h-64 border-2 border-black rounded-lg bg-gray-50">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-black border-t-transparent"></div>
+          </div>
+        ) : (
+          <>
+            {/* Chart Section */}
+            <div className="bg-white border-2 border-black p-6 rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+              <div className="h-80 w-full">
+                <Bar data={chartData} options={chartOptions} />
+              </div>
+            </div>
+
+            {/* Table Section */}
+            {/* PERBAIKAN: Menambahkan max-height dan sticky header */}
+            <div className="bg-white border-2 border-black rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+              <div className="p-4 border-b-2 border-black bg-gray-50 flex justify-between items-center">
+                <h3 className="text-lg font-black uppercase flex items-center gap-2">
+                  <Users size={20} /> Detail Pengguna Baru
+                </h3>
+                <span className="bg-black text-white px-3 py-1 rounded-full text-xs font-bold">
+                  Total: {userReportData.length}
+                </span>
+              </div>
+              {/* Container Scrollable */}
+              <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
+                <table className="w-full text-left border-collapse relative">
+                  <thead className="bg-black text-white sticky top-0 z-10 shadow-md">
+                    <tr>
+                      <th className="p-4 font-bold border-r border-gray-700 w-16 text-center">
+                        No
+                      </th>
+                      <th className="p-4 font-bold border-r border-gray-700">
+                        Nama Lengkap
+                      </th>
+                      <th className="p-4 font-bold border-r border-gray-700">
+                        Email / Kontak
+                      </th>
+                      <th className="p-4 font-bold border-r border-gray-700 text-center">
+                        Role
+                      </th>
+                      <th className="p-4 font-bold text-center">
+                        Tanggal Join
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {userReportData.length > 0 ? (
+                      userReportData.map((user, idx) => (
+                        <tr
+                          key={user._id || idx}
+                          className="border-b-2 border-gray-200 hover:bg-gray-50 transition-colors"
+                        >
+                          <td className="p-4 font-bold text-center border-r-2 border-gray-200">
+                            {idx + 1}
+                          </td>
+                          <td className="p-4 border-r-2 border-gray-200">
+                            <div className="font-bold">{user.name}</div>
+                            <div className="text-xs text-gray-500">
+                              @{user.username}
+                            </div>
+                          </td>
+                          <td className="p-4 border-r-2 border-gray-200 text-sm">
+                            <div>{user.email}</div>
+                            <div className="text-gray-500">
+                              {user.phone || "-"}
+                            </div>
+                          </td>
+                          <td className="p-4 text-center border-r-2 border-gray-200">
+                            <span
+                              className={`px-2 py-1 rounded text-xs font-bold border border-black ${
+                                user.role === "admin"
+                                  ? "bg-blue-100"
+                                  : "bg-gray-100"
+                              }`}
+                            >
+                              {user.role.toUpperCase()}
+                            </span>
+                          </td>
+                          <td className="p-4 text-center font-mono text-sm">
+                            {new Date(user.createdAt).toLocaleDateString(
+                              "id-ID",
+                              {
+                                day: "numeric",
+                                month: "short",
+                                year: "numeric",
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              }
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td
+                          colSpan="5"
+                          className="p-8 text-center text-gray-500 italic font-medium"
+                        >
+                          Tidak ada user baru pada periode ini.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default LaporanUserBaruCeo;

@@ -1,11 +1,11 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Bar } from "react-chartjs-2";
-import { X, ArrowLeft, FileText } from "lucide-react";
+import { X, ArrowLeft, FileText, Calendar, CalendarDays } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { useDispatch, useSelector } from "react-redux"; // Import Redux hooks
-import { fetchCeoReport } from "../../features/admin/adminSlice"; // Import action thunk
+import { useDispatch, useSelector } from "react-redux";
+import { fetchCeoReport } from "../../features/admin/adminSlice";
 
 import {
   Chart as ChartJS,
@@ -28,7 +28,6 @@ ChartJS.register(
   Legend
 );
 
-// --- Helper Component: Modal Detail ---
 const OrderDetailModal = ({ order, onClose }) => {
   if (!order) return null;
   return (
@@ -134,14 +133,13 @@ const OrderDetailModal = ({ order, onClose }) => {
   );
 };
 
-// --- Helper Component: Section List ---
 const LaporanSection = ({ title, orders, onOrderClick }) => (
   <div className="bg-white p-6 rounded-lg border border-black">
     <h2 className="text-xl font-bold mb-4 border-b border-black pb-2">
       {title}
     </h2>
     {orders.length > 0 ? (
-      <div className="divide-y divide-gray-300">
+      <div className="divide-y divide-gray-300 max-h-96 overflow-y-auto pr-2">
         {orders.map((order) => (
           <button
             key={order.id}
@@ -158,7 +156,13 @@ const LaporanSection = ({ title, orders, onOrderClick }) => (
                   Rp {order.totalHarga.toLocaleString("id-ID")}
                 </p>
                 <p className="text-xs text-gray-500">
-                  {new Date(order.tanggal).toLocaleDateString("id-ID")}
+                  {new Date(order.tanggal).toLocaleDateString("id-ID", {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
                 </p>
               </div>
             </div>
@@ -173,31 +177,32 @@ const LaporanSection = ({ title, orders, onOrderClick }) => (
   </div>
 );
 
-// --- Main Component ---
 const LaporanPesananCeo = () => {
   const dispatch = useDispatch();
 
-  // Mengambil data dari Redux store (ceoReportData), bukan dari props
   const { ceoReportData, loading } = useSelector((state) => state.admin);
 
   const [selectedOrder, setSelectedOrder] = useState(null);
+  
+  const [filterType, setFilterType] = useState("monthly"); 
+  
   const [listYear, setListYear] = useState(new Date().getFullYear());
   const [listMonthStart, setListMonthStart] = useState(1);
   const [listMonthEnd, setListMonthEnd] = useState(12);
+
+  const [specificDate, setSpecificDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
+
   const [chartYear, setChartYear] = useState(new Date().getFullYear());
   const [purchaseFilter, setPurchaseFilter] = useState("all");
 
-  // Fetch data saat komponen dimuat
   useEffect(() => {
-    // Kita mengirim object kosong {} agar backend mengembalikan semua data historis.
-    // Ini memungkinkan filter tahun/bulan di frontend bekerja dinamis tanpa fetch ulang.
     dispatch(fetchCeoReport({}));
   }, [dispatch]);
 
-  // Menggunakan ceoReportData sebagai sumber data
   const reportData = ceoReportData || [];
 
-  // Mendapatkan list tahun unik dari data yang ada
   const years = useMemo(() => {
     const uniqueYears = new Set(
       reportData.map((c) => new Date(c.tanggal).getFullYear())
@@ -206,21 +211,25 @@ const LaporanPesananCeo = () => {
     return Array.from(uniqueYears).sort((a, b) => b - a);
   }, [reportData]);
 
-  // Filter data untuk Daftar Pesanan (Tabel/List)
   const filteredCheckoutsForList = useMemo(() => {
     return reportData.filter((checkout) => {
       const checkoutDate = new Date(checkout.tanggal);
-      const yearMatch = checkoutDate.getFullYear() === listYear;
-      const startMonth = Math.min(listMonthStart, listMonthEnd);
-      const endMonth = Math.max(listMonthStart, listMonthEnd);
-      const monthMatch =
-        checkoutDate.getMonth() + 1 >= startMonth &&
-        checkoutDate.getMonth() + 1 <= endMonth;
-      return yearMatch && monthMatch;
-    });
-  }, [reportData, listYear, listMonthStart, listMonthEnd]);
 
-  // Filter data untuk Chart
+      if (filterType === "daily") {
+        const checkoutDateString = checkoutDate.toLocaleDateString('en-CA'); 
+        return checkoutDateString === specificDate;
+      } else {
+        const yearMatch = checkoutDate.getFullYear() === listYear;
+        const startMonth = Math.min(listMonthStart, listMonthEnd);
+        const endMonth = Math.max(listMonthStart, listMonthEnd);
+        const monthMatch =
+          checkoutDate.getMonth() + 1 >= startMonth &&
+          checkoutDate.getMonth() + 1 <= endMonth;
+        return yearMatch && monthMatch;
+      }
+    });
+  }, [reportData, filterType, specificDate, listYear, listMonthStart, listMonthEnd]);
+
   const chartData = useMemo(() => {
     const successfulPurchases = Array(12).fill(0);
     const failedPurchases = Array(12).fill(0);
@@ -230,7 +239,6 @@ const LaporanPesananCeo = () => {
       if (checkoutDate.getFullYear() === chartYear) {
         const month = checkoutDate.getMonth();
         if (["selesai", "sampai"].includes(checkout.status)) {
-          // Menambahkan 'sampai' sebagai sukses
           successfulPurchases[month] += 1;
         } else if (
           [
@@ -284,9 +292,12 @@ const LaporanPesananCeo = () => {
 
   const handleExportPDF = () => {
     const doc = new jsPDF();
+    
+    // --- 1. MENAMBAHKAN KOLOM 'ITEM DIPESAN' ---
     const tableColumn = [
       "ID Pesanan",
       "Nama Pelanggan",
+      "Item Dipesan", // Kolom baru
       "Tanggal",
       "Total Harga",
       "Status",
@@ -294,13 +305,22 @@ const LaporanPesananCeo = () => {
     const tableRows = [];
 
     filteredCheckoutsForList.forEach((order) => {
+      // --- 2. LOGIKA MENGAMBIL ITEM ---
+      // Menggabungkan item menjadi satu string dengan pemisah baris baru (\n)
+      const itemsString = order.items && order.items.length > 0 
+        ? order.items.map(item => `• ${item.name} (${item.quantity}x)`).join("\n")
+        : "-";
+
       const orderData = [
-        `#${order.id.substring(0, 8)}`, // Memperpendek ID agar rapi
+        `#${order.id.substring(0, 8)}`,
         order.nama,
+        itemsString, // Masukkan string item ke data row
         new Date(order.tanggal).toLocaleDateString("id-ID", {
           year: "numeric",
           month: "long",
           day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
         }),
         `Rp ${order.totalHarga.toLocaleString("id-ID")}`,
         order.status.charAt(0).toUpperCase() + order.status.slice(1),
@@ -308,30 +328,34 @@ const LaporanPesananCeo = () => {
       tableRows.push(orderData);
     });
 
+    const filterTitle = filterType === 'daily' 
+      ? `Harian (${new Date(specificDate).toLocaleDateString("id-ID", { dateStyle: 'long' })})`
+      : `Bulanan`;
+
     const date = new Date();
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-    const fullDate = `${day}-${month}-${year}`;
+    const fullDate = `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}`;
 
     autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
-      startY: 42,
-      margin: { top: 42 },
+      startY: 45,
+      margin: { top: 45 },
       theme: "grid",
-      styles: { font: "helvetica", fontSize: 8, cellPadding: 2 },
+      styles: { font: "helvetica", fontSize: 8, cellPadding: 2, valign: 'middle' }, // valign middle agar rapi
       headStyles: {
         fillColor: [41, 41, 41],
         textColor: [255, 255, 255],
         fontStyle: "bold",
+      },
+      // Mengatur lebar kolom agar item tidak terlalu sempit
+      columnStyles: {
+        2: { cellWidth: 50 } // Lebar kolom Item Dipesan
       },
       didDrawPage: function (data) {
         const logoWidth = 22;
         const logoHeight = 22;
         const margin = data.settings.margin.left;
 
-        // Header Logo & Text
         try {
           doc.addImage(
             janAgroLogoBase64,
@@ -350,13 +374,11 @@ const LaporanPesananCeo = () => {
         doc.setFontSize(12);
         doc.setFont("helvetica", "bold");
         doc.text("PT. Jan Agro Nusantara", margin + logoWidth + 5, 16);
+        doc.setFontSize(10);
+        doc.text(`Laporan Pesanan - ${filterTitle}`, margin + logoWidth + 5, 22);
+        
         doc.setFontSize(8);
         doc.setFont("helvetica", "normal");
-        doc.text(
-          "Kantor Pusat JanAgro, Jl. Pondok Chandra Indah Gg. Durian, Surabaya, 60111",
-          margin + logoWidth + 5,
-          22
-        );
         doc.text(
           "Email: janagronusantara@gmail.com | Telepon: (031) 123-4567",
           margin + logoWidth + 5,
@@ -370,7 +392,6 @@ const LaporanPesananCeo = () => {
           35
         );
 
-        // Footer Signature on last page
         if (data.pageNumber === doc.internal.getNumberOfPages()) {
           const pageHeight = doc.internal.pageSize.getHeight();
           const pageWidth = doc.internal.pageSize.getWidth();
@@ -414,7 +435,7 @@ const LaporanPesananCeo = () => {
         }
       },
     });
-    doc.save(`laporan_pesanan_janagronusantara_${fullDate}.pdf`);
+    doc.save(`laporan_pesanan_${filterType}_${fullDate}.pdf`);
   };
 
   const chartOptions = {
@@ -438,7 +459,6 @@ const LaporanPesananCeo = () => {
     <>
       <div className="bg-white min-h-screen pt-24 text-black">
         <div className="max-w-7xl mx-auto space-y-8 px-4 sm:px-6 lg:px-8 pb-12">
-          {/* Header */}
           <header className="flex justify-between items-center border-b-2 border-black pb-4">
             <div>
               <h1 className="text-4xl font-bold">Laporan Pesanan</h1>
@@ -462,7 +482,6 @@ const LaporanPesananCeo = () => {
             </div>
           ) : (
             <>
-              {/* Chart Section */}
               <div className="bg-white p-6 rounded-lg border border-black space-y-6">
                 <div>
                   <h2 className="text-xl font-bold mb-4">
@@ -496,9 +515,8 @@ const LaporanPesananCeo = () => {
                 </div>
               </div>
 
-              {/* List Filter Section */}
               <div className="bg-white border border-black p-6 rounded-lg">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
                   <h2 className="text-xl font-bold mb-4 sm:mb-0">
                     Filter Daftar Pesanan
                   </h2>
@@ -509,54 +527,102 @@ const LaporanPesananCeo = () => {
                     <FileText className="mr-2 h-5 w-5" /> Export PDF
                   </button>
                 </div>
-                <div className="flex flex-col sm:flex-row gap-4 items-center mt-4">
-                  <select
-                    value={listYear}
-                    onChange={(e) => setListYear(parseInt(e.target.value))}
-                    className="w-full sm:w-auto bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
+
+                <div className="flex space-x-4 mb-4 border-b border-gray-200 pb-2">
+                  <button
+                    onClick={() => setFilterType("monthly")}
+                    className={`flex items-center gap-2 pb-2 px-2 transition-colors ${
+                      filterType === "monthly"
+                        ? "border-b-2 border-black font-bold text-black"
+                        : "text-gray-500 hover:text-black"
+                    }`}
                   >
-                    {years.map((year) => (
-                      <option key={year} value={year}>
-                        {year}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    value={listMonthStart}
-                    onChange={(e) =>
-                      setListMonthStart(parseInt(e.target.value))
-                    }
-                    className="w-full sm:w-auto bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
+                    <CalendarDays size={18} />
+                    Per Bulan
+                  </button>
+                  <button
+                    onClick={() => setFilterType("daily")}
+                    className={`flex items-center gap-2 pb-2 px-2 transition-colors ${
+                      filterType === "daily"
+                        ? "border-b-2 border-black font-bold text-black"
+                        : "text-gray-500 hover:text-black"
+                    }`}
                   >
-                    {Array.from({ length: 12 }, (_, i) => (
-                      <option key={i + 1} value={i + 1}>
-                        {new Date(0, i).toLocaleString("id-ID", {
-                          month: "long",
-                        })}
-                      </option>
-                    ))}
-                  </select>
-                  <span className="text-gray-600">sampai</span>
-                  <select
-                    value={listMonthEnd}
-                    onChange={(e) => setListMonthEnd(parseInt(e.target.value))}
-                    className="w-full sm:w-auto bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
-                  >
-                    {Array.from({ length: 12 }, (_, i) => (
-                      <option key={i + 1} value={i + 1}>
-                        {new Date(0, i).toLocaleString("id-ID", {
-                          month: "long",
-                        })}
-                      </option>
-                    ))}
-                  </select>
+                    <Calendar size={18} />
+                    Per Tanggal Spesifik
+                  </button>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-4 items-center animate-fade-in">
+                  
+                  {filterType === "monthly" ? (
+                    <>
+                      <select
+                        value={listYear}
+                        onChange={(e) => setListYear(parseInt(e.target.value))}
+                        className="w-full sm:w-auto bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
+                      >
+                        {years.map((year) => (
+                          <option key={year} value={year}>
+                            {year}
+                          </option>
+                        ))}
+                      </select>
+                      <select
+                        value={listMonthStart}
+                        onChange={(e) =>
+                          setListMonthStart(parseInt(e.target.value))
+                        }
+                        className="w-full sm:w-auto bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
+                      >
+                        {Array.from({ length: 12 }, (_, i) => (
+                          <option key={i + 1} value={i + 1}>
+                            {new Date(0, i).toLocaleString("id-ID", {
+                              month: "long",
+                            })}
+                          </option>
+                        ))}
+                      </select>
+                      <span className="text-gray-600">sampai</span>
+                      <select
+                        value={listMonthEnd}
+                        onChange={(e) =>
+                          setListMonthEnd(parseInt(e.target.value))
+                        }
+                        className="w-full sm:w-auto bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
+                      >
+                        {Array.from({ length: 12 }, (_, i) => (
+                          <option key={i + 1} value={i + 1}>
+                            {new Date(0, i).toLocaleString("id-ID", {
+                              month: "long",
+                            })}
+                          </option>
+                        ))}
+                      </select>
+                    </>
+                  ) : (
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                        <label className="font-semibold text-gray-700">Pilih Tanggal:</label>
+                        <input 
+                            type="date"
+                            value={specificDate}
+                            onChange={(e) => setSpecificDate(e.target.value)}
+                            className="bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
+                        />
+                        <span className="text-sm text-gray-500 ml-2">
+                           (Menampilkan data: {new Date(specificDate).toLocaleDateString("id-ID", { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })})
+                        </span>
+                    </div>
+                  )}
                 </div>
               </div>
 
-              {/* Status Details Grid */}
               <div className="border-t-2 border-black pt-8">
-                <h2 className="text-3xl font-bold mb-6">
-                  Detail Pesanan per Status
+                <h2 className="text-3xl font-bold mb-6 flex items-center gap-2">
+                   Detail Pesanan
+                   <span className="text-sm font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                      Total: {filteredCheckoutsForList.length} Pesanan
+                   </span>
                 </h2>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                   <LaporanSection

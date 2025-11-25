@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom"; 
 import axios from "axios";
-import { Edit, Trash2, UserX, UserCheck, User, PlusCircle } from "lucide-react";
+import { Edit, Trash2, UserX, UserCheck, User, PlusCircle, FileText } from "lucide-react";
 import ConfirmationModal from "./ConfirmationModalCeo";
 import EditUserModalCeo from "./EditUserModalCeo";
 import CreateAdminModal from "./CreateAdminModal";
@@ -34,6 +35,7 @@ function UserCeo() {
     action: null,
     user: null,
   });
+  const navigate = useNavigate();
 
   const API_URL = import.meta.env.VITE_API_URL;
   // const BASE_SERVER_URL = API_URL.replace("/api", ""); // HAPUS INI
@@ -300,13 +302,24 @@ function UserCeo() {
       <div className="bg-white border-2 border-black rounded-lg p-6 space-y-8 shadow-xl">
         <div className="flex justify-between items-center pb-4 border-b-2 border-black">
           <h2 className="text-2xl font-black">User Management</h2>
-          <button
-            onClick={() => setCreateAdminModalOpen(true)}
-            className="flex items-center justify-center px-4 py-2 bg-black text-white font-bold rounded-lg hover:bg-gray-800 transition-colors"
-          >
-            <PlusCircle size={20} className="mr-2" />
-            Create Admin
-          </button>
+          <div className="flex gap-3">
+            {" "}
+            {/* Bungkus tombol dalam div flex */}
+            <button
+              onClick={() => navigate("/laporan-user-ceo")} // Navigasi ke laporan
+              className="flex items-center justify-center px-4 py-2 bg-white text-black font-bold rounded-lg border-2 border-black hover:bg-gray-100 transition-colors shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+            >
+              <FileText size={20} className="mr-2" />
+              Laporan User
+            </button>
+              <button
+              onClick={() => setCreateAdminModalOpen(true)}
+              className="flex items-center justify-center px-4 py-2 bg-black text-white font-bold rounded-lg hover:bg-gray-800 transition-colors shadow-[2px_2px_0px_0px_rgba(0,0,0,0.5)]"
+            >
+              <PlusCircle size={20} className="mr-2" />
+              Create Admin
+            </button>
+          </div>
         </div>
         <UserTable title="Pengguna Aktif" userList={activeUsers} />
         <UserTable

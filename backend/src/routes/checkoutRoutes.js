@@ -8,7 +8,6 @@ const { authenticateToken } = require("../middleware/authenticate");
 const snap = require('../config/midtrans');
 const Cancellation = require("../models/Cancellation");
 
-// --- HELPER FUNCTION ---
 const handleSuccessfulTransaction = async (checkout) => {
   if (checkout.status === 'diproses') return;
   console.log(`[LOG] Processing Success Logic for Order: ${checkout._id}`);
@@ -41,11 +40,6 @@ const handleSuccessfulTransaction = async (checkout) => {
   );
 };
 
-// ==========================================
-// ROUTES (URUTAN SANGAT PENTING!)
-// ==========================================
-
-// 1. GET ALL (Admin)
 router.get("/all", authenticateToken, async (req, res) => {
   try {
     const checkouts = await Checkout.find({}).sort({ createdAt: -1 });
@@ -55,18 +49,15 @@ router.get("/all", authenticateToken, async (req, res) => {
   }
 });
 
-// 2. GET REPORT (KHUSUS CEO) - Ditaruh DI ATAS route "/" atau "/:id"
 router.get("/ceo-report", authenticateToken, async (req, res) => {
-  console.log("--- CEO REPORT HIT ---"); // Cek terminal backend Anda saat refresh halaman
+  console.log("--- CEO REPORT HIT ---"); 
   console.log("Params:", req.query); 
 
   try {
     const { year, month } = req.query;
     let query = {};
 
-    // Filter Tanggal
     if (year) {
-      // Pastikan konversi ke integer
       const y = parseInt(year);
       const startYear = new Date(y, 0, 1);
       const endYear = new Date(y, 11, 31, 23, 59, 59);
@@ -82,14 +73,12 @@ router.get("/ceo-report", authenticateToken, async (req, res) => {
       }
     }
 
-    // Eksekusi
     const reportData = await Checkout.find(query)
       .select("nama totalHarga status createdAt items alamat noTelpPenerima subtotal diskon kurir metodePembayaran kodeVoucher userId")
       .sort({ createdAt: -1 });
 
     console.log(`Found ${reportData.length} records for report.`);
 
-    // Mapping ID
     const formattedData = reportData.map(doc => {
       const obj = doc.toObject();
       return {
@@ -111,7 +100,6 @@ router.get("/ceo-report", authenticateToken, async (req, res) => {
   }
 });
 
-// 3. GET HISTORY (User Login)
 router.get("/", authenticateToken, async (req, res) => {
   try {
     const checkouts = await Checkout.find({ userId: req.user.id }).sort({ createdAt: -1 });
@@ -121,7 +109,6 @@ router.get("/", authenticateToken, async (req, res) => {
   }
 });
 
-// 4. CREATE ORDER
 router.post("/create", authenticateToken, async (req, res) => {
   try {
     const userId = req.user.id;
@@ -197,7 +184,6 @@ router.post("/create", authenticateToken, async (req, res) => {
   }
 });
 
-// 5. UPDATE STATUS (Admin)
 router.put("/:id/status", authenticateToken, async (req, res) => {
   try {
     const checkout = await Checkout.findByIdAndUpdate(req.params.id, { status: req.body.status }, { new: true });
@@ -207,7 +193,6 @@ router.put("/:id/status", authenticateToken, async (req, res) => {
   }
 });
 
-// 6. CANCEL DECISION
 router.put("/cancel/decision/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -282,4 +267,69 @@ router.post("/midtrans-notification", async (req, res) => {
   }
 });
 
+
+router.get("/loyal-users-report", authenticateToken, async (req, res) => {
+  try {
+    // Aggregasi data menggunakan MongoDB Pipeline
+    const loyalUsers = await Checkout.aggregate([
+      // 1. Filter hanya pesanan yang sukses
+      { $match: { status: { $in: ["selesai", "sampai", "diproses", "dikirim"] } } },
+      
+      // 2. Grouping berdasarkan User ID
+      {
+        $group: {
+          _id: "$userId",
+          totalSpent: { $sum: "$totalHarga" },
+          orderCount: { $sum: 1 },
+          lastOrderDate: { $max: "$createdAt" },
+          purchasedItems: { $push: "$items" } // Kumpulkan semua array items
+        }
+      },
+      
+      // 3. Lookup data User untuk ambil nama & avatar
+      {
+        $lookup: {
+          from: "users", // Pastikan nama collection di DB adalah 'users'
+          localField: "_id",
+          foreignField: "_id",
+          as: "userInfo"
+        }
+      },
+      
+      // 4. Unwind array userInfo (karena lookup menghasilkan array)
+      { $unwind: "$userInfo" },
+      
+      // 5. Proyeksi data yang dibutuhkan
+      {
+        $project: {
+          _id: 1,
+          name: "$userInfo.name",
+          username: "$userInfo.username",
+          avatar: "$userInfo.avatar",
+          email: "$userInfo.email",
+          phone: "$userInfo.phone",
+          totalSpent: 1,
+          orderCount: 1,
+          lastOrderDate: 1,
+          // Flatten items array agar lebih mudah dibaca
+          allItems: {
+            $reduce: {
+              input: "$purchasedItems",
+              initialValue: [],
+              in: { $concatArrays: ["$$value", "$$this"] }
+            }
+          }
+        }
+      },
+      
+      // 6. Urutkan berdasarkan Total Belanja (Terbanyak)
+      { $sort: { totalSpent: -1 } }
+    ]);
+
+    res.status(200).json({ success: true, data: loyalUsers });
+  } catch (error) {
+    console.error("Error loyal users report:", error);
+    res.status(500).json({ success: false, message: "Gagal mengambil laporan user setia" });
+  }
+});
 module.exports = router;

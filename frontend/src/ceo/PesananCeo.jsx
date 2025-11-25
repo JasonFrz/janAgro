@@ -231,16 +231,28 @@ function PesananCeo({
   return (
     <div className="space-y-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h2 className="text-3xl font-black">Order & Request Management</h2>
+  <h2 className="text-3xl font-black">Order & Request Management</h2>
 
-        <button
-          onClick={() => navigate("/laporan-order-ceo")}
-          className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition shadow-md font-bold"
-        >
-          <FileText size={20} />
-          <span>Laporan Pesanan</span>
-        </button>
-      </div>
+  <div className="flex gap-3"> {/* Bungkus tombol dalam div */}
+      {/* Tombol Baru: User Setia */}
+      <button
+        onClick={() => navigate("/laporan-user-setia-ceo")}
+        className="flex items-center gap-2 bg-white text-black border-2 border-black px-4 py-2 rounded-lg hover:bg-gray-100 transition shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] font-bold"
+      >
+        <Users size={20} />
+        <span>User Setia</span>
+      </button>
+
+      {/* Tombol Lama: Laporan Pesanan */}
+      <button
+        onClick={() => navigate("/laporan-order-ceo")}
+        className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition shadow-md font-bold border-2 border-black"
+      >
+        <FileText size={20} />
+        <span>Laporan Pesanan</span>
+      </button>
+  </div>
+</div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <ActionCard title="Return Requests" count={pendingReturns.length}>

@@ -1,12 +1,11 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Bar } from "react-chartjs-2";
-import { X, ArrowLeft, FileText } from "lucide-react";
+import { X, ArrowLeft, FileText, Calendar, CalendarDays } from "lucide-react"; // Import Icon Calendar
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-// 1. IMPORT REDUX
 import { useDispatch, useSelector } from "react-redux";
-import { fetchCeoReport } from "../../features/admin/adminSlice"; // Sesuaikan path jika berbeda
+import { fetchCeoReport } from "../../features/admin/adminSlice";
 
 import {
   Chart as ChartJS,
@@ -18,7 +17,7 @@ import {
   Legend,
 } from "chart.js";
 
-import { janAgroLogoBase64 } from "./logoBase64"; // Pastikan path logo benar
+import { janAgroLogoBase64 } from "./logoBase64"; // Pastikan path benar
 
 ChartJS.register(
   CategoryScale,
@@ -29,7 +28,6 @@ ChartJS.register(
   Legend
 );
 
-// --- Helper Component: Modal Detail ---
 const OrderDetailModal = ({ order, onClose }) => {
   if (!order) return null;
   return (
@@ -135,14 +133,13 @@ const OrderDetailModal = ({ order, onClose }) => {
   );
 };
 
-// --- Helper Component: List Section ---
 const LaporanSection = ({ title, orders, onOrderClick }) => (
   <div className="bg-white p-6 rounded-lg border border-black">
     <h2 className="text-xl font-bold mb-4 border-b border-black pb-2">
       {title}
     </h2>
     {orders.length > 0 ? (
-      <div className="divide-y divide-gray-300">
+      <div className="divide-y divide-gray-300 max-h-96 overflow-y-auto pr-2">
         {orders.map((order) => (
           <button
             key={order.id}
@@ -161,7 +158,13 @@ const LaporanSection = ({ title, orders, onOrderClick }) => (
                   Rp {order.totalHarga.toLocaleString("id-ID")}
                 </p>
                 <p className="text-xs text-gray-500">
-                  {new Date(order.tanggal).toLocaleDateString("id-ID")}
+                  {new Date(order.tanggal).toLocaleDateString("id-ID", {
+                    day: "2-digit",
+                    month: "short",
+                    year: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
                 </p>
               </div>
             </div>
@@ -176,25 +179,28 @@ const LaporanSection = ({ title, orders, onOrderClick }) => (
   </div>
 );
 
-// --- MAIN COMPONENT ---
 const LaporanPesananAdmin = () => {
-  // 2. SETUP REDUX
   const dispatch = useDispatch();
-  // Kita menggunakan 'ceoReportData' karena itu state yang menyimpan data laporan lengkap
   const { ceoReportData, loading } = useSelector((state) => state.admin);
 
-  // 3. FETCH DATA SAAT MOUNT
   useEffect(() => {
     dispatch(fetchCeoReport({}));
   }, [dispatch]);
 
-  // Gunakan data dari Redux sebagai sumber data 'checkouts'
   const checkouts = ceoReportData || [];
 
   const [selectedOrder, setSelectedOrder] = useState(null);
+
+  const [filterType, setFilterType] = useState("monthly"); 
+
   const [listYear, setListYear] = useState(new Date().getFullYear());
   const [listMonthStart, setListMonthStart] = useState(1);
   const [listMonthEnd, setListMonthEnd] = useState(12);
+
+  const [specificDate, setSpecificDate] = useState(
+    new Date().toISOString().split("T")[0]
+  );
+
   const [chartYear, setChartYear] = useState(new Date().getFullYear());
   const [purchaseFilter, setPurchaseFilter] = useState("all");
 
@@ -209,15 +215,28 @@ const LaporanPesananAdmin = () => {
   const filteredCheckoutsForList = useMemo(() => {
     return checkouts.filter((checkout) => {
       const checkoutDate = new Date(checkout.tanggal);
-      const yearMatch = checkoutDate.getFullYear() === listYear;
-      const startMonth = Math.min(listMonthStart, listMonthEnd);
-      const endMonth = Math.max(listMonthStart, listMonthEnd);
-      const monthMatch =
-        checkoutDate.getMonth() + 1 >= startMonth &&
-        checkoutDate.getMonth() + 1 <= endMonth;
-      return yearMatch && monthMatch;
+
+      if (filterType === "daily") {
+        const checkoutDateString = checkoutDate.toLocaleDateString("en-CA");
+        return checkoutDateString === specificDate;
+      } else {
+        const yearMatch = checkoutDate.getFullYear() === listYear;
+        const startMonth = Math.min(listMonthStart, listMonthEnd);
+        const endMonth = Math.max(listMonthStart, listMonthEnd);
+        const monthMatch =
+          checkoutDate.getMonth() + 1 >= startMonth &&
+          checkoutDate.getMonth() + 1 <= endMonth;
+        return yearMatch && monthMatch;
+      }
     });
-  }, [checkouts, listYear, listMonthStart, listMonthEnd]);
+  }, [
+    checkouts,
+    filterType,
+    specificDate,
+    listYear,
+    listMonthStart,
+    listMonthEnd,
+  ]);
 
   const handleExportPDF = () => {
     const doc = new jsPDF();
@@ -237,23 +256,30 @@ const LaporanPesananAdmin = () => {
           year: "numeric",
           month: "long",
           day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
         }),
         `Rp ${order.totalHarga.toLocaleString("id-ID")}`,
         order.status.charAt(0).toUpperCase() + order.status.slice(1),
       ];
       tableRows.push(orderData);
     });
+
+    const filterTitle =
+      filterType === "daily"
+        ? `Harian (${new Date(specificDate).toLocaleDateString("id-ID", {
+            dateStyle: "long",
+          })})`
+        : `Bulanan`;
+
     const date = new Date();
-    const day = String(date.getDate()).padStart(2, "0");
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const year = date.getFullYear();
-    const fullDate = `${day}-${month}-${year}`;
+    const fullDate = `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}`;
 
     autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
-      startY: 42,
-      margin: { top: 42 },
+      startY: 45,
+      margin: { top: 45 },
       theme: "grid",
       styles: { font: "helvetica", fontSize: 8, cellPadding: 2 },
       headStyles: {
@@ -284,13 +310,15 @@ const LaporanPesananAdmin = () => {
         doc.setFontSize(12);
         doc.setFont("helvetica", "bold");
         doc.text("PT. Jan Agro Nusantara", margin + logoWidth + 5, 16);
-        doc.setFontSize(8);
-        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10);
         doc.text(
-          "Kantor Pusat JanAgro, Jl. Pondok Chandra Indah Gg. Durian, Surabaya, 60111",
+          `Laporan Pesanan (Admin) - ${filterTitle}`,
           margin + logoWidth + 5,
           22
         );
+
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "normal");
         doc.text(
           "Email: janagronusantara@gmail.com | Telepon: (031) 123-4567",
           margin + logoWidth + 5,
@@ -339,7 +367,7 @@ const LaporanPesananAdmin = () => {
         }
       },
     });
-    doc.save(`laporan_admin_janagronusantara_${fullDate}.pdf`);
+    doc.save(`laporan_admin_${filterType}_${fullDate}.pdf`);
   };
 
   const chartData = useMemo(() => {
@@ -441,7 +469,6 @@ const LaporanPesananAdmin = () => {
             </div>
           ) : (
             <>
-              {/* Chart Section */}
               <div className="bg-white p-6 rounded-lg border border-black space-y-6">
                 <div>
                   <h2 className="text-xl font-bold mb-4">
@@ -475,9 +502,8 @@ const LaporanPesananAdmin = () => {
                 </div>
               </div>
 
-              {/* List Filter Section */}
               <div className="bg-white border border-black p-6 rounded-lg">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
                   <h2 className="text-xl font-bold mb-4 sm:mb-0">
                     Filter Daftar Pesanan
                   </h2>
@@ -488,54 +514,110 @@ const LaporanPesananAdmin = () => {
                     <FileText className="mr-2 h-5 w-5" /> Export PDF
                   </button>
                 </div>
-                <div className="flex flex-col sm:flex-row gap-4 items-center mt-4">
-                  <select
-                    value={listYear}
-                    onChange={(e) => setListYear(parseInt(e.target.value))}
-                    className="w-full sm:w-auto bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
+
+                <div className="flex space-x-4 mb-4 border-b border-gray-200 pb-2">
+                  <button
+                    onClick={() => setFilterType("monthly")}
+                    className={`flex items-center gap-2 pb-2 px-2 transition-colors ${
+                      filterType === "monthly"
+                        ? "border-b-2 border-black font-bold text-black"
+                        : "text-gray-500 hover:text-black"
+                    }`}
                   >
-                    {years.map((year) => (
-                      <option key={year} value={year}>
-                        {year}
-                      </option>
-                    ))}
-                  </select>
-                  <select
-                    value={listMonthStart}
-                    onChange={(e) =>
-                      setListMonthStart(parseInt(e.target.value))
-                    }
-                    className="w-full sm:w-auto bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
+                    <CalendarDays size={18} />
+                    Per Bulan
+                  </button>
+                  <button
+                    onClick={() => setFilterType("daily")}
+                    className={`flex items-center gap-2 pb-2 px-2 transition-colors ${
+                      filterType === "daily"
+                        ? "border-b-2 border-black font-bold text-black"
+                        : "text-gray-500 hover:text-black"
+                    }`}
                   >
-                    {Array.from({ length: 12 }, (_, i) => (
-                      <option key={i + 1} value={i + 1}>
-                        {new Date(0, i).toLocaleString("id-ID", {
+                    <Calendar size={18} />
+                    Per Tanggal Spesifik
+                  </button>
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-4 items-center animate-fade-in">
+                  {filterType === "monthly" ? (
+                    <>
+                      <select
+                        value={listYear}
+                        onChange={(e) => setListYear(parseInt(e.target.value))}
+                        className="w-full sm:w-auto bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
+                      >
+                        {years.map((year) => (
+                          <option key={year} value={year}>
+                            {year}
+                          </option>
+                        ))}
+                      </select>
+                      <select
+                        value={listMonthStart}
+                        onChange={(e) =>
+                          setListMonthStart(parseInt(e.target.value))
+                        }
+                        className="w-full sm:w-auto bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
+                      >
+                        {Array.from({ length: 12 }, (_, i) => (
+                          <option key={i + 1} value={i + 1}>
+                            {new Date(0, i).toLocaleString("id-ID", {
+                              month: "long",
+                            })}
+                          </option>
+                        ))}
+                      </select>
+                      <span className="text-gray-600">sampai</span>
+                      <select
+                        value={listMonthEnd}
+                        onChange={(e) =>
+                          setListMonthEnd(parseInt(e.target.value))
+                        }
+                        className="w-full sm:w-auto bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
+                      >
+                        {Array.from({ length: 12 }, (_, i) => (
+                          <option key={i + 1} value={i + 1}>
+                            {new Date(0, i).toLocaleString("id-ID", {
+                              month: "long",
+                            })}
+                          </option>
+                        ))}
+                      </select>
+                    </>
+                  ) : (
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                      <label className="font-semibold text-gray-700">
+                        Pilih Tanggal:
+                      </label>
+                      <input
+                        type="date"
+                        value={specificDate}
+                        onChange={(e) => setSpecificDate(e.target.value)}
+                        className="bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
+                      />
+                      <span className="text-sm text-gray-500 ml-2">
+                        (Menampilkan data:{" "}
+                        {new Date(specificDate).toLocaleDateString("id-ID", {
+                          weekday: "long",
+                          day: "numeric",
                           month: "long",
+                          year: "numeric",
                         })}
-                      </option>
-                    ))}
-                  </select>
-                  <span className="text-gray-600">sampai</span>
-                  <select
-                    value={listMonthEnd}
-                    onChange={(e) => setListMonthEnd(parseInt(e.target.value))}
-                    className="w-full sm:w-auto bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
-                  >
-                    {Array.from({ length: 12 }, (_, i) => (
-                      <option key={i + 1} value={i + 1}>
-                        {new Date(0, i).toLocaleString("id-ID", {
-                          month: "long",
-                        })}
-                      </option>
-                    ))}
-                  </select>
+                        )
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
 
-              {/* Order Status Sections */}
               <div className="border-t-2 border-black pt-8">
-                <h2 className="text-3xl font-bold mb-6">
-                  Detail Pesanan per Status
+                <h2 className="text-3xl font-bold mb-6 flex items-center gap-2">
+                  Detail Pesanan
+                  <span className="text-sm font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                    Total: {filteredCheckoutsForList.length} Pesanan
+                  </span>
                 </h2>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                   <LaporanSection

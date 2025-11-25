@@ -5,7 +5,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
 // --- EXISTING THUNKS ---
 
-// THUNK: Mengambil semua pengguna
+// THUNK: Mengambil semua pengguna (Untuk Manajemen User)
 export const fetchUsers = createAsyncThunk(
   "admin/fetchUsers",
   async (_, { rejectWithValue }) => {
@@ -34,8 +34,7 @@ export const fetchCheckouts = createAsyncThunk(
   }
 );
 
-// --- NEW THUNK: Fetch CEO Report (Laporan Khusus) ---
-// Ini akan memanggil endpoint baru yang kita buat sebelumnya
+// THUNK: Fetch CEO Report (Laporan Pesanan/Keuangan)
 export const fetchCeoReport = createAsyncThunk(
   "admin/fetchCeoReport",
   async ({ year, month }, { rejectWithValue }) => {
@@ -43,10 +42,31 @@ export const fetchCeoReport = createAsyncThunk(
       const token = localStorage.getItem("token");
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
       
-      // Mengirim params year & month ke backend
       const response = await axios.get(`${API_URL}/checkouts/ceo-report`, { 
         headers,
         params: { year, month } 
+      });
+      
+      return response.data.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || err.message);
+    }
+  }
+);
+
+// --- NEW THUNK: Fetch User Report (Laporan User Baru) ---
+// Pastikan route backend '/users/user-report' sudah dibuat di routes/user.js
+export const fetchUserReport = createAsyncThunk(
+  "admin/fetchUserReport",
+  async (params, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("token");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      
+      // params berisi { year, month, day } dari komponen UI
+      const response = await axios.get(`${API_URL}/users/user-report`, { 
+        headers,
+        params 
       });
       
       return response.data.data;
@@ -141,9 +161,10 @@ export const decideCancellation = createAsyncThunk(
 const adminSlice = createSlice({
   name: "admin",
   initialState: {
-    users: [], 
-    checkouts: [], // Untuk data operasional (PesananCeo.jsx)
-    ceoReportData: [], // NEW: Untuk data laporan (LaporanPesananCeo.jsx)
+    users: [], // Data User Manajemen (UserCeo.jsx)
+    checkouts: [], // Data Pesanan Operasional
+    ceoReportData: [], // Data Laporan Pesanan (LaporanPesananCeo.jsx)
+    userReportData: [], // NEW: Data Laporan User Baru (LaporanUserBaruCeo.jsx)
     loading: false,
     error: null,
   },
@@ -154,7 +175,7 @@ const adminSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // --- Fetch Users ---
+      // --- Fetch Users (Management) ---
       .addCase(fetchUsers.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -182,17 +203,30 @@ const adminSlice = createSlice({
         state.error = action.payload;
       })
 
-      // --- NEW: Fetch CEO Report (Laporan) ---
+      // --- Fetch CEO Report (Laporan Pesanan) ---
       .addCase(fetchCeoReport.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(fetchCeoReport.fulfilled, (state, action) => {
         state.loading = false;
-        // Simpan ke state khusus laporan, bukan checkouts umum
         state.ceoReportData = action.payload; 
       })
       .addCase(fetchCeoReport.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      // --- NEW: Fetch User Report (Laporan User) ---
+      .addCase(fetchUserReport.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchUserReport.fulfilled, (state, action) => {
+        state.loading = false;
+        state.userReportData = action.payload; // Simpan ke state khusus laporan user
+      })
+      .addCase(fetchUserReport.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })

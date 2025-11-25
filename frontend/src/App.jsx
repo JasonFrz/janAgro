@@ -18,6 +18,7 @@ import Review from "./pages/Review";
 import LaporanPesanan from "./laporan/LaporanPesanan";
 import LaporanPesananAdmin from "./admin/laporanAdmin/LaporanPesananAdmin";
 import LaporanPesananCeo from "./ceo/laporanCeo/LaporanPesananCeo";
+import LaporanUserBaruCeo from "./ceo/laporanCeo/LaporanUserBaruCeo";
 import PengembalianBarang from "./pages/PengembalianBarang";
 import "./index.css";
 import axios from "axios";
@@ -32,7 +33,6 @@ import { setCredentials } from "./features/user/userSlice";
 
 function App() {
   const [showProfile, setShowProfile] = useState(false);
-  // const [user, setUser] = useState(null);    
   const [isAdmin, setIsAdmin] = useState(false);
   const [isPemilik, setIsPemilik] = useState(false);
   const [cart, setCart] = useState([]);
@@ -47,9 +47,9 @@ function App() {
   const { items: produk, status: productStatus } = useSelector(
     (state) => state.products
   );
-const { user, token, isAuthenticated } = useSelector((state) => state.users);
+  const { user, token, isAuthenticated } = useSelector((state) => state.users);
 
- useEffect(() => {
+  useEffect(() => {
     const bootstrapSession = async () => {
       const storedToken = localStorage.getItem("token");
       if (storedToken && !token) {
@@ -63,7 +63,6 @@ const { user, token, isAuthenticated } = useSelector((state) => state.users);
             // Ini adalah langkah paling penting:
             // Mengisi kembali state Redux dengan data user dan token dari localStorage.
             dispatch(setCredentials({ user: data.user, token: storedToken }));
- 
           } else {
             // Jika token tidak valid (misalnya kedaluwarsa), hapus dari localStorage.
             localStorage.removeItem("token");
@@ -80,7 +79,7 @@ const { user, token, isAuthenticated } = useSelector((state) => state.users);
     if (productStatus === "idle") {
       dispatch(fetchProducts());
     }
-  },  [dispatch, API_URL, productStatus, token]);
+  }, [dispatch, API_URL, productStatus, token]);
 
   useEffect(() => {
     if (user && user.role) {
@@ -211,9 +210,10 @@ const { user, token, isAuthenticated } = useSelector((state) => state.users);
     }
   };
 
- useEffect(() => {
+  useEffect(() => {
     const fetchCart = async () => {
-      if (user && token) { // Gunakan token dari Redux
+      if (user && token) {
+        // Gunakan token dari Redux
         try {
           const response = await axios.get(`${API_URL}/cart`, {
             headers: { Authorization: `Bearer ${token}` },
@@ -222,7 +222,10 @@ const { user, token, isAuthenticated } = useSelector((state) => state.users);
             setCart(response.data.data.items || []);
           }
         } catch (error) {
-          console.error("Gagal mengambil data keranjang (fetchCart):", error.response || error.message);
+          console.error(
+            "Gagal mengambil data keranjang (fetchCart):",
+            error.response || error.message
+          );
           setCart([]);
         }
       } else {
@@ -297,7 +300,7 @@ const { user, token, isAuthenticated } = useSelector((state) => state.users);
     };
 
     fetchCheckouts();
-  }, [user, token, API_URL]); 
+  }, [user, token, API_URL]);
 
   const handleCheckout = async (checkoutData) => {
     // TOKEN
@@ -369,21 +372,33 @@ const { user, token, isAuthenticated } = useSelector((state) => state.users);
       );
     }
   };
-   const handleProfileSave = async (userId, payload) => {
-    if (!token) { // Ambil token dari Redux
-      return { success: false, message: "Autentikasi gagal. Token tidak tersedia." };
+  const handleProfileSave = async (userId, payload) => {
+    if (!token) {
+      // Ambil token dari Redux
+      return {
+        success: false,
+        message: "Autentikasi gagal. Token tidak tersedia.",
+      };
     }
     try {
-      const response = await axios.put(`${API_URL}/users/update-profile/${userId}`, payload, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axios.put(
+        `${API_URL}/users/update-profile/${userId}`,
+        payload,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       if (response.data.success) {
         // Hapus setUser, cukup dispatch ke Redux
         dispatch(setCredentials({ user: response.data.user, token }));
         return { success: true, message: "Profil berhasil diperbarui!" };
       }
     } catch (error) {
-      return { success: false, message: error.response?.data?.message || "Terjadi kesalahan pada server." };
+      return {
+        success: false,
+        message:
+          error.response?.data?.message || "Terjadi kesalahan pada server.",
+      };
     }
   };
 
@@ -562,9 +577,9 @@ const { user, token, isAuthenticated } = useSelector((state) => state.users);
     fetchProducts();
   }, []);
 
-   const handleAvatarUpdateSuccess = (updatedUser) => {
+  const handleAvatarUpdateSuccess = (updatedUser) => {
     // Dispatch ke Redux untuk memperbarui state user di seluruh aplikasi
-  dispatch(setCredentials({ user: updatedUser, token: token }));
+    dispatch(setCredentials({ user: updatedUser, token: token }));
   };
   return (
     <div className="min-h-screen bg-white">
@@ -628,10 +643,7 @@ const { user, token, isAuthenticated } = useSelector((state) => state.users);
               />
             }
           />
-          <Route
-           path="/review/:productId"
-    element={<ReviewWrapper />}
-          />
+          <Route path="/review/:productId" element={<ReviewWrapper />} />
           <Route
             path="/pengembalian-barang/:orderId"
             element={
@@ -709,7 +721,7 @@ const { user, token, isAuthenticated } = useSelector((state) => state.users);
           <Route
             path="/laporan-order-admin"
             element={
-              isAdmin ? ( 
+              isAdmin ? (
                 <LaporanPesananAdmin checkouts={checkouts} />
               ) : (
                 <Home API_URL={API_URL} />
@@ -719,11 +731,23 @@ const { user, token, isAuthenticated } = useSelector((state) => state.users);
           <Route
             path="/laporan-order-ceo"
             element={
-              isPemilik ? ( 
+              isPemilik ? (
                 <LaporanPesananCeo checkouts={checkouts} />
               ) : (
                 <Home API_URL={API_URL} />
               )
+            }
+          />
+          <Route
+            path="/laporan-user-ceo"
+            element={
+              isPemilik ? <LaporanUserBaruCeo /> : <Home API_URL={API_URL} />
+            }
+          />
+          <Route
+            path="/laporan-user-setia-ceo"
+            element={
+              isPemilik ? <LaporanUserSetiaCeo /> : <Home API_URL={API_URL} />
             }
           />
           <Route path="*" element={<Home API_URL={API_URL} />} />
@@ -735,7 +759,6 @@ const { user, token, isAuthenticated } = useSelector((state) => state.users);
         isOpen={showProfile}
         onClose={() => setShowProfile(false)}
         user={user}
-        
         setIsAdmin={setIsAdmin}
         setShowProfile={setShowProfile}
         API_URL={API_URL}

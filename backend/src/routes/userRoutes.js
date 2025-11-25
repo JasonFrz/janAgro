@@ -196,4 +196,43 @@ router.get("/get-all-users", async (req, res) => {
   }
 });
 
+router.get("/user-report", authenticateToken, async (req, res) => {
+  try {
+    const { year, month, day } = req.query;
+    let query = {};
+
+    if (year) {
+      const y = parseInt(year);
+      let start, end;
+
+      if (day && month) {
+        const m = parseInt(month) - 1; 
+        const d = parseInt(day);
+        start = new Date(y, m, d, 0, 0, 0);
+        end = new Date(y, m, d, 23, 59, 59);
+      } else if (month) {
+        const m = parseInt(month) - 1;
+        start = new Date(y, m, 1);
+        end = new Date(y, m + 1, 0, 23, 59, 59);
+      } else {
+        start = new Date(y, 0, 1);
+        end = new Date(y, 11, 31, 23, 59, 59);
+      }
+
+      query.createdAt = { $gte: start, $lte: end };
+    }
+
+    const users = await User.find(query)
+      .select("name username email role phone createdAt address")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({ success: true, data: users });
+  } catch (error) {
+    console.error("Error user report:", error);
+    res.status(500).json({ success: false, message: "Gagal mengambil laporan user" });
+  }
+});
+
+module.exports = router;
+
 module.exports = router;
