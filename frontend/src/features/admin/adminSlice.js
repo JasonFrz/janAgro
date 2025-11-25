@@ -3,6 +3,8 @@ import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
+// --- EXISTING THUNKS ---
+
 // THUNK: Mengambil semua pengguna
 export const fetchUsers = createAsyncThunk(
   "admin/fetchUsers",
@@ -16,6 +18,7 @@ export const fetchUsers = createAsyncThunk(
   }
 );
 
+// THUNK: Fetch operational checkouts (Harian/Semua)
 export const fetchCheckouts = createAsyncThunk(
   "admin/fetchCheckouts",
   async (_, { rejectWithValue }) => {
@@ -31,7 +34,27 @@ export const fetchCheckouts = createAsyncThunk(
   }
 );
 
-
+// --- NEW THUNK: Fetch CEO Report (Laporan Khusus) ---
+// Ini akan memanggil endpoint baru yang kita buat sebelumnya
+export const fetchCeoReport = createAsyncThunk(
+  "admin/fetchCeoReport",
+  async ({ year, month }, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("token");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      
+      // Mengirim params year & month ke backend
+      const response = await axios.get(`${API_URL}/checkouts/ceo-report`, { 
+        headers,
+        params: { year, month } 
+      });
+      
+      return response.data.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || err.message);
+    }
+  }
+);
 
 // THUNK: Memperbarui pengguna
 export const editUser = createAsyncThunk(
@@ -54,7 +77,7 @@ export const deleteUser = createAsyncThunk(
   async (id, { rejectWithValue }) => {
     try {
       await axios.delete(`${API_URL}/admin/delete-user/${id}`);
-      return id; // Kembalikan ID agar kita bisa menghapusnya dari state
+      return id; 
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || "Gagal menghapus pengguna");
     }
@@ -74,12 +97,11 @@ export const toggleBanUser = createAsyncThunk(
   }
 );
 
-// THUNK: Update checkout status (moved here per request)
+// THUNK: Update checkout status
 export const updateCheckoutStatus = createAsyncThunk(
   "admin/updateCheckoutStatus",
   async ({ id, status }, { rejectWithValue }) => {
     try {
-      // get token from localStorage (adjust key if you store it differently)
       const token = localStorage.getItem("token") || localStorage.getItem("accessToken");
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
@@ -88,16 +110,13 @@ export const updateCheckoutStatus = createAsyncThunk(
         { status },
         { headers }
       );
-      // expect response.data.data to be the updated checkout object
       return response.data.data;
     } catch (error) {
-      // surface backend message when available
       const msg = error.response?.data?.message || error.message || "Gagal memperbarui status pesanan";
       return rejectWithValue(msg);
     }
   }
 );
-
 
 export const decideCancellation = createAsyncThunk(
   "admin/decideCancellation",
@@ -119,25 +138,23 @@ export const decideCancellation = createAsyncThunk(
   }
 );
 
-
-
 const adminSlice = createSlice({
   name: "admin",
   initialState: {
-    users: [], // pengguna
-    checkouts: [], // checkout orders managed by admin slice now
+    users: [], 
+    checkouts: [], // Untuk data operasional (PesananCeo.jsx)
+    ceoReportData: [], // NEW: Untuk data laporan (LaporanPesananCeo.jsx)
     loading: false,
     error: null,
   },
   reducers: {
-    // optional helper to set checkouts from fetched props
     setCheckouts(state, action) {
       state.checkouts = action.payload;
     },
   },
   extraReducers: (builder) => {
     builder
-      // Reducers untuk fetchUsers
+      // --- Fetch Users ---
       .addCase(fetchUsers.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -150,46 +167,8 @@ const adminSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
-      // Reducers untuk editUser
-      .addCase(editUser.fulfilled, (state, action) => {
-        const index = state.users.findIndex(u => u._id === action.payload._id);
-        if (index !== -1) {
-          state.users[index] = action.payload;
-        }
-      })
-      // Reducers untuk deleteUser
-      .addCase(deleteUser.fulfilled, (state, action) => {
-        state.users = state.users.filter(u => u._id !== action.payload);
-      })
-      // Reducers untuk toggleBanUser
-      .addCase(toggleBanUser.fulfilled, (state, action) => {
-        const index = state.users.findIndex(u => u._id === action.payload._id);
-        if (index !== -1) {
-          state.users[index] = action.payload;
-        }
-      })
 
-      // Reducers for updateCheckoutStatus (admin slice handles checkout status updates)
-      .addCase(updateCheckoutStatus.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(updateCheckoutStatus.fulfilled, (state, action) => {
-        state.loading = false;
-        const updated = action.payload;
-        if (!updated) return;
-        const idx = state.checkouts.findIndex(c => c._id === updated._id);
-        if (idx !== -1) {
-          state.checkouts[idx] = { ...state.checkouts[idx], ...updated };
-        } else {
-          // If not already present, add to front
-          state.checkouts.unshift(updated);
-        }
-      })
-      .addCase(updateCheckoutStatus.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload || action.error?.message;
-      })
+      // --- Fetch Checkouts (Operational) ---
       .addCase(fetchCheckouts.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -202,15 +181,76 @@ const adminSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
+
+      // --- NEW: Fetch CEO Report (Laporan) ---
+      .addCase(fetchCeoReport.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchCeoReport.fulfilled, (state, action) => {
+        state.loading = false;
+        // Simpan ke state khusus laporan, bukan checkouts umum
+        state.ceoReportData = action.payload; 
+      })
+      .addCase(fetchCeoReport.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      // --- Edit User ---
+      .addCase(editUser.fulfilled, (state, action) => {
+        const index = state.users.findIndex(u => u._id === action.payload._id);
+        if (index !== -1) {
+          state.users[index] = action.payload;
+        }
+      })
+      // --- Delete User ---
+      .addCase(deleteUser.fulfilled, (state, action) => {
+        state.users = state.users.filter(u => u._id !== action.payload);
+      })
+      // --- Toggle Ban ---
+      .addCase(toggleBanUser.fulfilled, (state, action) => {
+        const index = state.users.findIndex(u => u._id === action.payload._id);
+        if (index !== -1) {
+          state.users[index] = action.payload;
+        }
+      })
+      // --- Update Checkout Status ---
+      .addCase(updateCheckoutStatus.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateCheckoutStatus.fulfilled, (state, action) => {
+        state.loading = false;
+        const updated = action.payload;
+        if (!updated) return;
+        
+        // Update di list operational
+        const idx = state.checkouts.findIndex(c => c._id === updated._id);
+        if (idx !== -1) {
+          state.checkouts[idx] = { ...state.checkouts[idx], ...updated };
+        } else {
+          state.checkouts.unshift(updated);
+        }
+      })
+      .addCase(updateCheckoutStatus.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || action.error?.message;
+      })
+      // --- Decide Cancellation ---
       .addCase(decideCancellation.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
       .addCase(decideCancellation.fulfilled, (state, action) => {
         state.loading = false;
-        state.checkouts = state.checkouts.map((o) => 
-          o._id === action.payload._id ? action.payload : o
-        );
+        if (action.payload.deleted) {
+             state.checkouts = state.checkouts.filter(o => o._id !== action.payload.orderId);
+        } else {
+            state.checkouts = state.checkouts.map((o) => 
+                o._id === action.payload.orderId ? action.payload.order : o
+            );
+        }
       })
       .addCase(decideCancellation.rejected, (state, action) => {
         state.loading = false;

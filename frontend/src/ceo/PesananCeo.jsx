@@ -7,7 +7,6 @@ import {
   setCheckouts,
 } from "../features/admin/adminSlice";
 
-// --- Helper Components ---
 
 const StatusBadge = ({ status }) => {
   const statusStyles = {

@@ -1,9 +1,12 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Bar } from "react-chartjs-2";
 import { X, ArrowLeft, FileText } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { useDispatch, useSelector } from "react-redux"; // Import Redux hooks
+import { fetchCeoReport } from "../../features/admin/adminSlice"; // Import action thunk
+
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -25,6 +28,7 @@ ChartJS.register(
   Legend
 );
 
+// --- Helper Component: Modal Detail ---
 const OrderDetailModal = ({ order, onClose }) => {
   if (!order) return null;
   return (
@@ -67,7 +71,7 @@ const OrderDetailModal = ({ order, onClose }) => {
             <div className="divide-y divide-gray-200 border-y border-gray-200">
               {order.items.map((item) => (
                 <div
-                  key={item._id}
+                  key={item._id || item.product}
                   className="flex justify-between items-center py-3 text-sm"
                 >
                   <div>
@@ -88,7 +92,12 @@ const OrderDetailModal = ({ order, onClose }) => {
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-gray-600">Subtotal:</span>
-                <span>Rp {order.subtotal.toLocaleString("id-ID")}</span>
+                <span>
+                  Rp{" "}
+                  {order.subtotal
+                    ? order.subtotal.toLocaleString("id-ID")
+                    : "-"}
+                </span>
               </div>
               {order.diskon > 0 && (
                 <div className="flex justify-between">
@@ -102,7 +111,12 @@ const OrderDetailModal = ({ order, onClose }) => {
               )}
               <div className="flex justify-between">
                 <span className="text-gray-600">Biaya Kurir:</span>
-                <span>Rp {order.kurir.biaya.toLocaleString("id-ID")}</span>
+                <span>
+                  Rp{" "}
+                  {order.kurir?.biaya
+                    ? order.kurir.biaya.toLocaleString("id-ID")
+                    : 0}
+                </span>
               </div>
               <div className="flex justify-between text-base font-bold border-t border-black pt-2 mt-2">
                 <span>Total Harga:</span>
@@ -120,6 +134,7 @@ const OrderDetailModal = ({ order, onClose }) => {
   );
 };
 
+// --- Helper Component: Section List ---
 const LaporanSection = ({ title, orders, onOrderClick }) => (
   <div className="bg-white p-6 rounded-lg border border-black">
     <h2 className="text-xl font-bold mb-4 border-b border-black pb-2">
@@ -158,7 +173,13 @@ const LaporanSection = ({ title, orders, onOrderClick }) => (
   </div>
 );
 
-const LaporanPesananCeo = ({ checkouts = [] }) => {
+// --- Main Component ---
+const LaporanPesananCeo = () => {
+  const dispatch = useDispatch();
+
+  // Mengambil data dari Redux store (ceoReportData), bukan dari props
+  const { ceoReportData, loading } = useSelector((state) => state.admin);
+
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [listYear, setListYear] = useState(new Date().getFullYear());
   const [listMonthStart, setListMonthStart] = useState(1);
@@ -166,16 +187,28 @@ const LaporanPesananCeo = ({ checkouts = [] }) => {
   const [chartYear, setChartYear] = useState(new Date().getFullYear());
   const [purchaseFilter, setPurchaseFilter] = useState("all");
 
+  // Fetch data saat komponen dimuat
+  useEffect(() => {
+    // Kita mengirim object kosong {} agar backend mengembalikan semua data historis.
+    // Ini memungkinkan filter tahun/bulan di frontend bekerja dinamis tanpa fetch ulang.
+    dispatch(fetchCeoReport({}));
+  }, [dispatch]);
+
+  // Menggunakan ceoReportData sebagai sumber data
+  const reportData = ceoReportData || [];
+
+  // Mendapatkan list tahun unik dari data yang ada
   const years = useMemo(() => {
     const uniqueYears = new Set(
-      checkouts.map((c) => new Date(c.tanggal).getFullYear())
+      reportData.map((c) => new Date(c.tanggal).getFullYear())
     );
     uniqueYears.add(new Date().getFullYear());
     return Array.from(uniqueYears).sort((a, b) => b - a);
-  }, [checkouts]);
+  }, [reportData]);
 
+  // Filter data untuk Daftar Pesanan (Tabel/List)
   const filteredCheckoutsForList = useMemo(() => {
-    return checkouts.filter((checkout) => {
+    return reportData.filter((checkout) => {
       const checkoutDate = new Date(checkout.tanggal);
       const yearMatch = checkoutDate.getFullYear() === listYear;
       const startMonth = Math.min(listMonthStart, listMonthEnd);
@@ -185,7 +218,69 @@ const LaporanPesananCeo = ({ checkouts = [] }) => {
         checkoutDate.getMonth() + 1 <= endMonth;
       return yearMatch && monthMatch;
     });
-  }, [checkouts, listYear, listMonthStart, listMonthEnd]);
+  }, [reportData, listYear, listMonthStart, listMonthEnd]);
+
+  // Filter data untuk Chart
+  const chartData = useMemo(() => {
+    const successfulPurchases = Array(12).fill(0);
+    const failedPurchases = Array(12).fill(0);
+
+    reportData.forEach((checkout) => {
+      const checkoutDate = new Date(checkout.tanggal);
+      if (checkoutDate.getFullYear() === chartYear) {
+        const month = checkoutDate.getMonth();
+        if (["selesai", "sampai"].includes(checkout.status)) {
+          // Menambahkan 'sampai' sebagai sukses
+          successfulPurchases[month] += 1;
+        } else if (
+          [
+            "pengembalian berhasil",
+            "pengembalian ditolak",
+            "dibatalkan",
+            "pembatalan diajukan",
+          ].includes(checkout.status)
+        ) {
+          failedPurchases[month] += 1;
+        }
+      }
+    });
+
+    const datasets = [
+      {
+        label: "Pembelian Berhasil",
+        data: successfulPurchases,
+        backgroundColor: "rgba(34, 197, 94, 0.8)",
+      },
+      {
+        label: "Pembelian Gagal/Batal",
+        data: failedPurchases,
+        backgroundColor: "rgba(239, 68, 68, 0.8)",
+      },
+    ];
+
+    let filteredDatasets;
+    if (purchaseFilter === "success") filteredDatasets = [datasets[0]];
+    else if (purchaseFilter === "failed") filteredDatasets = [datasets[1]];
+    else filteredDatasets = datasets;
+
+    return {
+      labels: [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "Mei",
+        "Jun",
+        "Jul",
+        "Agu",
+        "Sep",
+        "Okt",
+        "Nov",
+        "Des",
+      ],
+      datasets: filteredDatasets,
+    };
+  }, [reportData, chartYear, purchaseFilter]);
 
   const handleExportPDF = () => {
     const doc = new jsPDF();
@@ -197,9 +292,10 @@ const LaporanPesananCeo = ({ checkouts = [] }) => {
       "Status",
     ];
     const tableRows = [];
+
     filteredCheckoutsForList.forEach((order) => {
       const orderData = [
-        `#${order.id}`,
+        `#${order.id.substring(0, 8)}`, // Memperpendek ID agar rapi
         order.nama,
         new Date(order.tanggal).toLocaleDateString("id-ID", {
           year: "numeric",
@@ -211,11 +307,13 @@ const LaporanPesananCeo = ({ checkouts = [] }) => {
       ];
       tableRows.push(orderData);
     });
+
     const date = new Date();
     const day = String(date.getDate()).padStart(2, "0");
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const year = date.getFullYear();
     const fullDate = `${day}-${month}-${year}`;
+
     autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
@@ -232,16 +330,23 @@ const LaporanPesananCeo = ({ checkouts = [] }) => {
         const logoWidth = 22;
         const logoHeight = 22;
         const margin = data.settings.margin.left;
-        doc.addImage(
-          janAgroLogoBase64,
-          "JPEG",
-          margin,
-          10,
-          logoWidth,
-          logoHeight,
-          undefined,
-          "FAST"
-        );
+
+        // Header Logo & Text
+        try {
+          doc.addImage(
+            janAgroLogoBase64,
+            "JPEG",
+            margin,
+            10,
+            logoWidth,
+            logoHeight,
+            undefined,
+            "FAST"
+          );
+        } catch (e) {
+          console.warn("Logo load failed", e);
+        }
+
         doc.setFontSize(12);
         doc.setFont("helvetica", "bold");
         doc.text("PT. Jan Agro Nusantara", margin + logoWidth + 5, 16);
@@ -264,6 +369,8 @@ const LaporanPesananCeo = ({ checkouts = [] }) => {
           doc.internal.pageSize.getWidth() - data.settings.margin.right,
           35
         );
+
+        // Footer Signature on last page
         if (data.pageNumber === doc.internal.getNumberOfPages()) {
           const pageHeight = doc.internal.pageSize.getHeight();
           const pageWidth = doc.internal.pageSize.getWidth();
@@ -276,7 +383,11 @@ const LaporanPesananCeo = ({ checkouts = [] }) => {
           doc.setFont("helvetica", "normal");
           const signatureX = pageWidth - data.settings.margin.right;
           doc.text(
-            `....................,...................................`,
+            `Surabaya, ${new Date().toLocaleDateString("id-ID", {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })}`,
             signatureX,
             finalY + 20,
             { align: "right" }
@@ -306,61 +417,6 @@ const LaporanPesananCeo = ({ checkouts = [] }) => {
     doc.save(`laporan_pesanan_janagronusantara_${fullDate}.pdf`);
   };
 
-  const chartData = useMemo(() => {
-    const successfulPurchases = Array(12).fill(0);
-    const failedPurchases = Array(12).fill(0);
-    checkouts.forEach((checkout) => {
-      const checkoutDate = new Date(checkout.tanggal);
-      if (checkoutDate.getFullYear() === chartYear) {
-        const month = checkoutDate.getMonth();
-        if (checkout.status === "selesai") {
-          successfulPurchases[month] += 1;
-        } else if (
-          [
-            "pengembalian berhasil",
-            "pengembalian ditolak",
-            "dibatalkan",
-          ].includes(checkout.status)
-        ) {
-          failedPurchases[month] += 1;
-        }
-      }
-    });
-    const datasets = [
-      {
-        label: "Pembelian Berhasil",
-        data: successfulPurchases,
-        backgroundColor: "rgba(34, 197, 94, 0.8)",
-      },
-      {
-        label: "Pembelian Gagal",
-        data: failedPurchases,
-        backgroundColor: "rgba(239, 68, 68, 0.8)",
-      },
-    ];
-    let filteredDatasets;
-    if (purchaseFilter === "success") filteredDatasets = [datasets[0]];
-    else if (purchaseFilter === "failed") filteredDatasets = [datasets[1]];
-    else filteredDatasets = datasets;
-    return {
-      labels: [
-        "Jan",
-        "Feb",
-        "Mar",
-        "Apr",
-        "Mei",
-        "Jun",
-        "Jul",
-        "Agu",
-        "Sep",
-        "Okt",
-        "Nov",
-        "Des",
-      ],
-      datasets: filteredDatasets,
-    };
-  }, [checkouts, chartYear, purchaseFilter]);
-
   const chartOptions = {
     responsive: true,
     maintainAspectRatio: false,
@@ -382,6 +438,7 @@ const LaporanPesananCeo = ({ checkouts = [] }) => {
     <>
       <div className="bg-white min-h-screen pt-24 text-black">
         <div className="max-w-7xl mx-auto space-y-8 px-4 sm:px-6 lg:px-8 pb-12">
+          {/* Header */}
           <header className="flex justify-between items-center border-b-2 border-black pb-4">
             <div>
               <h1 className="text-4xl font-bold">Laporan Pesanan</h1>
@@ -397,119 +454,136 @@ const LaporanPesananCeo = ({ checkouts = [] }) => {
               Kembali ke Ceo
             </Link>
           </header>
-          <div className="bg-white p-6 rounded-lg border border-black space-y-6">
-            <div>
-              <h2 className="text-xl font-bold mb-4">
-                Filter Diagram Pembelian
-              </h2>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <select
-                  value={chartYear}
-                  onChange={(e) => setChartYear(parseInt(e.target.value))}
-                  className="w-full sm:w-auto bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
-                >
-                  {years.map((year) => (
-                    <option key={year} value={year}>
-                      {year}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  value={purchaseFilter}
-                  onChange={(e) => setPurchaseFilter(e.target.value)}
-                  className="w-full sm:w-auto bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
-                >
-                  <option value="all">Semua Pembelian</option>
-                  <option value="success">Pembelian Berhasil</option>
-                  <option value="failed">Pembelian Gagal</option>
-                </select>
+
+          {loading ? (
+            <div className="text-center py-20">
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-black border-t-transparent"></div>
+              <p className="mt-2 text-gray-600">Memuat data laporan...</p>
+            </div>
+          ) : (
+            <>
+              {/* Chart Section */}
+              <div className="bg-white p-6 rounded-lg border border-black space-y-6">
+                <div>
+                  <h2 className="text-xl font-bold mb-4">
+                    Filter Diagram Pembelian
+                  </h2>
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <select
+                      value={chartYear}
+                      onChange={(e) => setChartYear(parseInt(e.target.value))}
+                      className="w-full sm:w-auto bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
+                    >
+                      {years.map((year) => (
+                        <option key={year} value={year}>
+                          {year}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      value={purchaseFilter}
+                      onChange={(e) => setPurchaseFilter(e.target.value)}
+                      className="w-full sm:w-auto bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
+                    >
+                      <option value="all">Semua Pembelian</option>
+                      <option value="success">Pembelian Berhasil</option>
+                      <option value="failed">Pembelian Gagal</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="h-96 relative">
+                  <Bar data={chartData} options={chartOptions} />
+                </div>
               </div>
-            </div>
-            <div className="h-96 relative">
-              <Bar data={chartData} options={chartOptions} />
-            </div>
-          </div>
-          <div className="bg-white border border-black p-6 rounded-lg">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
-              <h2 className="text-xl font-bold mb-4 sm:mb-0">
-                Filter Daftar Pesanan
-              </h2>
-              <button
-                onClick={handleExportPDF}
-                className="bg-green-600 text-white px-4 py-2 rounded-lg flex items-center hover:bg-green-700 transition-colors duration-200"
-              >
-                <FileText className="mr-2 h-5 w-5" /> Export PDF
-              </button>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-4 items-center mt-4">
-              <select
-                value={listYear}
-                onChange={(e) => setListYear(parseInt(e.target.value))}
-                className="w-full sm:w-auto bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
-              >
-                {years.map((year) => (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={listMonthStart}
-                onChange={(e) => setListMonthStart(parseInt(e.target.value))}
-                className="w-full sm:w-auto bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
-              >
-                {Array.from({ length: 12 }, (_, i) => (
-                  <option key={i + 1} value={i + 1}>
-                    {new Date(0, i).toLocaleString("id-ID", {
-                      month: "long",
-                    })}
-                  </option>
-                ))}
-              </select>
-              <span className="text-gray-600">sampai</span>
-              <select
-                value={listMonthEnd}
-                onChange={(e) => setListMonthEnd(parseInt(e.target.value))}
-                className="w-full sm:w-auto bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
-              >
-                {Array.from({ length: 12 }, (_, i) => (
-                  <option key={i + 1} value={i + 1}>
-                    {new Date(0, i).toLocaleString("id-ID", {
-                      month: "long",
-                    })}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-          <div className="border-t-2 border-black pt-8">
-            <h2 className="text-3xl font-bold mb-6">
-              Detail Pesanan per Status
-            </h2>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <LaporanSection
-                title="Pesanan Diproses"
-                orders={filteredCheckoutsForList.filter(
-                  (o) => o.status === "diproses"
-                )}
-                onOrderClick={setSelectedOrder}
-              />
-              <LaporanSection
-                title="Pesanan Dikirim"
-                orders={filteredCheckoutsForList.filter(
-                  (o) => o.status === "dikirim"
-                )}
-                onOrderClick={setSelectedOrder}
-              />
-              <LaporanSection
-                title="Pesanan Selesai"
-                orders={filteredCheckoutsForList.filter((o) =>
-                  ["selesai", "sampai"].includes(o.status)
-                )}
-                onOrderClick={setSelectedOrder}
-              />
-            </div>
-          </div>
+
+              {/* List Filter Section */}
+              <div className="bg-white border border-black p-6 rounded-lg">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+                  <h2 className="text-xl font-bold mb-4 sm:mb-0">
+                    Filter Daftar Pesanan
+                  </h2>
+                  <button
+                    onClick={handleExportPDF}
+                    className="bg-green-600 text-white px-4 py-2 rounded-lg flex items-center hover:bg-green-700 transition-colors duration-200"
+                  >
+                    <FileText className="mr-2 h-5 w-5" /> Export PDF
+                  </button>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-4 items-center mt-4">
+                  <select
+                    value={listYear}
+                    onChange={(e) => setListYear(parseInt(e.target.value))}
+                    className="w-full sm:w-auto bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
+                  >
+                    {years.map((year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    value={listMonthStart}
+                    onChange={(e) =>
+                      setListMonthStart(parseInt(e.target.value))
+                    }
+                    className="w-full sm:w-auto bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
+                  >
+                    {Array.from({ length: 12 }, (_, i) => (
+                      <option key={i + 1} value={i + 1}>
+                        {new Date(0, i).toLocaleString("id-ID", {
+                          month: "long",
+                        })}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="text-gray-600">sampai</span>
+                  <select
+                    value={listMonthEnd}
+                    onChange={(e) => setListMonthEnd(parseInt(e.target.value))}
+                    className="w-full sm:w-auto bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
+                  >
+                    {Array.from({ length: 12 }, (_, i) => (
+                      <option key={i + 1} value={i + 1}>
+                        {new Date(0, i).toLocaleString("id-ID", {
+                          month: "long",
+                        })}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Status Details Grid */}
+              <div className="border-t-2 border-black pt-8">
+                <h2 className="text-3xl font-bold mb-6">
+                  Detail Pesanan per Status
+                </h2>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                  <LaporanSection
+                    title="Pesanan Diproses"
+                    orders={filteredCheckoutsForList.filter(
+                      (o) => o.status === "diproses"
+                    )}
+                    onOrderClick={setSelectedOrder}
+                  />
+                  <LaporanSection
+                    title="Pesanan Dikirim"
+                    orders={filteredCheckoutsForList.filter(
+                      (o) => o.status === "dikirim"
+                    )}
+                    onOrderClick={setSelectedOrder}
+                  />
+                  <LaporanSection
+                    title="Pesanan Selesai"
+                    orders={filteredCheckoutsForList.filter((o) =>
+                      ["selesai", "sampai"].includes(o.status)
+                    )}
+                    onOrderClick={setSelectedOrder}
+                  />
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
       <OrderDetailModal

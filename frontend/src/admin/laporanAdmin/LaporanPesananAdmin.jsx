@@ -1,9 +1,13 @@
-import React, { useState, useMemo } from "react";
-import { Link } from "react-router-dom"; 
+import React, { useState, useMemo, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { Bar } from "react-chartjs-2";
 import { X, ArrowLeft, FileText } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+// 1. IMPORT REDUX
+import { useDispatch, useSelector } from "react-redux";
+import { fetchCeoReport } from "../../features/admin/adminSlice"; // Sesuaikan path jika berbeda
+
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -14,7 +18,7 @@ import {
   Legend,
 } from "chart.js";
 
-import { janAgroLogoBase64 } from "./logoBase64"; 
+import { janAgroLogoBase64 } from "./logoBase64"; // Pastikan path logo benar
 
 ChartJS.register(
   CategoryScale,
@@ -25,6 +29,7 @@ ChartJS.register(
   Legend
 );
 
+// --- Helper Component: Modal Detail ---
 const OrderDetailModal = ({ order, onClose }) => {
   if (!order) return null;
   return (
@@ -48,9 +53,7 @@ const OrderDetailModal = ({ order, onClose }) => {
         </div>
         <div className="space-y-6">
           <div>
-            <h3 className="text-lg font-bold mb-2">
-              Informasi Pengiriman
-            </h3>
+            <h3 className="text-lg font-bold mb-2">Informasi Pengiriman</h3>
             <div className="text-sm space-y-1">
               <p>
                 <span className="font-semibold">Nama:</span> {order.nama}
@@ -69,7 +72,7 @@ const OrderDetailModal = ({ order, onClose }) => {
             <div className="divide-y divide-gray-200 border-y border-gray-200">
               {order.items.map((item) => (
                 <div
-                  key={item._id}
+                  key={item._id || item.product}
                   className="flex justify-between items-center py-3 text-sm"
                 >
                   <div>
@@ -79,22 +82,23 @@ const OrderDetailModal = ({ order, onClose }) => {
                     </p>
                   </div>
                   <p className="font-semibold">
-                    Rp {(item.quantity * item.price).toLocaleString(
-                      "id-ID"
-                    )}
+                    Rp {(item.quantity * item.price).toLocaleString("id-ID")}
                   </p>
                 </div>
               ))}
             </div>
           </div>
           <div>
-            <h3 className="text-lg font-bold mb-2">
-              Ringkasan Pembayaran
-            </h3>
+            <h3 className="text-lg font-bold mb-2">Ringkasan Pembayaran</h3>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-gray-600">Subtotal:</span>
-                <span>Rp {order.subtotal.toLocaleString("id-ID")}</span>
+                <span>
+                  Rp{" "}
+                  {order.subtotal
+                    ? order.subtotal.toLocaleString("id-ID")
+                    : "-"}
+                </span>
               </div>
               {order.diskon > 0 && (
                 <div className="flex justify-between">
@@ -108,7 +112,12 @@ const OrderDetailModal = ({ order, onClose }) => {
               )}
               <div className="flex justify-between">
                 <span className="text-gray-600">Biaya Kurir:</span>
-                <span>Rp {order.kurir.biaya.toLocaleString("id-ID")}</span>
+                <span>
+                  Rp{" "}
+                  {order.kurir?.biaya
+                    ? order.kurir.biaya.toLocaleString("id-ID")
+                    : 0}
+                </span>
               </div>
               <div className="flex justify-between text-base font-bold border-t border-black pt-2 mt-2">
                 <span>Total Harga:</span>
@@ -126,6 +135,7 @@ const OrderDetailModal = ({ order, onClose }) => {
   );
 };
 
+// --- Helper Component: List Section ---
 const LaporanSection = ({ title, orders, onOrderClick }) => (
   <div className="bg-white p-6 rounded-lg border border-black">
     <h2 className="text-xl font-bold mb-4 border-b border-black pb-2">
@@ -141,7 +151,9 @@ const LaporanSection = ({ title, orders, onOrderClick }) => (
           >
             <div className="flex justify-between items-center">
               <div>
-                <p className="font-bold text-black">ORDER #{order.id}</p>
+                <p className="font-bold text-black">
+                  ORDER #{order.id.substring(0, 8)}
+                </p>
                 <p className="text-sm text-gray-600">{order.nama}</p>
               </div>
               <div className="text-right">
@@ -164,7 +176,21 @@ const LaporanSection = ({ title, orders, onOrderClick }) => (
   </div>
 );
 
-const LaporanPesananAdmin = ({ checkouts = [] }) => {
+// --- MAIN COMPONENT ---
+const LaporanPesananAdmin = () => {
+  // 2. SETUP REDUX
+  const dispatch = useDispatch();
+  // Kita menggunakan 'ceoReportData' karena itu state yang menyimpan data laporan lengkap
+  const { ceoReportData, loading } = useSelector((state) => state.admin);
+
+  // 3. FETCH DATA SAAT MOUNT
+  useEffect(() => {
+    dispatch(fetchCeoReport({}));
+  }, [dispatch]);
+
+  // Gunakan data dari Redux sebagai sumber data 'checkouts'
+  const checkouts = ceoReportData || [];
+
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [listYear, setListYear] = useState(new Date().getFullYear());
   const [listMonthStart, setListMonthStart] = useState(1);
@@ -205,7 +231,7 @@ const LaporanPesananAdmin = ({ checkouts = [] }) => {
     const tableRows = [];
     filteredCheckoutsForList.forEach((order) => {
       const orderData = [
-        `#${order.id}`,
+        `#${order.id.substring(0, 8)}`,
         order.nama,
         new Date(order.tanggal).toLocaleDateString("id-ID", {
           year: "numeric",
@@ -222,6 +248,7 @@ const LaporanPesananAdmin = ({ checkouts = [] }) => {
     const month = String(date.getMonth() + 1).padStart(2, "0");
     const year = date.getFullYear();
     const fullDate = `${day}-${month}-${year}`;
+
     autoTable(doc, {
       head: [tableColumn],
       body: tableRows,
@@ -238,16 +265,22 @@ const LaporanPesananAdmin = ({ checkouts = [] }) => {
         const logoWidth = 22;
         const logoHeight = 22;
         const margin = data.settings.margin.left;
-        doc.addImage(
-          janAgroLogoBase64,
-          "JPEG",
-          margin,
-          10,
-          logoWidth,
-          logoHeight,
-          undefined,
-          "FAST"
-        );
+
+        try {
+          doc.addImage(
+            janAgroLogoBase64,
+            "JPEG",
+            margin,
+            10,
+            logoWidth,
+            logoHeight,
+            undefined,
+            "FAST"
+          );
+        } catch (e) {
+          console.warn("Logo error", e);
+        }
+
         doc.setFontSize(12);
         doc.setFont("helvetica", "bold");
         doc.text("PT. Jan Agro Nusantara", margin + logoWidth + 5, 16);
@@ -282,16 +315,20 @@ const LaporanPesananAdmin = ({ checkouts = [] }) => {
           doc.setFont("helvetica", "normal");
           const signatureX = pageWidth - data.settings.margin.right;
           doc.text(
-            `....................,...................................`,
+            `Surabaya, ${new Date().toLocaleDateString("id-ID", {
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })}`,
             signatureX,
             finalY + 20,
             { align: "right" }
           );
           doc.setFont("helvetica", "bold");
-          doc.text("J.Alamsjah,S.H", signatureX, finalY + 45, {
+          doc.text("Admin JanAgro", signatureX, finalY + 45, {
             align: "right",
           });
-          const nameWidth = doc.getTextWidth("J.Alamsjah,S.H");
+          const nameWidth = doc.getTextWidth("Admin JanAgro");
           doc.setLineWidth(0.5);
           doc.line(
             signatureX - nameWidth,
@@ -299,17 +336,10 @@ const LaporanPesananAdmin = ({ checkouts = [] }) => {
             signatureX,
             finalY + 46
           );
-          doc.setFont("helvetica", "normal");
-          doc.text(
-            "Ceo & Founder of Jan Agro Nusantara",
-            signatureX,
-            finalY + 55,
-            { align: "right" }
-          );
         }
       },
     });
-    doc.save(`laporan_pesanan_janagronusantara_${fullDate}.pdf`);
+    doc.save(`laporan_admin_janagronusantara_${fullDate}.pdf`);
   };
 
   const chartData = useMemo(() => {
@@ -319,13 +349,14 @@ const LaporanPesananAdmin = ({ checkouts = [] }) => {
       const checkoutDate = new Date(checkout.tanggal);
       if (checkoutDate.getFullYear() === chartYear) {
         const month = checkoutDate.getMonth();
-        if (checkout.status === "selesai") {
+        if (["selesai", "sampai"].includes(checkout.status)) {
           successfulPurchases[month] += 1;
         } else if (
           [
             "pengembalian berhasil",
             "pengembalian ditolak",
             "dibatalkan",
+            "pembatalan diajukan",
           ].includes(checkout.status)
         ) {
           failedPurchases[month] += 1;
@@ -339,7 +370,7 @@ const LaporanPesananAdmin = ({ checkouts = [] }) => {
         backgroundColor: "rgba(34, 197, 94, 0.8)",
       },
       {
-        label: "Pembelian Gagal",
+        label: "Pembelian Gagal/Batal",
         data: failedPurchases,
         backgroundColor: "rgba(239, 68, 68, 0.8)",
       },
@@ -390,7 +421,7 @@ const LaporanPesananAdmin = ({ checkouts = [] }) => {
         <div className="max-w-7xl mx-auto space-y-8 px-4 sm:px-6 lg:px-8 pb-12">
           <header className="flex justify-between items-center border-b-2 border-black pb-4">
             <div>
-              <h1 className="text-4xl font-bold">Laporan Pesanan</h1>
+              <h1 className="text-4xl font-bold">Laporan Pesanan (Admin)</h1>
               <p className="text-gray-600 mt-1">
                 Analisis dan rekapitulasi data pesanan.
               </p>
@@ -403,119 +434,135 @@ const LaporanPesananAdmin = ({ checkouts = [] }) => {
               Kembali ke Admin
             </Link>
           </header>
-          <div className="bg-white p-6 rounded-lg border border-black space-y-6">
-            <div>
-              <h2 className="text-xl font-bold mb-4">
-                Filter Diagram Pembelian
-              </h2>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <select
-                  value={chartYear}
-                  onChange={(e) => setChartYear(parseInt(e.target.value))}
-                  className="w-full sm:w-auto bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
-                >
-                  {years.map((year) => (
-                    <option key={year} value={year}>
-                      {year}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  value={purchaseFilter}
-                  onChange={(e) => setPurchaseFilter(e.target.value)}
-                  className="w-full sm:w-auto bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
-                >
-                  <option value="all">Semua Pembelian</option>
-                  <option value="success">Pembelian Berhasil</option>
-                  <option value="failed">Pembelian Gagal</option>
-                </select>
+
+          {loading ? (
+            <div className="flex justify-center items-center h-64">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-black"></div>
+            </div>
+          ) : (
+            <>
+              {/* Chart Section */}
+              <div className="bg-white p-6 rounded-lg border border-black space-y-6">
+                <div>
+                  <h2 className="text-xl font-bold mb-4">
+                    Filter Diagram Pembelian
+                  </h2>
+                  <div className="flex flex-col sm:flex-row gap-4">
+                    <select
+                      value={chartYear}
+                      onChange={(e) => setChartYear(parseInt(e.target.value))}
+                      className="w-full sm:w-auto bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
+                    >
+                      {years.map((year) => (
+                        <option key={year} value={year}>
+                          {year}
+                        </option>
+                      ))}
+                    </select>
+                    <select
+                      value={purchaseFilter}
+                      onChange={(e) => setPurchaseFilter(e.target.value)}
+                      className="w-full sm:w-auto bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
+                    >
+                      <option value="all">Semua Pembelian</option>
+                      <option value="success">Pembelian Berhasil</option>
+                      <option value="failed">Pembelian Gagal</option>
+                    </select>
+                  </div>
+                </div>
+                <div className="h-96 relative">
+                  <Bar data={chartData} options={chartOptions} />
+                </div>
               </div>
-            </div>
-            <div className="h-96 relative">
-              <Bar data={chartData} options={chartOptions} />
-            </div>
-          </div>
-          <div className="bg-white border border-black p-6 rounded-lg">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
-              <h2 className="text-xl font-bold mb-4 sm:mb-0">
-                Filter Daftar Pesanan
-              </h2>
-              <button
-                onClick={handleExportPDF}
-                className="bg-green-600 text-white px-4 py-2 rounded-lg flex items-center hover:bg-green-700 transition-colors duration-200"
-              >
-                <FileText className="mr-2 h-5 w-5" /> Export PDF
-              </button>
-            </div>
-            <div className="flex flex-col sm:flex-row gap-4 items-center mt-4">
-              <select
-                value={listYear}
-                onChange={(e) => setListYear(parseInt(e.target.value))}
-                className="w-full sm:w-auto bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
-              >
-                {years.map((year) => (
-                  <option key={year} value={year}>
-                    {year}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={listMonthStart}
-                onChange={(e) => setListMonthStart(parseInt(e.target.value))}
-                className="w-full sm:w-auto bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
-              >
-                {Array.from({ length: 12 }, (_, i) => (
-                  <option key={i + 1} value={i + 1}>
-                    {new Date(0, i).toLocaleString("id-ID", {
-                      month: "long",
-                    })}
-                  </option>
-                ))}
-              </select>
-              <span className="text-gray-600">sampai</span>
-              <select
-                value={listMonthEnd}
-                onChange={(e) => setListMonthEnd(parseInt(e.target.value))}
-                className="w-full sm:w-auto bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
-              >
-                {Array.from({ length: 12 }, (_, i) => (
-                  <option key={i + 1} value={i + 1}>
-                    {new Date(0, i).toLocaleString("id-ID", {
-                      month: "long",
-                    })}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-          <div className="border-t-2 border-black pt-8">
-            <h2 className="text-3xl font-bold mb-6">
-              Detail Pesanan per Status
-            </h2>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <LaporanSection
-                title="Pesanan Diproses"
-                orders={filteredCheckoutsForList.filter(
-                  (o) => o.status === "diproses"
-                )}
-                onOrderClick={setSelectedOrder}
-              />
-              <LaporanSection
-                title="Pesanan Dikirim"
-                orders={filteredCheckoutsForList.filter(
-                  (o) => o.status === "dikirim"
-                )}
-                onOrderClick={setSelectedOrder}
-              />
-              <LaporanSection
-                title="Pesanan Selesai"
-                orders={filteredCheckoutsForList.filter((o) =>
-                  ["selesai", "sampai"].includes(o.status)
-                )}
-                onOrderClick={setSelectedOrder}
-              />
-            </div>
-          </div>
+
+              {/* List Filter Section */}
+              <div className="bg-white border border-black p-6 rounded-lg">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+                  <h2 className="text-xl font-bold mb-4 sm:mb-0">
+                    Filter Daftar Pesanan
+                  </h2>
+                  <button
+                    onClick={handleExportPDF}
+                    className="bg-green-600 text-white px-4 py-2 rounded-lg flex items-center hover:bg-green-700 transition-colors duration-200"
+                  >
+                    <FileText className="mr-2 h-5 w-5" /> Export PDF
+                  </button>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-4 items-center mt-4">
+                  <select
+                    value={listYear}
+                    onChange={(e) => setListYear(parseInt(e.target.value))}
+                    className="w-full sm:w-auto bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
+                  >
+                    {years.map((year) => (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    ))}
+                  </select>
+                  <select
+                    value={listMonthStart}
+                    onChange={(e) =>
+                      setListMonthStart(parseInt(e.target.value))
+                    }
+                    className="w-full sm:w-auto bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
+                  >
+                    {Array.from({ length: 12 }, (_, i) => (
+                      <option key={i + 1} value={i + 1}>
+                        {new Date(0, i).toLocaleString("id-ID", {
+                          month: "long",
+                        })}
+                      </option>
+                    ))}
+                  </select>
+                  <span className="text-gray-600">sampai</span>
+                  <select
+                    value={listMonthEnd}
+                    onChange={(e) => setListMonthEnd(parseInt(e.target.value))}
+                    className="w-full sm:w-auto bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
+                  >
+                    {Array.from({ length: 12 }, (_, i) => (
+                      <option key={i + 1} value={i + 1}>
+                        {new Date(0, i).toLocaleString("id-ID", {
+                          month: "long",
+                        })}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Order Status Sections */}
+              <div className="border-t-2 border-black pt-8">
+                <h2 className="text-3xl font-bold mb-6">
+                  Detail Pesanan per Status
+                </h2>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                  <LaporanSection
+                    title="Pesanan Diproses"
+                    orders={filteredCheckoutsForList.filter(
+                      (o) => o.status === "diproses"
+                    )}
+                    onOrderClick={setSelectedOrder}
+                  />
+                  <LaporanSection
+                    title="Pesanan Dikirim"
+                    orders={filteredCheckoutsForList.filter(
+                      (o) => o.status === "dikirim"
+                    )}
+                    onOrderClick={setSelectedOrder}
+                  />
+                  <LaporanSection
+                    title="Pesanan Selesai"
+                    orders={filteredCheckoutsForList.filter((o) =>
+                      ["selesai", "sampai"].includes(o.status)
+                    )}
+                    onOrderClick={setSelectedOrder}
+                  />
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
       <OrderDetailModal
