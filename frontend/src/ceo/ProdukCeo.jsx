@@ -1,9 +1,11 @@
 import React, { useState } from "react";
-import { Plus, X, Edit, Trash2, Upload } from "lucide-react";
+import { Plus, X, Edit, Trash2, Upload, FileText } from "lucide-react"; // Tambah FileText
+import { useNavigate } from "react-router-dom"; // Tambah useNavigate
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
 function ProdukCeo({ produk = [], onAdd, onUpdate, onDelete }) {
+  const navigate = useNavigate(); // Init hook
   const [form, setForm] = useState({
     name: "",
     category: "",
@@ -17,6 +19,7 @@ function ProdukCeo({ produk = [], onAdd, onUpdate, onDelete }) {
   const [imagePreview, setImagePreview] = useState(null);
   const [editingId, setEditingId] = useState(null);
 
+  // ... (handleImageChange, handleSubmit, handleCancel, handleEdit, handleDelete - TIDAK BERUBAH)
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file && (file.type === "image/png" || file.type === "image/jpeg")) {
@@ -93,9 +96,6 @@ function ProdukCeo({ produk = [], onAdd, onUpdate, onDelete }) {
     });
     setEditingId(p._id);
     setImageFile(null);
-
-    // PERUBAHAN DISINI:
-    // Karena Cloudinary menyimpan URL lengkap (https://...), kita pakai langsung.
     if (p.image) {
       setImagePreview(p.image);
     } else {
@@ -121,14 +121,29 @@ function ProdukCeo({ produk = [], onAdd, onUpdate, onDelete }) {
   return (
     <>
       <div className="space-y-8">
+        {/* Form Section */}
         <div className="bg-white text-black shadow-lg rounded-lg p-6 border-2 border-black">
-          <h2 className="text-2xl font-bold mb-6 pb-4 border-b-2 border-black">
-            {editingId ? "Edit Detail Produk" : "Tambah Produk Baru"}
-          </h2>
+          <div className="flex flex-col sm:flex-row justify-between items-center mb-6 pb-4 border-b-2 border-black gap-4">
+            <h2 className="text-2xl font-bold">
+              {editingId ? "Edit Detail Produk" : "Tambah Produk Baru"}
+            </h2>
+            
+            {/* --- TOMBOL BARU --- */}
+            <button
+              onClick={() => navigate("/laporan-barang-terlaku-ceo")}
+              className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition shadow-md font-bold"
+            >
+              <FileText size={20} />
+              <span>Laporan Barang</span>
+            </button>
+            {/* ------------------- */}
+          </div>
+
           <form
             onSubmit={handleSubmit}
             className="grid grid-cols-1 md:grid-cols-2 gap-6"
           >
+            {/* ... (Isi form SAMA PERSIS dengan kode Anda sebelumnya) ... */}
             <div className="md:col-span-2">
               <label className="block text-sm font-bold mb-1">
                 Nama Produk
@@ -164,7 +179,6 @@ function ProdukCeo({ produk = [], onAdd, onUpdate, onDelete }) {
               </label>
               <div className="flex items-center gap-4">
                 <div className="w-24 h-24 flex items-center justify-center border-2 border-black rounded bg-gray-100 overflow-hidden">
-                  {/* Preview Image: Bisa berupa URL (Cloudinary) atau Blob (Upload baru) */}
                   {imagePreview ? (
                     <img
                       src={imagePreview}
@@ -280,6 +294,8 @@ function ProdukCeo({ produk = [], onAdd, onUpdate, onDelete }) {
             </div>
           </form>
         </div>
+
+        {/* List Produk Section - Tidak Berubah */}
         <div className="bg-white text-black shadow-lg rounded-lg p-6 border-2 border-black">
           <h2 className="text-2xl font-bold mb-4">Daftar Inventaris Produk</h2>
           <div className="overflow-x-auto max-h-96 overflow-y-auto border-2 border-black rounded-lg">

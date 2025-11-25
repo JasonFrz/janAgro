@@ -267,39 +267,29 @@ router.post("/midtrans-notification", async (req, res) => {
   }
 });
 
-
 router.get("/loyal-users-report", authenticateToken, async (req, res) => {
   try {
-    // Aggregasi data menggunakan MongoDB Pipeline
     const loyalUsers = await Checkout.aggregate([
-      // 1. Filter hanya pesanan yang sukses
       { $match: { status: { $in: ["selesai", "sampai", "diproses", "dikirim"] } } },
       
-      // 2. Grouping berdasarkan User ID
       {
         $group: {
           _id: "$userId",
           totalSpent: { $sum: "$totalHarga" },
           orderCount: { $sum: 1 },
           lastOrderDate: { $max: "$createdAt" },
-          purchasedItems: { $push: "$items" } // Kumpulkan semua array items
+          purchasedItems: { $push: "$items" }
         }
       },
-      
-      // 3. Lookup data User untuk ambil nama & avatar
       {
         $lookup: {
-          from: "users", // Pastikan nama collection di DB adalah 'users'
+          from: "users", 
           localField: "_id",
           foreignField: "_id",
           as: "userInfo"
         }
       },
-      
-      // 4. Unwind array userInfo (karena lookup menghasilkan array)
       { $unwind: "$userInfo" },
-      
-      // 5. Proyeksi data yang dibutuhkan
       {
         $project: {
           _id: 1,
@@ -311,7 +301,6 @@ router.get("/loyal-users-report", authenticateToken, async (req, res) => {
           totalSpent: 1,
           orderCount: 1,
           lastOrderDate: 1,
-          // Flatten items array agar lebih mudah dibaca
           allItems: {
             $reduce: {
               input: "$purchasedItems",
@@ -322,7 +311,6 @@ router.get("/loyal-users-report", authenticateToken, async (req, res) => {
         }
       },
       
-      // 6. Urutkan berdasarkan Total Belanja (Terbanyak)
       { $sort: { totalSpent: -1 } }
     ]);
 
@@ -332,4 +320,45 @@ router.get("/loyal-users-report", authenticateToken, async (req, res) => {
     res.status(500).json({ success: false, message: "Gagal mengambil laporan user setia" });
   }
 });
+
+router.get("/best-selling-report", authenticateToken, async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    
+    let matchStage = { 
+      status: { $in: ["selesai", "sampai", "dikirim", "diproses"] } 
+    };
+
+    if (startDate && endDate) {
+      matchStage.createdAt = {
+        $gte: new Date(startDate), 
+        $lte: new Date(endDate)    
+      };
+    }
+
+    const bestSelling = await Checkout.aggregate([
+      { $match: matchStage }, 
+      { $unwind: "$items" },
+      {
+        $group: {
+          _id: "$items.product",
+          productName: { $first: "$items.name" },
+          productImage: { $first: "$items.image" },
+          productPrice: { $first: "$items.price" },
+          totalSold: { $sum: "$items.quantity" },
+          totalRevenue: { $sum: { $multiply: ["$items.price", "$items.quantity"] } }
+        }
+      },
+      { $sort: { totalSold: -1 } },
+      { $limit: 50 }
+    ]);
+
+    res.status(200).json({ success: true, data: bestSelling });
+  } catch (error) {
+    console.error("Error fetching best selling report:", error);
+    res.status(500).json({ success: false, message: "Gagal mengambil laporan barang terlaku" });
+  }
+});
+
+
 module.exports = router;

@@ -310,7 +310,7 @@ function UserCeo() {
               className="flex items-center justify-center px-4 py-2 bg-white text-black font-bold rounded-lg border-2 border-black hover:bg-gray-100 transition-colors shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
             >
               <FileText size={20} className="mr-2" />
-              Laporan User
+              Laporan Register User
             </button>
               <button
               onClick={() => setCreateAdminModalOpen(true)}

@@ -20,6 +20,7 @@ import LaporanPesananAdmin from "./admin/laporanAdmin/LaporanPesananAdmin";
 import LaporanPesananCeo from "./ceo/laporanCeo/LaporanPesananCeo";
 import LaporanUserBaruCeo from "./ceo/laporanCeo/LaporanUserBaruCeo";
 import LaporanUserSetiaCeo from "./ceo/laporanCeo/LaporanUserSetiaCeo";
+import LaporanBarangTerlakuCeo from "./ceo/laporanCeo/LaporanBarangTerlakuCeo";
 import PengembalianBarang from "./pages/PengembalianBarang";
 import "./index.css";
 import axios from "axios";
@@ -749,6 +750,16 @@ function App() {
             path="/laporan-user-setia-ceo"
             element={
               isPemilik ? <LaporanUserSetiaCeo /> : <Home API_URL={API_URL} />
+            }
+          />
+          <Route
+            path="/laporan-barang-terlaku-ceo"
+            element={
+              isPemilik ? (
+                <LaporanBarangTerlakuCeo />
+              ) : (
+                <Home API_URL={API_URL} />
+              )
             }
           />
           <Route path="*" element={<Home API_URL={API_URL} />} />

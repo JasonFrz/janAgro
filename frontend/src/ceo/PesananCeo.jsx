@@ -239,7 +239,7 @@ function PesananCeo({
             className="flex items-center gap-2 bg-white text-black border-2 border-black px-4 py-2 rounded-lg hover:bg-gray-100 transition shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] font-bold"
           >
             <Users size={20} />
-            <span>User Setia</span>
+            <span>Top Leaderboard Customers</span>
           </button>
           <button
             onClick={() => navigate("/laporan-order-ceo")}

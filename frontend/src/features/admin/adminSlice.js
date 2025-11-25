@@ -3,6 +3,9 @@ import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
+// --- THUNKS: DATA FETCHING ---
+
+// 1. Fetch Users (Manajemen User)
 export const fetchUsers = createAsyncThunk(
   "admin/fetchUsers",
   async (_, { rejectWithValue }) => {
@@ -15,6 +18,7 @@ export const fetchUsers = createAsyncThunk(
   }
 );
 
+// 2. Fetch Checkouts (Operasional Harian)
 export const fetchCheckouts = createAsyncThunk(
   "admin/fetchCheckouts",
   async (_, { rejectWithValue }) => {
@@ -30,6 +34,7 @@ export const fetchCheckouts = createAsyncThunk(
   }
 );
 
+// 3. Fetch CEO Report (Laporan Pesanan/Keuangan)
 export const fetchCeoReport = createAsyncThunk(
   "admin/fetchCeoReport",
   async ({ year, month }, { rejectWithValue }) => {
@@ -49,6 +54,7 @@ export const fetchCeoReport = createAsyncThunk(
   }
 );
 
+// 4. Fetch User Report (Laporan User Baru)
 export const fetchUserReport = createAsyncThunk(
   "admin/fetchUserReport",
   async (params, { rejectWithValue }) => {
@@ -68,6 +74,7 @@ export const fetchUserReport = createAsyncThunk(
   }
 );
 
+// 5. Fetch Loyal Users Report (Laporan User Setia)
 export const fetchLoyalUsersReport = createAsyncThunk(
   "admin/fetchLoyalUsersReport",
   async (_, { rejectWithValue }) => {
@@ -84,6 +91,28 @@ export const fetchLoyalUsersReport = createAsyncThunk(
   }
 );
 
+// 6. Fetch Best Selling Report (Laporan Barang Terlaku)
+export const fetchBestSellingReport = createAsyncThunk(
+  "admin/fetchBestSellingReport",
+  async (params, { rejectWithValue }) => { // Terima params
+    try {
+      const token = localStorage.getItem("token");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      
+      // Kirim params (startDate, endDate) ke backend
+      const response = await axios.get(`${API_URL}/checkouts/best-selling-report`, { 
+        headers,
+        params 
+      });
+      return response.data.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || err.message);
+    }
+  }
+);
+
+// --- THUNKS: ACTIONS (CRUD & STATUS) ---
+
 export const editUser = createAsyncThunk(
   "admin/editUser",
   async ({ id, userData }, { rejectWithValue }) => {
@@ -92,7 +121,6 @@ export const editUser = createAsyncThunk(
       return response.data.data;
     } catch (error) {
       const errorMessage = error.response?.data?.message || "Gagal memperbarui pengguna";
-      alert(errorMessage);
       return rejectWithValue(errorMessage);
     }
   }
@@ -162,6 +190,8 @@ export const decideCancellation = createAsyncThunk(
   }
 );
 
+// --- SLICE DEFINITION ---
+
 const adminSlice = createSlice({
   name: "admin",
   initialState: {
@@ -170,6 +200,7 @@ const adminSlice = createSlice({
     ceoReportData: [], 
     userReportData: [], 
     loyalUsersData: [],
+    bestSellingData: [], // State untuk laporan barang terlaku
     loading: false,
     error: null,
   },
@@ -180,6 +211,7 @@ const adminSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // --- Fetch Users ---
       .addCase(fetchUsers.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -192,6 +224,8 @@ const adminSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
+
+      // --- Fetch Checkouts ---
       .addCase(fetchCheckouts.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -204,6 +238,8 @@ const adminSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
+
+      // --- Fetch CEO Report ---
       .addCase(fetchCeoReport.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -216,6 +252,8 @@ const adminSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
+
+      // --- Fetch User Report ---
       .addCase(fetchUserReport.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -228,6 +266,8 @@ const adminSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
+
+      // --- Fetch Loyal Users Report ---
       .addCase(fetchLoyalUsersReport.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -240,21 +280,40 @@ const adminSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
+
+      // --- Fetch Best Selling Report ---
+      .addCase(fetchBestSellingReport.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchBestSellingReport.fulfilled, (state, action) => {
+        state.loading = false;
+        state.bestSellingData = action.payload;
+      })
+      .addCase(fetchBestSellingReport.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      // --- Actions: Edit User ---
       .addCase(editUser.fulfilled, (state, action) => {
         const index = state.users.findIndex(u => u._id === action.payload._id);
         if (index !== -1) {
           state.users[index] = action.payload;
         }
       })
+      // --- Actions: Delete User ---
       .addCase(deleteUser.fulfilled, (state, action) => {
         state.users = state.users.filter(u => u._id !== action.payload);
       })
+      // --- Actions: Ban User ---
       .addCase(toggleBanUser.fulfilled, (state, action) => {
         const index = state.users.findIndex(u => u._id === action.payload._id);
         if (index !== -1) {
           state.users[index] = action.payload;
         }
       })
+      // --- Actions: Update Checkout ---
       .addCase(updateCheckoutStatus.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -274,6 +333,7 @@ const adminSlice = createSlice({
         state.loading = false;
         state.error = action.payload || action.error?.message;
       })
+      // --- Actions: Cancellation ---
       .addCase(decideCancellation.pending, (state) => {
         state.loading = true;
         state.error = null;
