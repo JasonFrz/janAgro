@@ -21,6 +21,7 @@ import LaporanPesananCeo from "./ceo/laporanCeo/LaporanPesananCeo";
 import LaporanUserBaruCeo from "./ceo/laporanCeo/LaporanUserBaruCeo";
 import LaporanUserSetiaCeo from "./ceo/laporanCeo/LaporanUserSetiaCeo";
 import LaporanBarangTerlakuCeo from "./ceo/laporanCeo/LaporanBarangTerlakuCeo";
+import LaporanVoucherCeo from "./ceo/laporanCeo/LaporanVoucherCeo";
 import PengembalianBarang from "./pages/PengembalianBarang";
 import "./index.css";
 import axios from "axios";
@@ -760,6 +761,12 @@ function App() {
               ) : (
                 <Home API_URL={API_URL} />
               )
+            }
+          />
+          <Route
+            path="/laporan-voucher-ceo"
+            element={
+              isPemilik ? <LaporanVoucherCeo /> : <Home API_URL={API_URL} />
             }
           />
           <Route path="*" element={<Home API_URL={API_URL} />} />

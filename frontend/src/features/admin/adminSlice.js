@@ -3,7 +3,9 @@ import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
-// --- THUNKS: DATA FETCHING ---
+// ==========================================
+// THUNKS: DATA FETCHING (GET)
+// ==========================================
 
 // 1. Fetch Users (Manajemen User)
 export const fetchUsers = createAsyncThunk(
@@ -34,7 +36,7 @@ export const fetchCheckouts = createAsyncThunk(
   }
 );
 
-// 3. Fetch CEO Report (Laporan Pesanan/Keuangan)
+// 3. Fetch CEO Report (Laporan Pesanan/Keuangan Bulanan/Tahunan)
 export const fetchCeoReport = createAsyncThunk(
   "admin/fetchCeoReport",
   async ({ year, month }, { rejectWithValue }) => {
@@ -54,7 +56,7 @@ export const fetchCeoReport = createAsyncThunk(
   }
 );
 
-// 4. Fetch User Report (Laporan User Baru)
+// 4. Fetch User Report (Laporan User Baru Harian/Bulanan/Tahunan)
 export const fetchUserReport = createAsyncThunk(
   "admin/fetchUserReport",
   async (params, { rejectWithValue }) => {
@@ -94,7 +96,7 @@ export const fetchLoyalUsersReport = createAsyncThunk(
 // 6. Fetch Best Selling Report (Laporan Barang Terlaku)
 export const fetchBestSellingReport = createAsyncThunk(
   "admin/fetchBestSellingReport",
-  async (params, { rejectWithValue }) => {
+  async (params, { rejectWithValue }) => { 
     try {
       const token = localStorage.getItem("token");
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
@@ -103,7 +105,6 @@ export const fetchBestSellingReport = createAsyncThunk(
         headers,
         params 
       });
-      
       return response.data.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message);
@@ -111,7 +112,7 @@ export const fetchBestSellingReport = createAsyncThunk(
   }
 );
 
-// 7. Fetch All Reviews (Laporan Ulasan) - *Tambahan jika diperlukan untuk fitur Ulasan CEO*
+// 7. Fetch All Reviews (Laporan Ulasan)
 export const fetchAllReviews = createAsyncThunk(
   "admin/fetchAllReviews",
   async (_, { rejectWithValue }) => {
@@ -126,7 +127,29 @@ export const fetchAllReviews = createAsyncThunk(
   }
 );
 
-// --- THUNKS: ACTIONS (CRUD & STATUS) ---
+// 8. Fetch Voucher Usage Report (Laporan Penggunaan Voucher)
+export const fetchVoucherUsageReport = createAsyncThunk(
+  "admin/fetchVoucherUsageReport",
+  async (params, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("token");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      
+      const response = await axios.get(`${API_URL}/vouchers/usage-report`, { 
+        headers,
+        params 
+      });
+      
+      return response.data.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || err.message);
+    }
+  }
+);
+
+// ==========================================
+// THUNKS: ACTIONS (PUT/DELETE/POST)
+// ==========================================
 
 export const editUser = createAsyncThunk(
   "admin/editUser",
@@ -205,18 +228,21 @@ export const decideCancellation = createAsyncThunk(
   }
 );
 
-// --- SLICE DEFINITION ---
+// ==========================================
+// SLICE DEFINITION
+// ==========================================
 
 const adminSlice = createSlice({
   name: "admin",
   initialState: {
-    users: [], 
-    checkouts: [], 
-    ceoReportData: [], 
-    userReportData: [], 
-    loyalUsersData: [],
-    bestSellingData: [], 
-    reviews: [], // State untuk ulasan
+    users: [],              // Manajemen User
+    checkouts: [],          // Operasional Pesanan
+    ceoReportData: [],      // Laporan Pesanan
+    userReportData: [],     // Laporan User Baru
+    loyalUsersData: [],     // Laporan User Setia
+    bestSellingData: [],    // Laporan Barang Terlaku
+    reviews: [],            // Laporan Ulasan
+    voucherReportData: [],  // Laporan Voucher
     loading: false,
     error: null,
   },
@@ -228,109 +254,49 @@ const adminSlice = createSlice({
   extraReducers: (builder) => {
     builder
       // --- Fetch Users ---
-      .addCase(fetchUsers.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(fetchUsers.fulfilled, (state, action) => {
-        state.loading = false;
-        state.users = action.payload;
-      })
-      .addCase(fetchUsers.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
+      .addCase(fetchUsers.pending, (state) => { state.loading = true; state.error = null; })
+      .addCase(fetchUsers.fulfilled, (state, action) => { state.loading = false; state.users = action.payload; })
+      .addCase(fetchUsers.rejected, (state, action) => { state.loading = false; state.error = action.payload; })
 
       // --- Fetch Checkouts ---
-      .addCase(fetchCheckouts.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(fetchCheckouts.fulfilled, (state, action) => {
-        state.loading = false;
-        state.checkouts = action.payload;
-      })
-      .addCase(fetchCheckouts.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
+      .addCase(fetchCheckouts.pending, (state) => { state.loading = true; state.error = null; })
+      .addCase(fetchCheckouts.fulfilled, (state, action) => { state.loading = false; state.checkouts = action.payload; })
+      .addCase(fetchCheckouts.rejected, (state, action) => { state.loading = false; state.error = action.payload; })
 
       // --- Fetch CEO Report ---
-      .addCase(fetchCeoReport.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(fetchCeoReport.fulfilled, (state, action) => {
-        state.loading = false;
-        state.ceoReportData = action.payload; 
-      })
-      .addCase(fetchCeoReport.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
+      .addCase(fetchCeoReport.pending, (state) => { state.loading = true; state.error = null; })
+      .addCase(fetchCeoReport.fulfilled, (state, action) => { state.loading = false; state.ceoReportData = action.payload; })
+      .addCase(fetchCeoReport.rejected, (state, action) => { state.loading = false; state.error = action.payload; })
 
       // --- Fetch User Report ---
-      .addCase(fetchUserReport.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(fetchUserReport.fulfilled, (state, action) => {
-        state.loading = false;
-        state.userReportData = action.payload;
-      })
-      .addCase(fetchUserReport.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
+      .addCase(fetchUserReport.pending, (state) => { state.loading = true; state.error = null; })
+      .addCase(fetchUserReport.fulfilled, (state, action) => { state.loading = false; state.userReportData = action.payload; })
+      .addCase(fetchUserReport.rejected, (state, action) => { state.loading = false; state.error = action.payload; })
 
       // --- Fetch Loyal Users Report ---
-      .addCase(fetchLoyalUsersReport.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(fetchLoyalUsersReport.fulfilled, (state, action) => {
-        state.loading = false;
-        state.loyalUsersData = action.payload;
-      })
-      .addCase(fetchLoyalUsersReport.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
+      .addCase(fetchLoyalUsersReport.pending, (state) => { state.loading = true; state.error = null; })
+      .addCase(fetchLoyalUsersReport.fulfilled, (state, action) => { state.loading = false; state.loyalUsersData = action.payload; })
+      .addCase(fetchLoyalUsersReport.rejected, (state, action) => { state.loading = false; state.error = action.payload; })
 
       // --- Fetch Best Selling Report ---
-      .addCase(fetchBestSellingReport.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(fetchBestSellingReport.fulfilled, (state, action) => {
-        state.loading = false;
-        state.bestSellingData = action.payload;
-      })
-      .addCase(fetchBestSellingReport.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
+      .addCase(fetchBestSellingReport.pending, (state) => { state.loading = true; state.error = null; })
+      .addCase(fetchBestSellingReport.fulfilled, (state, action) => { state.loading = false; state.bestSellingData = action.payload; })
+      .addCase(fetchBestSellingReport.rejected, (state, action) => { state.loading = false; state.error = action.payload; })
 
       // --- Fetch All Reviews ---
-      .addCase(fetchAllReviews.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(fetchAllReviews.fulfilled, (state, action) => {
-        state.loading = false;
-        state.reviews = action.payload;
-      })
-      .addCase(fetchAllReviews.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
+      .addCase(fetchAllReviews.pending, (state) => { state.loading = true; state.error = null; })
+      .addCase(fetchAllReviews.fulfilled, (state, action) => { state.loading = false; state.reviews = action.payload; })
+      .addCase(fetchAllReviews.rejected, (state, action) => { state.loading = false; state.error = action.payload; })
+
+      // --- Fetch Voucher Usage Report ---
+      .addCase(fetchVoucherUsageReport.pending, (state) => { state.loading = true; state.error = null; })
+      .addCase(fetchVoucherUsageReport.fulfilled, (state, action) => { state.loading = false; state.voucherReportData = action.payload; })
+      .addCase(fetchVoucherUsageReport.rejected, (state, action) => { state.loading = false; state.error = action.payload; })
 
       // --- Actions: Edit User ---
       .addCase(editUser.fulfilled, (state, action) => {
         const index = state.users.findIndex(u => u._id === action.payload._id);
-        if (index !== -1) {
-          state.users[index] = action.payload;
-        }
+        if (index !== -1) state.users[index] = action.payload;
       })
       // --- Actions: Delete User ---
       .addCase(deleteUser.fulfilled, (state, action) => {
@@ -339,35 +305,21 @@ const adminSlice = createSlice({
       // --- Actions: Ban User ---
       .addCase(toggleBanUser.fulfilled, (state, action) => {
         const index = state.users.findIndex(u => u._id === action.payload._id);
-        if (index !== -1) {
-          state.users[index] = action.payload;
-        }
+        if (index !== -1) state.users[index] = action.payload;
       })
       // --- Actions: Update Checkout ---
-      .addCase(updateCheckoutStatus.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
+      .addCase(updateCheckoutStatus.pending, (state) => { state.loading = true; state.error = null; })
       .addCase(updateCheckoutStatus.fulfilled, (state, action) => {
         state.loading = false;
         const updated = action.payload;
         if (!updated) return;
         const idx = state.checkouts.findIndex(c => c._id === updated._id);
-        if (idx !== -1) {
-          state.checkouts[idx] = { ...state.checkouts[idx], ...updated };
-        } else {
-          state.checkouts.unshift(updated);
-        }
+        if (idx !== -1) state.checkouts[idx] = { ...state.checkouts[idx], ...updated };
+        else state.checkouts.unshift(updated);
       })
-      .addCase(updateCheckoutStatus.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload || action.error?.message;
-      })
+      .addCase(updateCheckoutStatus.rejected, (state, action) => { state.loading = false; state.error = action.payload || action.error?.message; })
       // --- Actions: Cancellation ---
-      .addCase(decideCancellation.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
+      .addCase(decideCancellation.pending, (state) => { state.loading = true; state.error = null; })
       .addCase(decideCancellation.fulfilled, (state, action) => {
         state.loading = false;
         if (action.payload.deleted) {
@@ -378,10 +330,7 @@ const adminSlice = createSlice({
             );
         }
       })
-      .addCase(decideCancellation.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload?.message || "Failed to process cancellation";
-      });
+      .addCase(decideCancellation.rejected, (state, action) => { state.loading = false; state.error = action.payload?.message || "Failed to process cancellation"; });
   },
 });
 

@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const Voucher = require("../models/Voucher");
+const Checkout = require("../models/Checkout");
 
 router.post("/add-voucher", async (req, res) => {
   try {
@@ -62,6 +63,35 @@ router.delete("/delete-voucher/:id", async (req, res) => {
     }
     res.json({ success: true, message: "Voucher berhasil dihapus" });
   } catch (error) {
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+router.get("/usage-report", async (req, res) => {
+  try {
+    const { startDate, endDate, search } = req.query;
+    let query = { kodeVoucher: { $ne: null } }; // Hanya ambil yg punya kodeVoucher
+
+    // Filter Tanggal
+    if (startDate && endDate) {
+      query.createdAt = {
+        $gte: new Date(startDate),
+        $lte: new Date(new Date(endDate).setHours(23, 59, 59))
+      };
+    }
+
+    // Filter Search (Kode Voucher)
+    if (search) {
+      query.kodeVoucher = { $regex: search, $options: "i" };
+    }
+
+    const voucherUsage = await Checkout.find(query)
+      .select("kodeVoucher nama totalHarga diskon items createdAt")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({ success: true, data: voucherUsage });
+  } catch (error) {
+    console.error("Error voucher report:", error);
     res.status(500).json({ success: false, message: "Server error" });
   }
 });

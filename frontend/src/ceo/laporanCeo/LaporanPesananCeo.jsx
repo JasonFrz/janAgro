@@ -6,7 +6,6 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCeoReport } from "../../features/admin/adminSlice";
-
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -16,7 +15,6 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-
 import { janAgroLogoBase64 } from "./logoBase64";
 
 ChartJS.register(
@@ -179,21 +177,15 @@ const LaporanSection = ({ title, orders, onOrderClick }) => (
 
 const LaporanPesananCeo = () => {
   const dispatch = useDispatch();
-
   const { ceoReportData, loading } = useSelector((state) => state.admin);
-
   const [selectedOrder, setSelectedOrder] = useState(null);
-  
-  const [filterType, setFilterType] = useState("monthly"); 
-  
+  const [filterType, setFilterType] = useState("monthly");
   const [listYear, setListYear] = useState(new Date().getFullYear());
   const [listMonthStart, setListMonthStart] = useState(1);
   const [listMonthEnd, setListMonthEnd] = useState(12);
-
   const [specificDate, setSpecificDate] = useState(
     new Date().toISOString().split("T")[0]
   );
-
   const [chartYear, setChartYear] = useState(new Date().getFullYear());
   const [purchaseFilter, setPurchaseFilter] = useState("all");
 
@@ -202,7 +194,6 @@ const LaporanPesananCeo = () => {
   }, [dispatch]);
 
   const reportData = ceoReportData || [];
-
   const years = useMemo(() => {
     const uniqueYears = new Set(
       reportData.map((c) => new Date(c.tanggal).getFullYear())
@@ -214,9 +205,8 @@ const LaporanPesananCeo = () => {
   const filteredCheckoutsForList = useMemo(() => {
     return reportData.filter((checkout) => {
       const checkoutDate = new Date(checkout.tanggal);
-
       if (filterType === "daily") {
-        const checkoutDateString = checkoutDate.toLocaleDateString('en-CA'); 
+        const checkoutDateString = checkoutDate.toLocaleDateString("en-CA");
         return checkoutDateString === specificDate;
       } else {
         const yearMatch = checkoutDate.getFullYear() === listYear;
@@ -228,12 +218,18 @@ const LaporanPesananCeo = () => {
         return yearMatch && monthMatch;
       }
     });
-  }, [reportData, filterType, specificDate, listYear, listMonthStart, listMonthEnd]);
+  }, [
+    reportData,
+    filterType,
+    specificDate,
+    listYear,
+    listMonthStart,
+    listMonthEnd,
+  ]);
 
   const chartData = useMemo(() => {
     const successfulPurchases = Array(12).fill(0);
     const failedPurchases = Array(12).fill(0);
-
     reportData.forEach((checkout) => {
       const checkoutDate = new Date(checkout.tanggal);
       if (checkoutDate.getFullYear() === chartYear) {
@@ -252,7 +248,6 @@ const LaporanPesananCeo = () => {
         }
       }
     });
-
     const datasets = [
       {
         label: "Pembelian Berhasil",
@@ -265,12 +260,10 @@ const LaporanPesananCeo = () => {
         backgroundColor: "rgba(239, 68, 68, 0.8)",
       },
     ];
-
     let filteredDatasets;
     if (purchaseFilter === "success") filteredDatasets = [datasets[0]];
     else if (purchaseFilter === "failed") filteredDatasets = [datasets[1]];
     else filteredDatasets = datasets;
-
     return {
       labels: [
         "Jan",
@@ -292,12 +285,10 @@ const LaporanPesananCeo = () => {
 
   const handleExportPDF = () => {
     const doc = new jsPDF();
-    
-    // --- 1. MENAMBAHKAN KOLOM 'ITEM DIPESAN' ---
     const tableColumn = [
       "ID Pesanan",
       "Nama Pelanggan",
-      "Item Dipesan", // Kolom baru
+      "Item Dipesan",
       "Tanggal",
       "Total Harga",
       "Status",
@@ -305,16 +296,16 @@ const LaporanPesananCeo = () => {
     const tableRows = [];
 
     filteredCheckoutsForList.forEach((order) => {
-      // --- 2. LOGIKA MENGAMBIL ITEM ---
-      // Menggabungkan item menjadi satu string dengan pemisah baris baru (\n)
-      const itemsString = order.items && order.items.length > 0 
-        ? order.items.map(item => `• ${item.name} (${item.quantity}x)`).join("\n")
-        : "-";
-
+      const itemsString =
+        order.items && order.items.length > 0
+          ? order.items
+              .map((item) => `• ${item.name} (${item.quantity}x)`)
+              .join("\n")
+          : "-";
       const orderData = [
         `#${order.id.substring(0, 8)}`,
         order.nama,
-        itemsString, // Masukkan string item ke data row
+        itemsString,
         new Date(order.tanggal).toLocaleDateString("id-ID", {
           year: "numeric",
           month: "long",
@@ -328,12 +319,16 @@ const LaporanPesananCeo = () => {
       tableRows.push(orderData);
     });
 
-    const filterTitle = filterType === 'daily' 
-      ? `Harian (${new Date(specificDate).toLocaleDateString("id-ID", { dateStyle: 'long' })})`
-      : `Bulanan`;
-
+    const filterTitle =
+      filterType === "daily"
+        ? `Harian (${new Date(specificDate).toLocaleDateString("id-ID", {
+            dateStyle: "long",
+          })})`
+        : `Bulanan`;
     const date = new Date();
-    const fullDate = `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}`;
+    const fullDate = `${date.getDate()}-${
+      date.getMonth() + 1
+    }-${date.getFullYear()}`;
 
     autoTable(doc, {
       head: [tableColumn],
@@ -341,21 +336,25 @@ const LaporanPesananCeo = () => {
       startY: 45,
       margin: { top: 45 },
       theme: "grid",
-      styles: { font: "helvetica", fontSize: 8, cellPadding: 2, valign: 'middle' }, // valign middle agar rapi
+      styles: {
+        font: "helvetica",
+        fontSize: 8,
+        cellPadding: 2,
+        valign: "middle",
+      },
       headStyles: {
         fillColor: [41, 41, 41],
         textColor: [255, 255, 255],
         fontStyle: "bold",
       },
-      // Mengatur lebar kolom agar item tidak terlalu sempit
-      columnStyles: {
-        2: { cellWidth: 50 } // Lebar kolom Item Dipesan
-      },
+      columnStyles: { 2: { cellWidth: 50 } },
       didDrawPage: function (data) {
         const logoWidth = 22;
         const logoHeight = 22;
         const margin = data.settings.margin.left;
+        const pageWidth = doc.internal.pageSize.getWidth();
 
+        // --- HEADER ---
         try {
           doc.addImage(
             janAgroLogoBase64,
@@ -367,57 +366,60 @@ const LaporanPesananCeo = () => {
             undefined,
             "FAST"
           );
-        } catch (e) {
-          console.warn("Logo load failed", e);
-        }
+        } catch (e) {}
 
-        doc.setFontSize(12);
+        doc.setFontSize(14);
         doc.setFont("helvetica", "bold");
         doc.text("PT. Jan Agro Nusantara", margin + logoWidth + 5, 16);
         doc.setFontSize(10);
-        doc.text(`Laporan Pesanan - ${filterTitle}`, margin + logoWidth + 5, 22);
-        
+        doc.text(
+          `Laporan Pesanan - ${filterTitle}`,
+          margin + logoWidth + 5,
+          21
+        );
+
         doc.setFontSize(8);
         doc.setFont("helvetica", "normal");
         doc.text(
-          "Email: janagronusantara@gmail.com | Telepon: (031) 123-4567",
+          "Jan Agro Nusantara Indonesia Pondok Chandra Indah No. 69 Surabaya 10130, Indonesia",
           margin + logoWidth + 5,
-          27
+          26
         );
-        doc.setDrawColor(0, 0, 0);
-        doc.line(
-          margin,
-          35,
-          doc.internal.pageSize.getWidth() - data.settings.margin.right,
-          35
+        doc.text(
+          "Email: janagronusantara@gmail.com | Contact Person: +62 811 762 788",
+          margin + logoWidth + 5,
+          30
         );
 
+        doc.setDrawColor(0, 0, 0);
+        doc.line(margin, 35, pageWidth - data.settings.margin.right, 35);
+
+        // --- FOOTER ---
         if (data.pageNumber === doc.internal.getNumberOfPages()) {
           const pageHeight = doc.internal.pageSize.getHeight();
-          const pageWidth = doc.internal.pageSize.getWidth();
           let finalY = data.cursor.y;
           if (finalY + 60 > pageHeight) {
             doc.addPage();
             finalY = data.settings.margin.top;
           }
+
+          const signatureX = pageWidth - data.settings.margin.right;
+          const currentDate = new Date().toLocaleDateString("id-ID", {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+          });
+
           doc.setFontSize(10);
           doc.setFont("helvetica", "normal");
-          const signatureX = pageWidth - data.settings.margin.right;
-          doc.text(
-            `Surabaya, ${new Date().toLocaleDateString("id-ID", {
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-            })}`,
-            signatureX,
-            finalY + 20,
-            { align: "right" }
-          );
-          doc.setFont("helvetica", "bold");
-          doc.text("J.Alamsjah,S.H", signatureX, finalY + 45, {
+          doc.text(`Surabaya, ${currentDate}`, signatureX, finalY + 20, {
             align: "right",
           });
-          const nameWidth = doc.getTextWidth("J.Alamsjah,S.H");
+          doc.setFont("helvetica", "bold");
+          doc.text("J.Alamsjah, S.H", signatureX, finalY + 45, {
+            align: "right",
+          });
+          const nameWidth = doc.getTextWidth("J.Alamsjah, S.H");
           doc.setLineWidth(0.5);
           doc.line(
             signatureX - nameWidth,
@@ -426,12 +428,10 @@ const LaporanPesananCeo = () => {
             finalY + 46
           );
           doc.setFont("helvetica", "normal");
-          doc.text(
-            "Ceo & Founder of Jan Agro Nusantara",
-            signatureX,
-            finalY + 55,
-            { align: "right" }
-          );
+          doc.setFontSize(9);
+          doc.text("Ceo & Founder", signatureX, finalY + 50, {
+            align: "right",
+          });
         }
       },
     });
@@ -474,7 +474,6 @@ const LaporanPesananCeo = () => {
               Kembali ke Ceo
             </Link>
           </header>
-
           {loading ? (
             <div className="text-center py-20">
               <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-black border-t-transparent"></div>
@@ -514,7 +513,6 @@ const LaporanPesananCeo = () => {
                   <Bar data={chartData} options={chartOptions} />
                 </div>
               </div>
-
               <div className="bg-white border border-black p-6 rounded-lg">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
                   <h2 className="text-xl font-bold mb-4 sm:mb-0">
@@ -527,7 +525,6 @@ const LaporanPesananCeo = () => {
                     <FileText className="mr-2 h-5 w-5" /> Export PDF
                   </button>
                 </div>
-
                 <div className="flex space-x-4 mb-4 border-b border-gray-200 pb-2">
                   <button
                     onClick={() => setFilterType("monthly")}
@@ -552,9 +549,7 @@ const LaporanPesananCeo = () => {
                     Per Tanggal Spesifik
                   </button>
                 </div>
-
                 <div className="flex flex-col sm:flex-row gap-4 items-center animate-fade-in">
-                  
                   {filterType === "monthly" ? (
                     <>
                       <select
@@ -602,27 +597,35 @@ const LaporanPesananCeo = () => {
                     </>
                   ) : (
                     <div className="flex items-center gap-2 w-full sm:w-auto">
-                        <label className="font-semibold text-gray-700">Pilih Tanggal:</label>
-                        <input 
-                            type="date"
-                            value={specificDate}
-                            onChange={(e) => setSpecificDate(e.target.value)}
-                            className="bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
-                        />
-                        <span className="text-sm text-gray-500 ml-2">
-                           (Menampilkan data: {new Date(specificDate).toLocaleDateString("id-ID", { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })})
-                        </span>
+                      <label className="font-semibold text-gray-700">
+                        Pilih Tanggal:
+                      </label>
+                      <input
+                        type="date"
+                        value={specificDate}
+                        onChange={(e) => setSpecificDate(e.target.value)}
+                        className="bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
+                      />
+                      <span className="text-sm text-gray-500 ml-2">
+                        (Menampilkan data:{" "}
+                        {new Date(specificDate).toLocaleDateString("id-ID", {
+                          weekday: "long",
+                          day: "numeric",
+                          month: "long",
+                          year: "numeric",
+                        })}
+                        )
+                      </span>
                     </div>
                   )}
                 </div>
               </div>
-
               <div className="border-t-2 border-black pt-8">
                 <h2 className="text-3xl font-bold mb-6 flex items-center gap-2">
-                   Detail Pesanan
-                   <span className="text-sm font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                      Total: {filteredCheckoutsForList.length} Pesanan
-                   </span>
+                  Detail Pesanan
+                  <span className="text-sm font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                    Total: {filteredCheckoutsForList.length} Pesanan
+                  </span>
                 </h2>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                   <LaporanSection
@@ -659,5 +662,4 @@ const LaporanPesananCeo = () => {
     </>
   );
 };
-
 export default LaporanPesananCeo;

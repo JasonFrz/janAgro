@@ -7,7 +7,6 @@ import autoTable from "jspdf-autotable";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchUserReport } from "../../features/admin/adminSlice";
 import { janAgroLogoBase64 } from "./logoBase64";
-
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -30,7 +29,7 @@ ChartJS.register(
 const LaporanUserBaruCeo = () => {
   const dispatch = useDispatch();
   const { userReportData, loading } = useSelector((state) => state.admin);
-  const [filterType, setFilterType] = useState("yearly"); 
+  const [filterType, setFilterType] = useState("yearly");
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedDate, setSelectedDate] = useState(
@@ -51,7 +50,6 @@ const LaporanUserBaruCeo = () => {
         day: dateObj.getDate(),
       };
     }
-
     dispatch(fetchUserReport(params));
   }, [dispatch, filterType, selectedYear, selectedMonth, selectedDate]);
 
@@ -59,8 +57,6 @@ const LaporanUserBaruCeo = () => {
     const data = userReportData || [];
     let labels = [];
     let counts = [];
-    let labelText = "";
-
     if (filterType === "yearly") {
       labels = [
         "Jan",
@@ -78,36 +74,29 @@ const LaporanUserBaruCeo = () => {
       ];
       counts = Array(12).fill(0);
       data.forEach((user) => {
-        const m = new Date(user.createdAt).getMonth();
-        counts[m]++;
+        counts[new Date(user.createdAt).getMonth()]++;
       });
-      labelText = `Registrasi User Tahun ${selectedYear}`;
     } else if (filterType === "monthly") {
       const daysInMonth = new Date(selectedYear, selectedMonth, 0).getDate();
       labels = Array.from({ length: daysInMonth }, (_, i) => i + 1);
       counts = Array(daysInMonth).fill(0);
       data.forEach((user) => {
-        const d = new Date(user.createdAt).getDate();
-        counts[d - 1]++;
+        counts[new Date(user.createdAt).getDate() - 1]++;
       });
-      labelText = `Registrasi User Bulan ${selectedMonth}/${selectedYear}`;
     } else {
       labels = Array.from({ length: 24 }, (_, i) => `${i}:00`);
       counts = Array(24).fill(0);
       data.forEach((user) => {
-        const h = new Date(user.createdAt).getHours();
-        counts[h]++;
+        counts[new Date(user.createdAt).getHours()]++;
       });
-      labelText = `Registrasi User Tanggal ${selectedDate}`;
     }
-
     return {
       labels,
       datasets: [
         {
           label: "User Baru",
           data: counts,
-          backgroundColor: "rgba(0, 0, 0, 0.8)", // Hitam
+          backgroundColor: "rgba(0, 0, 0, 0.8)",
           borderColor: "rgba(0, 0, 0, 1)",
           borderWidth: 1,
         },
@@ -168,7 +157,9 @@ const LaporanUserBaruCeo = () => {
         const logoWidth = 22;
         const logoHeight = 22;
         const margin = data.settings.margin.left;
+        const pageWidth = doc.internal.pageSize.getWidth();
 
+        // --- HEADER ---
         try {
           doc.addImage(
             janAgroLogoBase64,
@@ -189,53 +180,55 @@ const LaporanUserBaruCeo = () => {
         doc.text(
           `Laporan User Baru - ${titleText}`,
           margin + logoWidth + 5,
-          22
+          21
         );
 
         doc.setFontSize(8);
         doc.setFont("helvetica", "normal");
         doc.text(
-          "Email: janagronusantara@gmail.com | Telepon: (031) 123-4567",
+          "Jan Agro Nusantara Indonesia Pondok Chandra Indah No. 69 Surabaya 10130, Indonesia",
           margin + logoWidth + 5,
-          27
+          26
         );
-        doc.setDrawColor(0, 0, 0);
-        doc.setLineWidth(1);
-        doc.line(
-          margin,
-          35,
-          doc.internal.pageSize.getWidth() - data.settings.margin.right,
-          35
+        doc.text(
+          "Email: janagronusantara@gmail.com | Contact Person: +62 811 762 788",
+          margin + logoWidth + 5,
+          30
         );
 
+        doc.setDrawColor(0, 0, 0);
+        doc.setLineWidth(1);
+        doc.line(margin, 35, pageWidth - data.settings.margin.right, 35);
+
+        // --- FOOTER ---
         if (data.pageNumber === doc.internal.getNumberOfPages()) {
           const pageHeight = doc.internal.pageSize.getHeight();
-          const pageWidth = doc.internal.pageSize.getWidth();
           let finalY = data.cursor.y + 20;
           if (finalY + 40 > pageHeight) {
             doc.addPage();
             finalY = 40;
           }
 
-          doc.setFontSize(10);
           const signatureX = pageWidth - data.settings.margin.right;
-          doc.text(
-            `Surabaya, ${new Date().toLocaleDateString("id-ID", {
-              day: "numeric",
-              month: "long",
-              year: "numeric",
-            })}`,
-            signatureX,
-            finalY,
-            { align: "right" }
-          );
+          const currentDate = new Date().toLocaleDateString("id-ID", {
+            day: "numeric",
+            month: "long",
+            year: "numeric",
+          });
+
+          doc.setFontSize(10);
+          doc.setFont("helvetica", "normal");
+          doc.text(`Surabaya, ${currentDate}`, signatureX, finalY, {
+            align: "right",
+          });
           doc.setFont("helvetica", "bold");
-          doc.text("J.Alamsjah,S.H", signatureX, finalY + 25, {
+          doc.text("J.Alamsjah, S.H", signatureX, finalY + 25, {
             align: "right",
           });
           doc.setLineWidth(0.5);
           doc.line(signatureX - 30, finalY + 26, signatureX, finalY + 26);
           doc.setFont("helvetica", "normal");
+          doc.setFontSize(9);
           doc.text("Ceo & Founder", signatureX, finalY + 32, {
             align: "right",
           });
@@ -283,7 +276,7 @@ const LaporanUserBaruCeo = () => {
             to="/ceo"
             className="group flex items-center bg-black text-white px-5 py-2.5 rounded-lg font-bold hover:bg-gray-800 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)] hover:translate-x-[2px] hover:translate-y-[2px]"
           >
-            <ArrowLeft className="mr-2 h-5 w-5 group-hover:-translate-x-1 transition-transform" />
+            <ArrowLeft className="mr-2 h-5 w-5 group-hover:-translate-x-1 transition-transform" />{" "}
             KEMBALI KE CEO
           </Link>
         </header>
@@ -313,7 +306,6 @@ const LaporanUserBaruCeo = () => {
               ))}
             </div>
           </div>
-
           <div className="flex flex-wrap gap-4 items-center">
             {filterType === "daily" && (
               <div className="flex flex-col">
@@ -328,7 +320,6 @@ const LaporanUserBaruCeo = () => {
                 />
               </div>
             )}
-
             {(filterType === "monthly" || filterType === "yearly") && (
               <div className="flex flex-col">
                 <label className="text-xs font-bold uppercase mb-1">
@@ -350,7 +341,6 @@ const LaporanUserBaruCeo = () => {
                 </select>
               </div>
             )}
-
             {filterType === "monthly" && (
               <div className="flex flex-col">
                 <label className="text-xs font-bold uppercase mb-1">
@@ -371,7 +361,6 @@ const LaporanUserBaruCeo = () => {
                 </select>
               </div>
             )}
-
             <button
               onClick={handleExportPDF}
               className="ml-auto bg-green-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-green-700 transition-all border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] flex items-center gap-2"
@@ -489,5 +478,4 @@ const LaporanUserBaruCeo = () => {
     </div>
   );
 };
-
 export default LaporanUserBaruCeo;

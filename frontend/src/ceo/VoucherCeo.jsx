@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { Edit, Trash2, Plus } from "lucide-react";
+import { Edit, Trash2, Plus, FileText, Users } from "lucide-react";
 import ConfirmationModalCeo from "./ConfirmationModalCeo";
+import { useNavigate } from "react-router-dom";
 import VoucherModalCeo from "./VoucherModalCeo";
 
 function VoucherCeo({ vouchers, onAdd, onUpdate, onDelete }) {
@@ -8,7 +9,7 @@ function VoucherCeo({ vouchers, onAdd, onUpdate, onDelete }) {
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [editingVoucher, setEditingVoucher] = useState(null);
   const [voucherToDelete, setVoucherToDelete] = useState(null);
-
+  const navigate = useNavigate();
   const handleOpenModal = (voucher = null) => {
     setEditingVoucher(voucher);
     setIsModalOpen(true);
@@ -58,13 +59,25 @@ function VoucherCeo({ vouchers, onAdd, onUpdate, onDelete }) {
       <div className="bg-white text-black shadow-lg rounded-lg p-6 border-2 border-black">
         <div className="flex items-center justify-between mb-6 pb-4 border-b-2 border-black">
           <h2 className="text-2xl font-bold">Voucher Management</h2>
-          <button
-            onClick={() => handleOpenModal()}
-            className="flex items-center space-x-2 bg-black text-white py-2 px-4 rounded-md font-bold hover:bg-gray-800 transition-transform hover:scale-105"
-          >
-            <Plus size={20} />
-            <span>Add New Voucher</span>
-          </button>
+            <div className="flex gap-3">
+             {/* TOMBOL BARU: Laporan Voucher */}
+             <button
+                onClick={() => navigate("/laporan-voucher-ceo")}
+                className="flex items-center space-x-2 bg-white text-black border-2 border-black py-2 px-4 rounded-md font-bold hover:bg-gray-100 transition-transform"
+              >
+                <FileText size={20} />
+                <span>Laporan Voucher</span>
+              </button>
+
+             {/* Tombol Add */}
+             <button
+                onClick={() => handleOpenModal()}
+                className="flex items-center space-x-2 bg-black text-white py-2 px-4 rounded-md font-bold hover:bg-gray-800 transition-transform hover:scale-105"
+              >
+                <Plus size={20} />
+                <span>Add New Voucher</span>
+              </button>
+          </div>
         </div>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y-2 divide-black">
