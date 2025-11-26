@@ -1,5 +1,5 @@
-import React, { useMemo, useState, useEffect } from "react"; 
-import { useDispatch, useSelector } from "react-redux"; 
+import React, { useMemo, useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import {
   Users,
   Package,
@@ -9,12 +9,14 @@ import {
   TrendingDown,
   Clock,
 } from "lucide-react";
-import { fetchUsers } from "../features/admin/adminSlice"; 
+import { fetchUsers } from "../features/admin/adminSlice";
+
 function DashboardCeo({ vouchers = [], produk = [], checkouts = [] }) {
   const dispatch = useDispatch();
   const { users, loading: usersLoading } = useSelector((state) => state.admin);
 
   const [sortDirection, setSortDirection] = useState("asc");
+
   useEffect(() => {
     if (users.length === 0) {
       dispatch(fetchUsers());
@@ -31,18 +33,22 @@ function DashboardCeo({ vouchers = [], produk = [], checkouts = [] }) {
     const totalRevenue = checkouts
       .filter((o) => o.status === "selesai" || o.status === "sampai")
       .reduce((sum, order) => sum + order.totalHarga, 0);
+
     const successfulOrders = checkouts.filter(
       (o) => o.status === "selesai" || o.status === "sampai"
     ).length;
+
     const pendingOrders = checkouts.filter(
       (o) =>
         o.status === "diproses" ||
         o.status === "dikirim" ||
         o.status === "pending"
     ).length;
+
     const lowStockProducts = produk.filter(
-      (p) => p.stock > 0 && p.stock <= 10
+      (p) => p.stock <= 10 
     ).length;
+
     return { totalRevenue, successfulOrders, pendingOrders, lowStockProducts };
   }, [checkouts, produk]);
 
@@ -121,10 +127,10 @@ function DashboardCeo({ vouchers = [], produk = [], checkouts = [] }) {
           isLoading={usersLoading}
         />
         <StatCard
-          icon={<Ticket size={24} />}
-          title="Low Stock Products"
+          icon={<Package size={24} />}
+          title="Low Stock & Empty"
           value={stats.lowStockProducts}
-          detail="Items needing immediate restock."
+          detail="Items needing immediate restock (Qty ≤ 10)."
           trend="down"
         />
       </div>
@@ -195,10 +201,10 @@ function DashboardCeo({ vouchers = [], produk = [], checkouts = [] }) {
               {sortedProducts.map((p) => {
                 const stockStatus =
                   p.stock === 0
-                    ? "bg-red-500"
+                    ? "bg-red-600" 
                     : p.stock <= 10
                     ? "bg-yellow-400"
-                    : "bg-green-500";
+                    : "bg-green-500"; 
                 return (
                   <li
                     key={p._id}
@@ -209,7 +215,9 @@ function DashboardCeo({ vouchers = [], produk = [], checkouts = [] }) {
                       <p className="text-sm text-gray-500">{p.category}</p>
                     </div>
                     <div className="flex items-center space-x-3">
-                      <span className="font-bold text-lg">{p.stock}</span>
+                      <span className={`font-bold text-lg ${p.stock === 0 ? 'text-red-600' : ''}`}>
+                        {p.stock === 0 ? "Empty" : p.stock}
+                      </span>
                       <div
                         className={`w-3 h-3 rounded-full ${stockStatus}`}
                       ></div>

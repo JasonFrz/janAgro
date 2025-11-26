@@ -5,17 +5,16 @@ import {
   Package,
   ShoppingCart,
   Ticket,
-  FileText, 
+  FileText,
+  MessageSquare, // Import Icon Baru
 } from "lucide-react";
 import DashboardCeo from "../ceo/DashboardCeo";
 import ProdukCeo from "../ceo/ProdukCeo";
 import PesananCeo from "../ceo/PesananCeo";
 import VoucherCeo from "../ceo/VoucherCeo";
 import UserCeo from "../ceo/UserCeo";
-import LaporanPesananCeo from "../ceo/laporanCeo/LaporanPesananCeo";
-
-import { Link } from "react-router-dom"; 
-
+import UlasanCeo from "../ceo/UlasanCeo"; // Import Komponen Baru
+import { Link } from "react-router-dom";
 
 function Ceo({
   users,
@@ -80,7 +79,7 @@ function Ceo({
             onDelete={onDeleteVoucher}
           />
         );
-         case "users": // Tambahkan case baru untuk pengguna
+      case "users":
         return <UserCeo />;
       case "pesanan":
         return (
@@ -95,6 +94,8 @@ function Ceo({
             onRejectCancellation={onRejectCancellation}
           />
         );
+      case "ulasan": // CASE BARU
+        return <UlasanCeo />;
       default:
         return (
           <DashboardCeo
@@ -120,10 +121,7 @@ function Ceo({
           >
             Dashboard
           </NavButton>
-           <NavButton
-            tabName="users"
-            icon={<Users className="mr-3 h-6 w-6" />}
-          >
+          <NavButton tabName="users" icon={<Users className="mr-3 h-6 w-6" />}>
             Users
           </NavButton>
           <NavButton
@@ -144,13 +142,14 @@ function Ceo({
           >
             Orders
           </NavButton>
-        
-          <Link
-            to="/laporan"
-            className="flex items-center w-full px-4 py-3 rounded-lg font-bold transition-all duration-200 border-2 bg-white text-black border-transparent hover:border-black hover:bg-gray-100"
+
+          {/* TOMBOL BARU DI SINI */}
+          <NavButton
+            tabName="ulasan"
+            icon={<MessageSquare className="mr-3 h-6 w-6" />}
           >
-            <FileText className="mr-3 h-6 w-6" /> Reports
-          </Link>
+            Reviews
+          </NavButton>
         </nav>
       </aside>
       <main className="flex-1 p-8 space-y-6 overflow-y-auto">

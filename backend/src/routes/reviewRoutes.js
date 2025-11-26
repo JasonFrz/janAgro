@@ -102,4 +102,22 @@ router.get("/product/:productId", async (req, res) => {
   }
 });
 
+
+router.get("/all", authenticateToken, async (req, res) => {
+  try {
+    const reviews = await Review.find({})
+      .populate("user", "name avatar email")
+      .populate("product", "name image price category") 
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      data: reviews,
+    });
+  } catch (error) {
+    console.error("Error fetching all reviews:", error);
+    res.status(500).json({ success: false, message: "Server error fetching reviews." });
+  }
+});
+
 module.exports = router;

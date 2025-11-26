@@ -94,16 +94,31 @@ export const fetchLoyalUsersReport = createAsyncThunk(
 // 6. Fetch Best Selling Report (Laporan Barang Terlaku)
 export const fetchBestSellingReport = createAsyncThunk(
   "admin/fetchBestSellingReport",
-  async (params, { rejectWithValue }) => { // Terima params
+  async (params, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("token");
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
       
-      // Kirim params (startDate, endDate) ke backend
       const response = await axios.get(`${API_URL}/checkouts/best-selling-report`, { 
         headers,
         params 
       });
+      
+      return response.data.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || err.message);
+    }
+  }
+);
+
+// 7. Fetch All Reviews (Laporan Ulasan) - *Tambahan jika diperlukan untuk fitur Ulasan CEO*
+export const fetchAllReviews = createAsyncThunk(
+  "admin/fetchAllReviews",
+  async (_, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("token");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const response = await axios.get(`${API_URL}/reviews/all`, { headers });
       return response.data.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.message || err.message);
@@ -174,7 +189,7 @@ export const decideCancellation = createAsyncThunk(
   "admin/decideCancellation",
   async ({ orderId, decision }, { rejectWithValue }) => {
     try {
-      const res = await fetch(`http://localhost:3000/api/checkouts/cancel/decision/${orderId}`, {
+      const res = await fetch(`${API_URL}/checkouts/cancel/decision/${orderId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ decision }),
@@ -200,7 +215,8 @@ const adminSlice = createSlice({
     ceoReportData: [], 
     userReportData: [], 
     loyalUsersData: [],
-    bestSellingData: [], // State untuk laporan barang terlaku
+    bestSellingData: [], 
+    reviews: [], // State untuk ulasan
     loading: false,
     error: null,
   },
@@ -291,6 +307,20 @@ const adminSlice = createSlice({
         state.bestSellingData = action.payload;
       })
       .addCase(fetchBestSellingReport.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      // --- Fetch All Reviews ---
+      .addCase(fetchAllReviews.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchAllReviews.fulfilled, (state, action) => {
+        state.loading = false;
+        state.reviews = action.payload;
+      })
+      .addCase(fetchAllReviews.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
