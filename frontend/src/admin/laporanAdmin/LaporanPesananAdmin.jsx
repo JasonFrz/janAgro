@@ -30,6 +30,30 @@ ChartJS.register(
 
 const OrderDetailModal = ({ order, onClose }) => {
   if (!order) return null;
+
+  // Helper function to map payment type to readable format
+  const getPaymentMethodDisplay = (paymentType, metodePembayaran) => {
+    const paymentMap = {
+      'credit_card': 'Kartu Kredit',
+      'bank_transfer': 'Transfer Bank',
+      'gopay': 'GoPay',
+      'qris': 'QRIS',
+      'cstore': 'Convenience Store',
+      'echannel': 'E-Channel',
+      'bnpl': 'Cicilan',
+      'transfer_bank': 'Transfer Bank'
+    };
+    // If paymentType exists and is not null/empty, use it (it's from actual Midtrans payment)
+    if (paymentType && paymentType !== 'null' && paymentType.trim()) {
+      return paymentMap[paymentType] || paymentType;
+    }
+    // Fall back to metodePembayaran only if it's not 'Online Payment'
+    if (metodePembayaran && metodePembayaran !== 'Online Payment') {
+      return metodePembayaran;
+    }
+    return 'Online Payment';
+  };
+
   return (
     <div
       className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4"
@@ -123,7 +147,9 @@ const OrderDetailModal = ({ order, onClose }) => {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Metode Pembayaran:</span>
-                <span className="font-semibold">{order.metodePembayaran}</span>
+                <span className="font-semibold">
+                  {getPaymentMethodDisplay(order.paymentType, order.metodePembayaran)}
+                </span>
               </div>
             </div>
           </div>
@@ -240,10 +266,35 @@ const LaporanPesananAdmin = () => {
 
   const handleExportPDF = () => {
     const doc = new jsPDF();
+    
+    // Helper function to map payment type to readable format
+    const getPaymentMethodDisplay = (paymentType, metodePembayaran) => {
+      const paymentMap = {
+        'credit_card': 'Kartu Kredit',
+        'bank_transfer': 'Transfer Bank',
+        'gopay': 'GoPay',
+        'qris': 'QRIS',
+        'cstore': 'Convenience Store',
+        'echannel': 'E-Channel',
+        'bnpl': 'Cicilan',
+        'transfer_bank': 'Transfer Bank'
+      };
+      // If paymentType exists and is not null/empty, use it (it's from actual Midtrans payment)
+      if (paymentType && paymentType !== 'null' && paymentType.trim && paymentType.trim()) {
+        return paymentMap[paymentType] || paymentType;
+      }
+      // Fall back to metodePembayaran only if it's not 'Online Payment'
+      if (metodePembayaran && metodePembayaran !== 'Online Payment') {
+        return metodePembayaran;
+      }
+      return 'Online Payment';
+    };
+
     const tableColumn = [
       "ID Pesanan",
       "Nama Pelanggan",
       "Tanggal",
+      "Metode Pembayaran",
       "Total Harga",
       "Status",
     ];
@@ -259,6 +310,7 @@ const LaporanPesananAdmin = () => {
           hour: "2-digit",
           minute: "2-digit",
         }),
+        getPaymentMethodDisplay(order.paymentType, order.metodePembayaran),
         `Rp ${order.totalHarga.toLocaleString("id-ID")}`,
         order.status.charAt(0).toUpperCase() + order.status.slice(1),
       ];

@@ -42,7 +42,7 @@ const handleSuccessfulTransaction = async (checkout) => {
 
 router.get("/all", authenticateToken, async (req, res) => {
   try {
-    const checkouts = await Checkout.find({}).sort({ createdAt: -1 });
+    const checkouts = await Checkout.find({}).select("+paymentType").sort({ createdAt: -1 });
     res.status(200).json({ success: true, data: checkouts });
   } catch (error) {
     res.status(500).json({ success: false, message: "Error fetching all orders" });
@@ -74,7 +74,7 @@ router.get("/ceo-report", authenticateToken, async (req, res) => {
     }
 
     const reportData = await Checkout.find(query)
-      .select("nama totalHarga status createdAt items alamat noTelpPenerima subtotal diskon kurir metodePembayaran kodeVoucher userId")
+      .select("nama totalHarga status createdAt items alamat noTelpPenerima subtotal diskon kurir metodePembayaran paymentType kodeVoucher userId")
       .sort({ createdAt: -1 });
 
     console.log(`Found ${reportData.length} records for report.`);
@@ -229,6 +229,13 @@ router.post("/verify-payment/:orderId", authenticateToken, async (req, res) => {
         const midtransStatus = await snap.transaction.status(orderId);
         const transactionStatus = midtransStatus.transaction_status;
         const fraudStatus = midtransStatus.fraud_status;
+        const paymentType = midtransStatus.payment_type; // Capture payment type
+
+        // Update payment type from Midtrans
+        if (paymentType) {
+          checkout.paymentType = paymentType;
+          await checkout.save();
+        }
 
         if ((transactionStatus === 'capture' || transactionStatus === 'settlement') && fraudStatus === 'accept') {
             await handleSuccessfulTransaction(checkout);
@@ -251,18 +258,31 @@ router.post("/midtrans-notification", async (req, res) => {
     const orderId = statusResponse.order_id;
     const transactionStatus = statusResponse.transaction_status;
     const fraudStatus = statusResponse.fraud_status;
+    const paymentType = statusResponse.payment_type; // Capture payment type from Midtrans
+
+    console.log(`[Midtrans Notification] Order: ${orderId}, Status: ${transactionStatus}, Payment Type: ${paymentType}`);
 
     const checkout = await Checkout.findById(orderId);
     if (!checkout) return res.status(404).send('Not Found');
+
+    // Update payment type from Midtrans - always update if present
+    if (paymentType) {
+      checkout.paymentType = paymentType;
+      console.log(`[Midtrans Notification] Updated paymentType to: ${paymentType}`);
+    }
 
     if ((transactionStatus === 'capture' || transactionStatus === 'settlement') && fraudStatus === 'accept') {
       await handleSuccessfulTransaction(checkout);
     } else if (transactionStatus === 'cancel' || transactionStatus === 'deny' || transactionStatus === 'expire') {
       checkout.status = 'dibatalkan';
       await checkout.save();
+    } else {
+      // For pending and other statuses, still save the payment type
+      await checkout.save();
     }
     res.status(200).send('OK');
   } catch (error) {
+    console.error('[Midtrans Notification Error]', error);
     res.status(500).send('Error');
   }
 });

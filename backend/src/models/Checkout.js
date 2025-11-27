@@ -29,8 +29,15 @@ const CheckoutSchema = new mongoose.Schema(
     // --- PERBAIKAN DI SINI ---
     metodePembayaran: {
       type: String,
-      enum: ["Transfer Bank", "COD", "Kartu Kredit", "Online Payment"], // <-- TAMBAHKAN "Online Payment"
+      enum: ["Transfer Bank", "COD", "Kartu Kredit", "Online Payment"],
       required: true,
+    },
+    
+    // Actual Midtrans payment type
+    paymentType: {
+      type: String,
+      default: null,
+      // Examples: credit_card, bank_transfer, gopay, qris, cstore, echannel, etc.
     },
     
     status: {
