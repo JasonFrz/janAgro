@@ -1,11 +1,13 @@
 import React, { useState } from "react";
-import { Plus, X, Upload, Edit, Trash2 } from "lucide-react";
+import { Plus, X, Upload, Edit, Trash2, FileText } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 // Tidak perlu lagi SERVER_URL untuk gambar Cloudinary
 // const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 // const SERVER_URL = API_URL.replace("/api", "");
 
 function ProdukAdmin({ produk = [], onAdd, onUpdate, onDelete }) {
+  const navigate = useNavigate();
   const [form, setForm] = useState({
     name: "", category: "", price: "", stock: "", description: "", detail: "", image: "",
   });
@@ -148,7 +150,25 @@ function ProdukAdmin({ produk = [], onAdd, onUpdate, onDelete }) {
         </div>
 
         <div className="bg-white shadow rounded-lg p-6">
-          <h2 className="text-xl font-semibold mb-4">Daftar Produk</h2>
+          <div className="flex flex-col sm:flex-row justify-between items-center mb-4 pb-4 border-b gap-4">
+            <h2 className="text-xl font-semibold">Daftar Produk</h2>
+            <div className="flex gap-2 flex-wrap">
+              <button
+                onClick={() => navigate("/laporan-stok-admin")}
+                className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition shadow-md font-bold"
+              >
+                <FileText size={20} />
+                <span>Laporan Stok</span>
+              </button>
+              <button
+                onClick={() => navigate("/laporan-movement-admin")}
+                className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition shadow-md font-bold"
+              >
+                <FileText size={20} />
+                <span>Laporan Masuk/Keluar</span>
+              </button>
+            </div>
+          </div>
           {produk.length === 0 ? (<p className="text-gray-500">Memuat produk...</p>) : (
             <div className="overflow-x-auto max-h-96 overflow-y-auto">
               <table className="w-full border-collapse">

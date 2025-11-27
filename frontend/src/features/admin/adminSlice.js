@@ -187,6 +187,59 @@ export const fetchStockMovementSummary = createAsyncThunk(
   }
 );
 
+// 11. Fetch Stock Report (Laporan Stok)
+export const fetchStockReport = createAsyncThunk(
+  "admin/fetchStockReport",
+  async ({ filterType = "all" }, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("token") || localStorage.getItem("accessToken");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const response = await axios.get(`${API_URL}/products/stock-report`, {
+        params: { filterType },
+        headers,
+      });
+      return response.data.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || error.message);
+    }
+  }
+);
+
+// 12. Fetch Low Stock Report (Laporan Stok Menipis/Habis)
+export const fetchLowStockReport = createAsyncThunk(
+  "admin/fetchLowStockReport",
+  async ({ filterType = "all" }, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("token") || localStorage.getItem("accessToken");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const response = await axios.get(`${API_URL}/products/low-stock-report`, {
+        params: { filterType },
+        headers,
+      });
+      return response.data.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || error.message);
+    }
+  }
+);
+
+// 13. Fetch Out of Stock Report (Laporan Stok Habis)
+export const fetchOutOfStockReport = createAsyncThunk(
+  "admin/fetchOutOfStockReport",
+  async (_, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("token") || localStorage.getItem("accessToken");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const response = await axios.get(`${API_URL}/products/out-of-stock-report`, {
+        headers,
+      });
+      return response.data.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.message || error.message);
+    }
+  }
+);
+
 // ==========================================
 // THUNKS: ACTIONS (PUT/DELETE/POST)
 // ==========================================
@@ -285,6 +338,9 @@ const adminSlice = createSlice({
     voucherReportData: [],  // Laporan Voucher
     stockMovementData: [],  // Laporan Gerakan Stok
     stockMovementSummary: [], // Ringkasan Gerakan Stok
+    stockReportData: [],    // Laporan Stok
+    lowStockReportData: [], // Laporan Stok Menipis/Habis
+    outOfStockReportData: [], // Laporan Stok Habis
     loading: false,
     error: null,
   },
@@ -344,6 +400,48 @@ const adminSlice = createSlice({
       .addCase(fetchStockMovementSummary.pending, (state) => { state.loading = true; state.error = null; })
       .addCase(fetchStockMovementSummary.fulfilled, (state, action) => { state.loading = false; state.stockMovementSummary = action.payload; })
       .addCase(fetchStockMovementSummary.rejected, (state, action) => { state.loading = false; state.error = action.payload; })
+
+      // --- Fetch Stock Report ---
+      .addCase(fetchStockReport.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchStockReport.fulfilled, (state, action) => {
+        state.loading = false;
+        state.stockReportData = action.payload;
+      })
+      .addCase(fetchStockReport.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      // --- Fetch Low Stock Report ---
+      .addCase(fetchLowStockReport.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchLowStockReport.fulfilled, (state, action) => {
+        state.loading = false;
+        state.lowStockReportData = action.payload;
+      })
+      .addCase(fetchLowStockReport.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      // --- Fetch Out of Stock Report ---
+      .addCase(fetchOutOfStockReport.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchOutOfStockReport.fulfilled, (state, action) => {
+        state.loading = false;
+        state.outOfStockReportData = action.payload;
+      })
+      .addCase(fetchOutOfStockReport.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
 
       // --- Actions: Edit User ---
       .addCase(editUser.fulfilled, (state, action) => {

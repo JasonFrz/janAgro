@@ -318,6 +318,20 @@ function DashboardCeo({ vouchers = [], produk = [], checkouts = [] }) {
               </div>
             </div>
           </Link>
+          <Link
+            to="/laporan-revenue-ceo"
+            className="bg-white border-2 border-black rounded-lg p-6 hover:shadow-lg hover:scale-105 transition-all"
+          >
+            <div className="flex items-center gap-4">
+              <div className="bg-pink-500 text-white p-4 rounded-lg">
+                <FileText size={24} />
+              </div>
+              <div>
+                <h3 className="font-bold text-lg">Laporan Revenue</h3>
+                <p className="text-sm text-gray-600">Analisis omzet dan pendapatan</p>
+              </div>
+            </div>
+          </Link>
         </div>
       </div>
     </div>

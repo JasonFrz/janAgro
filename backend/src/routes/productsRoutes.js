@@ -148,6 +148,91 @@ router.delete("/delete-product/:id", async (req, res) => {
   }
 });
 
+// Stock Report (Laporan Stok Menipis/Habis - original)
+router.get("/stock-report", async (req, res) => {
+  try {
+    const { filterType } = req.query;
+    let query = {};
+
+    if (filterType === "outOfStock") {
+      query = { stock: 0 };
+    } else if (filterType === "lowStock") {
+      query = { stock: { $gt: 0, $lte: 10 } };
+    } else if (filterType === "all") {
+      query = { $or: [{ stock: 0 }, { stock: { $gt: 0, $lte: 10 } }] };
+    }
+
+    const products = await Product.find(query).select("name price stock image");
+    
+    res.status(200).json({
+      success: true,
+      data: products,
+    });
+  } catch (error) {
+    console.error("Error fetching stock report:", error);
+    res.status(500).json({ success: false, message: "Gagal mengambil laporan stok" });
+  }
+});
+
+// Low Stock Report (Laporan Stok Menipis/Habis - new endpoint)
+router.get("/low-stock-report", async (req, res) => {
+  try {
+    const { filterType } = req.query;
+    let query = {};
+
+    if (filterType === "outOfStock") {
+      query = { stock: 0 };
+    } else if (filterType === "lowStock") {
+      query = { stock: { $gt: 0, $lte: 10 } };
+    } else if (filterType === "all") {
+      query = { $or: [{ stock: 0 }, { stock: { $gt: 0, $lte: 10 } }] };
+    }
+
+    const products = await Product.find(query).select("name price stock image");
+    
+    res.status(200).json({
+      success: true,
+      data: products,
+    });
+  } catch (error) {
+    console.error("Error fetching low stock report:", error);
+    res.status(500).json({ success: false, message: "Gagal mengambil laporan stok menipis/habis" });
+  }
+});
+
+// Out of Stock Report (Laporan Stok Habis - only out of stock products)
+router.get("/out-of-stock-report", async (req, res) => {
+  try {
+    const products = await Product.find({ stock: 0 }).select("name price stock image category");
+    
+    res.status(200).json({
+      success: true,
+      data: products,
+    });
+  } catch (error) {
+    console.error("Error fetching out of stock report:", error);
+    res.status(500).json({ success: false, message: "Gagal mengambil laporan stok habis" });
+  }
+});
+
+// Stock Movement Report (Laporan Stok Masuk/Keluar)
+router.get("/stock-movement-report", async (req, res) => {
+  try {
+    const movements = await StockMovement.find()
+      .populate("productId", "name price image")
+      .sort({ createdAt: -1 })
+      .lean();
+
+    res.status(200).json({
+      success: true,
+      data: movements,
+    });
+  } catch (error) {
+    console.error("Error fetching stock movement report:", error);
+    res.status(500).json({ success: false, message: "Gagal mengambil laporan pergerakan stok" });
+  }
+});
+
 const deleteImageFromCloudinary = async (imageUrl) => {
   try {
     

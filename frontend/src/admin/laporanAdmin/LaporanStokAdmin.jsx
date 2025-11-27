@@ -1,198 +1,55 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Bar } from "react-chartjs-2";
-import {
-  ArrowLeft,
-  FileText,
-  TrendingUp,
-  TrendingDown,
-  Calendar,
-  CalendarDays,
-  Clock,
-} from "lucide-react";
+import { ArrowLeft, FileText, Package, AlertTriangle, AlertCircle } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchStockMovementReport, fetchStockMovementSummary } from "../../features/admin/adminSlice";
+import { fetchStockReport } from "../../features/admin/adminSlice";
 import { janAgroLogoBase64 } from "./logoBase64";
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-} from "chart.js";
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend
-);
 
 const LaporanStokAdmin = () => {
   const dispatch = useDispatch();
-  const { stockMovementData, stockMovementSummary, loading } = useSelector(
-    (state) => state.admin
-  );
-  const [filterType, setFilterType] = useState("monthly");
-  const [selectedDate, setSelectedDate] = useState(
-    new Date().toISOString().split("T")[0]
-  );
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-  const [movementFilter, setMovementFilter] = useState("all");
+  const { stockReportData = [], loading } = useSelector((state) => state.admin);
+  const [filterType, setFilterType] = useState("all");
 
   useEffect(() => {
-    let startDate, endDate;
-    const dateObj = new Date(selectedDate);
+    dispatch(fetchStockReport({ filterType }));
+  }, [dispatch, filterType]);
 
-    if (filterType === "daily") {
-      startDate = new Date(selectedDate);
-      startDate.setHours(0, 0, 0, 0);
-      endDate = new Date(selectedDate);
-      endDate.setHours(23, 59, 59, 999);
-    } else if (filterType === "weekly") {
-      const day = dateObj.getDay();
-      const diff = dateObj.getDate() - day + (day === 0 ? -6 : 1);
-      startDate = new Date(dateObj.setDate(diff));
-      startDate.setHours(0, 0, 0, 0);
-      endDate = new Date(startDate);
-      endDate.setDate(startDate.getDate() + 6);
-      endDate.setHours(23, 59, 59, 999);
-    } else if (filterType === "monthly") {
-      startDate = new Date(selectedYear, selectedMonth - 1, 1);
-      endDate = new Date(selectedYear, selectedMonth, 0, 23, 59, 59);
-    } else if (filterType === "yearly") {
-      startDate = new Date(selectedYear, 0, 1);
-      endDate = new Date(selectedYear, 11, 31, 23, 59, 59);
-    }
+  const stockStats = useMemo(() => {
+    const outOfStock = stockReportData.filter((item) => item.stock === 0).length;
+    const lowStock = stockReportData.filter((item) => item.stock > 0 && item.stock <= 10).length;
+    const totalAffected = stockReportData.length;
 
-    dispatch(
-      fetchStockMovementReport({
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
-      })
-    );
-
-    dispatch(
-      fetchStockMovementSummary({
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
-      })
-    );
-  }, [dispatch, filterType, selectedDate, selectedMonth, selectedYear]);
-
-  const chartData = useMemo(() => {
-    const productSummaries = stockMovementSummary.slice(0, 10);
-
-    return {
-      labels: productSummaries.map((item) =>
-        item.productName.substring(0, 12) +
-        (item.productName.length > 12 ? "..." : "")
-      ),
-      datasets: [
-        {
-          label: "Stok Masuk (Unit)",
-          data: productSummaries.map((item) => item.totalIn),
-          backgroundColor: "rgba(34, 197, 94, 0.8)",
-          borderColor: "rgba(34, 197, 94, 1)",
-          borderWidth: 2,
-        },
-        {
-          label: "Stok Keluar (Unit)",
-          data: productSummaries.map((item) => item.totalOut),
-          backgroundColor: "rgba(239, 68, 68, 0.8)",
-          borderColor: "rgba(239, 68, 68, 1)",
-          borderWidth: 2,
-        },
-      ],
-    };
-  }, [stockMovementSummary]);
-
-  const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: { position: "top" },
-      title: {
-        display: true,
-        text: "Top 10 Produk - Gerakan Stok",
-        font: { size: 16, weight: "bold" },
-        color: "#000",
-      },
-    },
-    scales: {
-      x: {
-        ticks: { color: "#000", font: { weight: "bold" } },
-        grid: { display: false },
-      },
-      y: {
-        beginAtZero: true,
-        ticks: { color: "#000", stepSize: 1 },
-        grid: { color: "#e5e5e5" },
-      },
-    },
-  };
-
-  const filteredMovements = useMemo(() => {
-    return stockMovementData.filter((movement) => {
-      if (movementFilter === "in") return movement.movementType === "in";
-      if (movementFilter === "out") return movement.movementType === "out";
-      return true;
-    });
-  }, [stockMovementData, movementFilter]);
+    return { outOfStock, lowStock, totalAffected };
+  }, [stockReportData]);
 
   const handleExportPDF = () => {
     const doc = new jsPDF();
     const tableColumn = [
-      "Produk",
-      "Jenis",
-      "Alasan",
-      "Jumlah",
-      "Stok Sebelum",
-      "Stok Sesudah",
-      "Tanggal",
+      "Rank",
+      "Nama Produk",
+      "Harga",
+      "Stok Saat Ini",
+      "Status",
     ];
     const tableRows = [];
 
-    filteredMovements.forEach((item) => {
+    stockReportData.forEach((item, index) => {
+      const status = item.stock === 0 ? "HABIS" : "MENIPIS";
       const rowData = [
-        item.productName,
-        item.movementType === "in" ? "Masuk" : "Keluar",
-        item.reason.charAt(0).toUpperCase() + item.reason.slice(1),
-        `${item.quantity} unit`,
-        `${item.previousStock} unit`,
-        `${item.currentStock} unit`,
-        new Date(item.createdAt).toLocaleDateString("id-ID", {
-          year: "numeric",
-          month: "short",
-          day: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
+        index + 1,
+        item.name,
+        `Rp ${item.price.toLocaleString("id-ID")}`,
+        `${item.stock} pcs`,
+        status,
       ];
       tableRows.push(rowData);
     });
 
-    let filterTitle = "";
-    if (filterType === "daily")
-      filterTitle = `Harian (${new Date(selectedDate).toLocaleDateString(
-        "id-ID"
-      )})`;
-    else if (filterType === "monthly")
-      filterTitle = `Bulanan (${selectedMonth}/${selectedYear})`;
-    else if (filterType === "yearly") filterTitle = `Tahunan (${selectedYear})`;
-    else filterTitle = "Mingguan";
-
     const date = new Date();
-    const fullDate = `${date.getDate()}-${
-      date.getMonth() + 1
-    }-${date.getFullYear()}`;
+    const fullDate = `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}`;
+    const filterTitle = filterType === "all" ? "Semua Produk" : filterType === "outOfStock" ? "Stok Habis" : "Stok Menipis";
 
     autoTable(doc, {
       head: [tableColumn],
@@ -202,8 +59,8 @@ const LaporanStokAdmin = () => {
       theme: "grid",
       styles: {
         font: "helvetica",
-        fontSize: 8,
-        cellPadding: 2,
+        fontSize: 9,
+        cellPadding: 3,
         textColor: [0, 0, 0],
         valign: "middle",
       },
@@ -212,18 +69,12 @@ const LaporanStokAdmin = () => {
         textColor: [255, 255, 255],
         fontStyle: "bold",
       },
-      columnStyles: {
-        0: { cellWidth: 30 },
-        1: { cellWidth: 15 },
-        2: { cellWidth: 25 },
-      },
       didDrawPage: function (data) {
         const logoWidth = 22;
         const logoHeight = 22;
         const margin = data.settings.margin.left;
         const pageWidth = doc.internal.pageSize.getWidth();
 
-        // --- HEADER ---
         try {
           doc.addImage(
             janAgroLogoBase64,
@@ -241,11 +92,7 @@ const LaporanStokAdmin = () => {
         doc.setFont("helvetica", "bold");
         doc.text("PT. Jan Agro Nusantara", margin + logoWidth + 5, 16);
         doc.setFontSize(10);
-        doc.text(
-          `Laporan Gerakan Stok (Admin) - ${filterTitle}`,
-          margin + logoWidth + 5,
-          21
-        );
+        doc.text(`Laporan Stok Menipis/Habis - ${filterTitle}`, margin + logoWidth + 5, 21);
 
         doc.setFontSize(8);
         doc.setFont("helvetica", "normal");
@@ -264,7 +111,6 @@ const LaporanStokAdmin = () => {
         doc.setLineWidth(1);
         doc.line(margin, 35, pageWidth - data.settings.margin.right, 35);
 
-        // --- FOOTER ---
         if (data.pageNumber === doc.internal.getNumberOfPages()) {
           const pageHeight = doc.internal.pageSize.getHeight();
           let finalY = data.cursor.y + 15;
@@ -275,37 +121,24 @@ const LaporanStokAdmin = () => {
 
           const signatureX = pageWidth - data.settings.margin.right;
           const currentDate = new Date().toLocaleDateString("id-ID", {
-            day: "numeric",
-            month: "long",
-            year: "numeric",
+            day: "numeric", month: "long", year: "numeric",
           });
 
           doc.setFontSize(10);
           doc.setFont("helvetica", "normal");
-          doc.text(`Surabaya, ${currentDate}`, signatureX, finalY, {
-            align: "right",
-          });
+          doc.text(`Surabaya, ${currentDate}`, signatureX, finalY, { align: "right" });
           doc.setFont("helvetica", "bold");
-          doc.text("Admin JanAgro", signatureX, finalY + 20, {
-            align: "right",
-          });
-          const nameWidth = doc.getTextWidth("Admin JanAgro");
+          doc.text("J.Alamsjah, S.H", signatureX, finalY + 20, { align: "right" });
+          const nameWidth = doc.getTextWidth("J.Alamsjah, S.H");
           doc.setLineWidth(0.5);
-          doc.line(
-            signatureX - nameWidth,
-            finalY + 21,
-            signatureX,
-            finalY + 21
-          );
+          doc.line(signatureX - nameWidth, finalY + 21, signatureX, finalY + 21);
           doc.setFont("helvetica", "normal");
           doc.setFontSize(9);
-          doc.text("Admin", signatureX, finalY + 25, {
-            align: "right",
-          });
+          doc.text("Ceo & Founder", signatureX, finalY + 25, { align: "right" });
         }
       },
     });
-    doc.save(`laporan_gerakan_stok_admin_${filterType}_${fullDate}.pdf`);
+    doc.save(`laporan_stok_${filterType}_${fullDate}.pdf`);
   };
 
   return (
@@ -314,297 +147,153 @@ const LaporanStokAdmin = () => {
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center border-b-4 border-black pb-4 gap-4">
           <div>
             <h1 className="text-4xl font-black uppercase tracking-tight">
-              Laporan Gerakan Stok (Admin)
+              Stock Report
             </h1>
             <p className="text-gray-600 font-medium mt-1">
-              Analisis pergerakan stok masuk dan keluar produk.
+              Pantau produk dengan stok menipis atau habis.
             </p>
           </div>
           <Link
             to="/admin"
-            className="flex items-center bg-black text-white px-5 py-2.5 rounded-lg font-bold hover:bg-gray-800 transition-all border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]"
+            className="flex items-center bg-black text-white px-5 py-2.5 rounded-lg font-bold hover:bg-gray-800 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]"
           >
             <ArrowLeft className="mr-2 h-5 w-5" /> KEMBALI
           </Link>
         </header>
 
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white border-2 border-black p-6 rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-600 text-sm font-bold">STOK HABIS</p>
+                <p className="text-3xl font-black">{stockStats.outOfStock}</p>
+              </div>
+              <AlertTriangle className="h-12 w-12 text-red-600" />
+            </div>
+          </div>
+          <div className="bg-white border-2 border-black p-6 rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-600 text-sm font-bold">STOK MENIPIS</p>
+                <p className="text-3xl font-black">{stockStats.lowStock}</p>
+              </div>
+              <AlertCircle className="h-12 w-12 text-yellow-600" />
+            </div>
+          </div>
+          <div className="bg-white border-2 border-black p-6 rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-gray-600 text-sm font-bold">TOTAL TERPENGARUH</p>
+                <p className="text-3xl font-black">{stockStats.totalAffected}</p>
+              </div>
+              <Package className="h-12 w-12 text-blue-600" />
+            </div>
+          </div>
+        </div>
+
+        {/* Filter & Export */}
         <div className="bg-white border-2 border-black p-6 rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-          <div className="flex flex-col md:flex-row justify-between items-end md:items-center mb-6 border-b-2 border-gray-200 pb-4">
-            <h2 className="text-xl font-bold flex items-center gap-2">
-              <Calendar className="h-6 w-6" /> Filter Laporan
-            </h2>
-            <div className="flex bg-gray-100 p-1 rounded-md border border-black mt-4 md:mt-0 overflow-x-auto">
+          <div className="flex flex-col md:flex-row justify-between items-end md:items-center gap-4">
+            <div className="flex gap-2 flex-wrap">
               {[
-                { id: "daily", label: "Harian", icon: <Clock size={16} /> },
-                {
-                  id: "weekly",
-                  label: "Mingguan",
-                  icon: <CalendarDays size={16} />,
-                },
-                {
-                  id: "monthly",
-                  label: "Bulanan",
-                  icon: <Calendar size={16} />,
-                },
-                {
-                  id: "yearly",
-                  label: "Tahunan",
-                  icon: <Calendar size={16} />,
-                },
+                { id: "all", label: "Semua" },
+                { id: "outOfStock", label: "Stok Habis" },
+                { id: "lowStock", label: "Stok Menipis" },
               ].map((type) => (
                 <button
                   key={type.id}
                   onClick={() => setFilterType(type.id)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded text-sm font-bold transition-all whitespace-nowrap ${
+                  className={`px-4 py-2 rounded font-bold text-sm transition-all ${
                     filterType === type.id
                       ? "bg-black text-white shadow-md"
-                      : "text-gray-600 hover:text-black"
+                      : "bg-gray-100 text-gray-600 hover:text-black"
                   }`}
                 >
-                  {type.icon} {type.label}
+                  {type.label}
                 </button>
               ))}
             </div>
-          </div>
-          <div className="flex flex-wrap gap-4 items-end">
-            {(filterType === "daily" || filterType === "weekly") && (
-              <div className="flex flex-col">
-                <label className="text-xs font-bold uppercase mb-1">
-                  Pilih Tanggal
-                </label>
-                <input
-                  type="date"
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                  className="border-2 border-black rounded px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-black"
-                />
-                {filterType === "weekly" && (
-                  <span className="text-xs text-gray-500 mt-1">
-                    *Memilih satu minggu (Senin-Minggu) dari tanggal ini.
-                  </span>
-                )}
-              </div>
-            )}
-            {filterType === "monthly" && (
-              <>
-                <div className="flex flex-col">
-                  <label className="text-xs font-bold uppercase mb-1">
-                    Bulan
-                  </label>
-                  <select
-                    value={selectedMonth}
-                    onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-                    className="border-2 border-black rounded px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-black min-w-[150px]"
-                  >
-                    {Array.from({ length: 12 }, (_, i) => (
-                      <option key={i + 1} value={i + 1}>
-                        {new Date(0, i).toLocaleString("id-ID", {
-                          month: "long",
-                        })}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="flex flex-col">
-                  <label className="text-xs font-bold uppercase mb-1">
-                    Tahun
-                  </label>
-                  <select
-                    value={selectedYear}
-                    onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                    className="border-2 border-black rounded px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-black min-w-[100px]"
-                  >
-                    {Array.from(
-                      { length: 5 },
-                      (_, i) => new Date().getFullYear() - i
-                    ).map((y) => (
-                      <option key={y} value={y}>
-                        {y}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </>
-            )}
-            {filterType === "yearly" && (
-              <div className="flex flex-col">
-                <label className="text-xs font-bold uppercase mb-1">
-                  Tahun
-                </label>
-                <select
-                  value={selectedYear}
-                  onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                  className="border-2 border-black rounded px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-black min-w-[100px]"
-                >
-                  {Array.from(
-                    { length: 5 },
-                    (_, i) => new Date().getFullYear() - i
-                  ).map((y) => (
-                    <option key={y} value={y}>
-                      {y}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
             <button
               onClick={handleExportPDF}
-              className="ml-auto bg-green-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-green-700 transition-all border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] flex items-center gap-2"
+              className="bg-green-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-green-700 transition-all border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] flex items-center gap-2"
             >
               <FileText size={20} /> Export PDF
             </button>
           </div>
         </div>
 
+        {/* Table */}
         {loading ? (
           <div className="flex justify-center items-center h-64 border-2 border-black rounded-lg bg-gray-50">
             <div className="animate-spin rounded-full h-12 w-12 border-4 border-black border-t-transparent"></div>
           </div>
         ) : (
-          <>
-            <div className="bg-white border-2 border-black p-6 rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-              <div className="h-80 w-full">
-                <Bar data={chartData} options={chartOptions} />
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-black uppercase flex items-center gap-2">
-                  Detail Gerakan Stok
-                </h2>
-                <div className="flex gap-2 border-2 border-black p-2 rounded-lg bg-gray-100">
-                  <button
-                    onClick={() => setMovementFilter("all")}
-                    className={`px-4 py-2 rounded font-bold transition-all ${
-                      movementFilter === "all"
-                        ? "bg-black text-white"
-                        : "text-gray-600 hover:text-black"
-                    }`}
-                  >
-                    Semua
-                  </button>
-                  <button
-                    onClick={() => setMovementFilter("in")}
-                    className={`px-4 py-2 rounded font-bold transition-all flex items-center gap-2 ${
-                      movementFilter === "in"
-                        ? "bg-green-600 text-white"
-                        : "text-gray-600 hover:text-green-600"
-                    }`}
-                  >
-                    <TrendingUp size={16} /> Masuk
-                  </button>
-                  <button
-                    onClick={() => setMovementFilter("out")}
-                    className={`px-4 py-2 rounded font-bold transition-all flex items-center gap-2 ${
-                      movementFilter === "out"
-                        ? "bg-red-600 text-white"
-                        : "text-gray-600 hover:text-red-600"
-                    }`}
-                  >
-                    <TrendingDown size={16} /> Keluar
-                  </button>
-                </div>
-              </div>
-
-              <div className="bg-white border-2 border-black rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
-                <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
-                  <table className="w-full text-left border-collapse">
-                    <thead className="bg-black text-white sticky top-0 z-10">
-                      <tr>
-                        <th className="p-4 font-bold border-r border-gray-700 text-center">
-                          Produk
-                        </th>
-                        <th className="p-4 font-bold border-r border-gray-700 text-center">
-                          Jenis
-                        </th>
-                        <th className="p-4 font-bold border-r border-gray-700 text-center">
-                          Alasan
-                        </th>
-                        <th className="p-4 font-bold border-r border-gray-700 text-center">
-                          Jumlah
-                        </th>
-                        <th className="p-4 font-bold border-r border-gray-700 text-center">
-                          Stok Sebelum
-                        </th>
-                        <th className="p-4 font-bold border-r border-gray-700 text-center">
-                          Stok Sesudah
-                        </th>
-                        <th className="p-4 font-bold text-center">
-                          Tanggal & Jam
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {filteredMovements.length > 0 ? (
-                        filteredMovements.map((item, idx) => (
-                          <tr
-                            key={idx}
-                            className="border-b-2 border-gray-200 hover:bg-gray-50 transition-colors"
-                          >
-                            <td className="p-4 font-bold border-r-2 border-gray-200">
-                              {item.productName}
-                            </td>
-                            <td className="p-4 border-r-2 border-gray-200 text-center">
-                              <span
-                                className={`px-3 py-1 rounded-full font-bold text-white ${
-                                  item.movementType === "in"
-                                    ? "bg-green-600"
-                                    : "bg-red-600"
-                                }`}
-                              >
-                                {item.movementType === "in" ? "Masuk" : "Keluar"}
-                              </span>
-                            </td>
-                            <td className="p-4 border-r-2 border-gray-200 text-center">
-                              <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm font-semibold">
-                                {item.reason.charAt(0).toUpperCase() +
-                                  item.reason.slice(1)}
-                              </span>
-                            </td>
-                            <td className="p-4 border-r-2 border-gray-200 text-center font-bold">
-                              {item.quantity} unit
-                            </td>
-                            <td className="p-4 border-r-2 border-gray-200 text-center">
-                              <span className="bg-gray-200 px-2 py-1 rounded font-semibold">
-                                {item.previousStock}
-                              </span>
-                            </td>
-                            <td className="p-4 border-r-2 border-gray-200 text-center">
-                              <span className="bg-gray-100 px-2 py-1 rounded font-semibold">
-                                {item.currentStock}
-                              </span>
-                            </td>
-                            <td className="p-4 text-center text-sm">
-                              {new Date(item.createdAt).toLocaleDateString(
-                                "id-ID",
-                                {
-                                  year: "numeric",
-                                  month: "short",
-                                  day: "numeric",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                }
-                              )}
-                            </td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td
-                            colSpan="7"
-                            className="p-8 text-center text-gray-500 italic font-medium"
-                          >
-                            Tidak ada gerakan stok pada periode ini.
+          <div className="space-y-4">
+            <h2 className="text-2xl font-black uppercase flex items-center gap-2">
+              <Package className="text-black" /> Detail Stok
+            </h2>
+            <div className="bg-white border-2 border-black rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
+              <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead className="bg-black text-white sticky top-0 z-10">
+                    <tr>
+                      <th className="p-4 font-bold border-r border-gray-700 w-16 text-center">#</th>
+                      <th className="p-4 font-bold border-r border-gray-700 w-24 text-center">Gambar</th>
+                      <th className="p-4 font-bold border-r border-gray-700">Nama Produk</th>
+                      <th className="p-4 font-bold border-r border-gray-700 text-right">Harga</th>
+                      <th className="p-4 font-bold border-r border-gray-700 text-center">Stok</th>
+                      <th className="p-4 font-bold text-center">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {stockReportData.length > 0 ? (
+                      stockReportData.map((item, idx) => (
+                        <tr key={idx} className="border-b-2 border-gray-200 hover:bg-gray-50 transition-colors">
+                          <td className="p-4 font-black text-center border-r-2 border-gray-200 text-lg">{idx + 1}</td>
+                          <td className="p-3 border-r-2 border-gray-200 text-center">
+                            {item.image ? (
+                              <img
+                                src={item.image}
+                                alt={item.name}
+                                className="w-16 h-16 object-cover border-2 border-black rounded-md mx-auto bg-white"
+                              />
+                            ) : (
+                              <div className="w-16 h-16 bg-gray-200 border-2 border-black rounded-md mx-auto flex items-center justify-center text-xs font-bold">
+                                No IMG
+                              </div>
+                            )}
+                          </td>
+                          <td className="p-4 border-r-2 border-gray-200 font-bold text-lg">{item.name}</td>
+                          <td className="p-4 border-r-2 border-gray-200 text-right font-mono">
+                            Rp {item.price.toLocaleString("id-ID")}
+                          </td>
+                          <td className="p-4 border-r-2 border-gray-200 text-center font-bold">
+                            {item.stock}
+                          </td>
+                          <td className="p-4 text-center">
+                            <span
+                              className={`px-3 py-1 rounded-full font-bold text-white ${
+                                item.stock === 0 ? "bg-red-600" : "bg-yellow-600"
+                              }`}
+                            >
+                              {item.stock === 0 ? "HABIS" : "MENIPIS"}
+                            </span>
                           </td>
                         </tr>
-                      )}
-                    </tbody>
-                  </table>
-                </div>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="6" className="p-8 text-center text-gray-500 italic font-medium">
+                          Semua produk memiliki stok yang cukup.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
               </div>
             </div>
-          </>
+          </div>
         )}
       </div>
     </div>

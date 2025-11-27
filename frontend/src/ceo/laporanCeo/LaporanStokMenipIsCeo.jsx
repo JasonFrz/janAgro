@@ -4,25 +4,25 @@ import { ArrowLeft, FileText, Package, AlertTriangle, AlertCircle } from "lucide
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchStockReport } from "../../features/admin/adminSlice";
+import { fetchLowStockReport } from "../../features/admin/adminSlice";
 import { janAgroLogoBase64 } from "./logoBase64";
 
-const LaporanStokCeo = () => {
+const LaporanStokMenipIsCeo = () => {
   const dispatch = useDispatch();
-  const { stockReportData = [], loading } = useSelector((state) => state.admin);
+  const { lowStockReportData = [], loading } = useSelector((state) => state.admin);
   const [filterType, setFilterType] = useState("all");
 
   useEffect(() => {
-    dispatch(fetchStockReport({ filterType }));
+    dispatch(fetchLowStockReport({ filterType }));
   }, [dispatch, filterType]);
 
   const stockStats = useMemo(() => {
-    const outOfStock = stockReportData.filter((item) => item.stock === 0).length;
-    const lowStock = stockReportData.filter((item) => item.stock > 0 && item.stock <= 10).length;
-    const totalAffected = stockReportData.length;
+    const outOfStock = lowStockReportData.filter((item) => item.stock === 0).length;
+    const lowStock = lowStockReportData.filter((item) => item.stock > 0 && item.stock <= 10).length;
+    const totalAffected = lowStockReportData.length;
 
     return { outOfStock, lowStock, totalAffected };
-  }, [stockReportData]);
+  }, [lowStockReportData]);
 
   const handleExportPDF = () => {
     const doc = new jsPDF();
@@ -35,7 +35,7 @@ const LaporanStokCeo = () => {
     ];
     const tableRows = [];
 
-    stockReportData.forEach((item, index) => {
+    lowStockReportData.forEach((item, index) => {
       const status = item.stock === 0 ? "HABIS" : "MENIPIS";
       const rowData = [
         index + 1,
@@ -86,7 +86,9 @@ const LaporanStokCeo = () => {
             undefined,
             "FAST"
           );
-        } catch (e) {}
+        } catch (error) {
+          // Logo load error silently handled
+        }
 
         doc.setFontSize(14);
         doc.setFont("helvetica", "bold");
@@ -111,7 +113,6 @@ const LaporanStokCeo = () => {
         doc.setLineWidth(1);
         doc.line(margin, 35, pageWidth - data.settings.margin.right, 35);
 
-        // FOOTER
         if (data.pageNumber === doc.internal.getNumberOfPages()) {
           const pageHeight = doc.internal.pageSize.getHeight();
           let finalY = data.cursor.y + 15;
@@ -139,7 +140,7 @@ const LaporanStokCeo = () => {
         }
       },
     });
-    doc.save(`laporan_stok_${filterType}_${fullDate}.pdf`);
+    doc.save(`laporan_stok_menipis_${filterType}_${fullDate}.pdf`);
   };
 
   return (
@@ -248,8 +249,8 @@ const LaporanStokCeo = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {stockReportData.length > 0 ? (
-                      stockReportData.map((item, idx) => (
+                    {lowStockReportData.length > 0 ? (
+                      lowStockReportData.map((item, idx) => (
                         <tr key={idx} className="border-b-2 border-gray-200 hover:bg-gray-50 transition-colors">
                           <td className="p-4 font-black text-center border-r-2 border-gray-200 text-lg">{idx + 1}</td>
                           <td className="p-3 border-r-2 border-gray-200 text-center">
@@ -301,4 +302,4 @@ const LaporanStokCeo = () => {
   );
 };
 
-export default LaporanStokCeo;
+export default LaporanStokMenipIsCeo;

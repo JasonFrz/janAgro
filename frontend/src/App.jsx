@@ -18,12 +18,15 @@ import Review from "./pages/Review";
 import LaporanPesanan from "./laporan/LaporanPesanan";
 import LaporanPesananAdmin from "./admin/laporanAdmin/LaporanPesananAdmin";
 import LaporanStokAdmin from "./admin/laporanAdmin/LaporanStokAdmin";
+import LaporanMovementAdmin from "./admin/laporanAdmin/LaporanMovementAdmin";
 import LaporanPesananCeo from "./ceo/laporanCeo/LaporanPesananCeo";
 import LaporanUserBaruCeo from "./ceo/laporanCeo/LaporanUserBaruCeo";
 import LaporanUserSetiaCeo from "./ceo/laporanCeo/LaporanUserSetiaCeo";
 import LaporanBarangTerlakuCeo from "./ceo/laporanCeo/LaporanBarangTerlakuCeo";
 import LaporanVoucherCeo from "./ceo/laporanCeo/LaporanVoucherCeo";
 import LaporanStokCeo from "./ceo/laporanCeo/LaporanStokCeo";
+import LaporanMovementCeo from "./ceo/laporanCeo/LaporanMovementCeo";
+import LaporanRevenueCeo from "./ceo/laporanCeo/LaporanRevenueCeo";
 import PengembalianBarang from "./pages/PengembalianBarang";
 import "./index.css";
 import axios from "axios";
@@ -744,6 +747,16 @@ function App() {
             }
           />
           <Route
+            path="/laporan-movement-admin"
+            element={
+              isAdmin ? (
+                <LaporanMovementAdmin />
+              ) : (
+                <Home API_URL={API_URL} />
+              )
+            }
+          />
+          <Route
             path="/laporan-order-ceo"
             element={
               isPemilik ? (
@@ -785,6 +798,18 @@ function App() {
             path="/laporan-stok-ceo"
             element={
               isPemilik ? <LaporanStokCeo /> : <Home API_URL={API_URL} />
+            }
+          />
+          <Route
+            path="/laporan-movement-ceo"
+            element={
+              isPemilik ? <LaporanMovementCeo /> : <Home API_URL={API_URL} />
+            }
+          />
+          <Route
+            path="/laporan-revenue-ceo"
+            element={
+              isPemilik ? <LaporanRevenueCeo /> : <Home API_URL={API_URL} />
             }
           />
           <Route path="*" element={<Home API_URL={API_URL} />} />

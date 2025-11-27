@@ -128,15 +128,29 @@ function ProdukCeo({ produk = [], onAdd, onUpdate, onDelete }) {
               {editingId ? "Edit Detail Produk" : "Tambah Produk Baru"}
             </h2>
             
-            {/* --- TOMBOL BARU --- */}
-            <button
-              onClick={() => navigate("/laporan-barang-terlaku-ceo")}
-              className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition shadow-md font-bold"
-            >
-              <FileText size={20} />
-              <span>Laporan Barang</span>
-            </button>
-            {/* ------------------- */}
+            <div className="flex gap-2 flex-wrap">
+              <button
+                onClick={() => navigate("/laporan-barang-terlaku-ceo")}
+                className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition shadow-md font-bold"
+              >
+                <FileText size={20} />
+                <span>Laporan Barang</span>
+              </button>
+              <button
+                onClick={() => navigate("/laporan-stok-ceo")}
+                className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition shadow-md font-bold"
+              >
+                <FileText size={20} />
+                <span>Laporan Stok</span>
+              </button>
+              <button
+                onClick={() => navigate("/laporan-movement-ceo")}
+                className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition shadow-md font-bold"
+              >
+                <FileText size={20} />
+                <span>Laporan Masuk/Keluar</span>
+              </button>
+            </div>
           </div>
 
           <form

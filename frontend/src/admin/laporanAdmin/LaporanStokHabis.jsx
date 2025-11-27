@@ -1,55 +1,49 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, FileText, Package, AlertTriangle, AlertCircle } from "lucide-react";
+import { ArrowLeft, FileText, Package, AlertTriangle } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useDispatch, useSelector } from "react-redux";
-import { fetchStockReport } from "../../features/admin/adminSlice";
+import { fetchOutOfStockReport } from "../../features/admin/adminSlice";
 import { janAgroLogoBase64 } from "./logoBase64";
 
-const LaporanStokCeo = () => {
+const LaporanStokHabis = () => {
   const dispatch = useDispatch();
-  const { stockReportData = [], loading } = useSelector((state) => state.admin);
-  const [filterType, setFilterType] = useState("all");
+  const { outOfStockReportData = [], loading } = useSelector((state) => state.admin);
 
   useEffect(() => {
-    dispatch(fetchStockReport({ filterType }));
-  }, [dispatch, filterType]);
+    dispatch(fetchOutOfStockReport());
+  }, [dispatch]);
 
   const stockStats = useMemo(() => {
-    const outOfStock = stockReportData.filter((item) => item.stock === 0).length;
-    const lowStock = stockReportData.filter((item) => item.stock > 0 && item.stock <= 10).length;
-    const totalAffected = stockReportData.length;
-
-    return { outOfStock, lowStock, totalAffected };
-  }, [stockReportData]);
+    return {
+      totalOutOfStock: outOfStockReportData.length,
+      estimatedLoss: outOfStockReportData.reduce((sum, item) => sum + item.price, 0),
+    };
+  }, [outOfStockReportData]);
 
   const handleExportPDF = () => {
     const doc = new jsPDF();
     const tableColumn = [
       "Rank",
       "Nama Produk",
-      "Harga",
-      "Stok Saat Ini",
-      "Status",
+      "Harga Satuan",
+      "Kategori",
     ];
     const tableRows = [];
 
-    stockReportData.forEach((item, index) => {
-      const status = item.stock === 0 ? "HABIS" : "MENIPIS";
+    outOfStockReportData.forEach((item, index) => {
       const rowData = [
         index + 1,
         item.name,
         `Rp ${item.price.toLocaleString("id-ID")}`,
-        `${item.stock} pcs`,
-        status,
+        item.category || "-",
       ];
       tableRows.push(rowData);
     });
 
     const date = new Date();
     const fullDate = `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}`;
-    const filterTitle = filterType === "all" ? "Semua Produk" : filterType === "outOfStock" ? "Stok Habis" : "Stok Menipis";
 
     autoTable(doc, {
       head: [tableColumn],
@@ -86,13 +80,15 @@ const LaporanStokCeo = () => {
             undefined,
             "FAST"
           );
-        } catch (e) {}
+        } catch {
+          // Logo load error silently handled
+        }
 
         doc.setFontSize(14);
         doc.setFont("helvetica", "bold");
         doc.text("PT. Jan Agro Nusantara", margin + logoWidth + 5, 16);
         doc.setFontSize(10);
-        doc.text(`Laporan Stok Menipis/Habis - ${filterTitle}`, margin + logoWidth + 5, 21);
+        doc.text(`Laporan Stok Habis`, margin + logoWidth + 5, 21);
 
         doc.setFontSize(8);
         doc.setFont("helvetica", "normal");
@@ -111,7 +107,6 @@ const LaporanStokCeo = () => {
         doc.setLineWidth(1);
         doc.line(margin, 35, pageWidth - data.settings.margin.right, 35);
 
-        // FOOTER
         if (data.pageNumber === doc.internal.getNumberOfPages()) {
           const pageHeight = doc.internal.pageSize.getHeight();
           let finalY = data.cursor.y + 15;
@@ -139,7 +134,7 @@ const LaporanStokCeo = () => {
         }
       },
     });
-    doc.save(`laporan_stok_${filterType}_${fullDate}.pdf`);
+    doc.save(`laporan_stok_habis_${fullDate}.pdf`);
   };
 
   return (
@@ -148,14 +143,14 @@ const LaporanStokCeo = () => {
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center border-b-4 border-black pb-4 gap-4">
           <div>
             <h1 className="text-4xl font-black uppercase tracking-tight">
-              Stock Report
+              Out of Stock Report
             </h1>
             <p className="text-gray-600 font-medium mt-1">
-              Pantau produk dengan stok menipis atau habis.
+              Pantau semua produk yang telah habis.
             </p>
           </div>
           <Link
-            to="/ceo"
+            to="/admin"
             className="flex items-center bg-black text-white px-5 py-2.5 rounded-lg font-bold hover:bg-gray-800 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]"
           >
             <ArrowLeft className="mr-2 h-5 w-5" /> KEMBALI
@@ -163,12 +158,12 @@ const LaporanStokCeo = () => {
         </header>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-white border-2 border-black p-6 rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm font-bold">STOK HABIS</p>
-                <p className="text-3xl font-black">{stockStats.outOfStock}</p>
+                <p className="text-gray-600 text-sm font-bold">TOTAL PRODUK HABIS</p>
+                <p className="text-3xl font-black">{stockStats.totalOutOfStock}</p>
               </div>
               <AlertTriangle className="h-12 w-12 text-red-600" />
             </div>
@@ -176,45 +171,17 @@ const LaporanStokCeo = () => {
           <div className="bg-white border-2 border-black p-6 rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm font-bold">STOK MENIPIS</p>
-                <p className="text-3xl font-black">{stockStats.lowStock}</p>
-              </div>
-              <AlertCircle className="h-12 w-12 text-yellow-600" />
-            </div>
-          </div>
-          <div className="bg-white border-2 border-black p-6 rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-bold">TOTAL TERPENGARUH</p>
-                <p className="text-3xl font-black">{stockStats.totalAffected}</p>
+                <p className="text-gray-600 text-sm font-bold">TOTAL NILAI PRODUK</p>
+                <p className="text-3xl font-black">Rp {stockStats.estimatedLoss.toLocaleString("id-ID")}</p>
               </div>
               <Package className="h-12 w-12 text-blue-600" />
             </div>
           </div>
         </div>
 
-        {/* Filter & Export */}
+        {/* Export Button */}
         <div className="bg-white border-2 border-black p-6 rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-          <div className="flex flex-col md:flex-row justify-between items-end md:items-center gap-4">
-            <div className="flex gap-2 flex-wrap">
-              {[
-                { id: "all", label: "Semua" },
-                { id: "outOfStock", label: "Stok Habis" },
-                { id: "lowStock", label: "Stok Menipis" },
-              ].map((type) => (
-                <button
-                  key={type.id}
-                  onClick={() => setFilterType(type.id)}
-                  className={`px-4 py-2 rounded font-bold text-sm transition-all ${
-                    filterType === type.id
-                      ? "bg-black text-white shadow-md"
-                      : "bg-gray-100 text-gray-600 hover:text-black"
-                  }`}
-                >
-                  {type.label}
-                </button>
-              ))}
-            </div>
+          <div className="flex justify-end">
             <button
               onClick={handleExportPDF}
               className="bg-green-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-green-700 transition-all border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] flex items-center gap-2"
@@ -232,7 +199,7 @@ const LaporanStokCeo = () => {
         ) : (
           <div className="space-y-4">
             <h2 className="text-2xl font-black uppercase flex items-center gap-2">
-              <Package className="text-black" /> Detail Stok
+              <Package className="text-black" /> Detail Produk Habis
             </h2>
             <div className="bg-white border-2 border-black rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
               <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
@@ -242,14 +209,13 @@ const LaporanStokCeo = () => {
                       <th className="p-4 font-bold border-r border-gray-700 w-16 text-center">#</th>
                       <th className="p-4 font-bold border-r border-gray-700 w-24 text-center">Gambar</th>
                       <th className="p-4 font-bold border-r border-gray-700">Nama Produk</th>
-                      <th className="p-4 font-bold border-r border-gray-700 text-right">Harga</th>
-                      <th className="p-4 font-bold border-r border-gray-700 text-center">Stok</th>
-                      <th className="p-4 font-bold text-center">Status</th>
+                      <th className="p-4 font-bold border-r border-gray-700">Kategori</th>
+                      <th className="p-4 font-bold text-right">Harga</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {stockReportData.length > 0 ? (
-                      stockReportData.map((item, idx) => (
+                    {outOfStockReportData.length > 0 ? (
+                      outOfStockReportData.map((item, idx) => (
                         <tr key={idx} className="border-b-2 border-gray-200 hover:bg-gray-50 transition-colors">
                           <td className="p-4 font-black text-center border-r-2 border-gray-200 text-lg">{idx + 1}</td>
                           <td className="p-3 border-r-2 border-gray-200 text-center">
@@ -266,27 +232,16 @@ const LaporanStokCeo = () => {
                             )}
                           </td>
                           <td className="p-4 border-r-2 border-gray-200 font-bold text-lg">{item.name}</td>
-                          <td className="p-4 border-r-2 border-gray-200 text-right font-mono">
+                          <td className="p-4 border-r-2 border-gray-200 text-gray-700">{item.category || "-"}</td>
+                          <td className="p-4 text-right font-mono font-bold text-green-700">
                             Rp {item.price.toLocaleString("id-ID")}
-                          </td>
-                          <td className="p-4 border-r-2 border-gray-200 text-center font-bold">
-                            {item.stock}
-                          </td>
-                          <td className="p-4 text-center">
-                            <span
-                              className={`px-3 py-1 rounded-full font-bold text-white ${
-                                item.stock === 0 ? "bg-red-600" : "bg-yellow-600"
-                              }`}
-                            >
-                              {item.stock === 0 ? "HABIS" : "MENIPIS"}
-                            </span>
                           </td>
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="6" className="p-8 text-center text-gray-500 italic font-medium">
-                          Semua produk memiliki stok yang cukup.
+                        <td colSpan="5" className="p-8 text-center text-gray-500 italic font-medium">
+                          Tidak ada produk yang habis.
                         </td>
                       </tr>
                     )}
@@ -301,4 +256,4 @@ const LaporanStokCeo = () => {
   );
 };
 
-export default LaporanStokCeo;
+export default LaporanStokHabis;
