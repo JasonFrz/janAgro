@@ -1,6 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const Product = require("../models/Product");
+const StockMovement = require("../models/StockMovement");
+const { logStockMovement } = require("../functions/stockMovementLogger");
 const multer = require("multer");
 const cloudinary = require("cloudinary").v2;
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
@@ -67,6 +69,30 @@ router.put("/update-product/:id", upload.single("image"), async (req, res) => {
       }
 
       updateData.image = req.file.path;
+    }
+
+    // Log stock movement if stock is being updated
+    if (updateData.stock !== undefined && oldProduct) {
+      const previousStock = oldProduct.stock;
+      const newStock = parseInt(updateData.stock);
+      const difference = newStock - previousStock;
+
+      if (difference !== 0) {
+        const movementType = difference > 0 ? "in" : "out";
+        const quantity = Math.abs(difference);
+
+        await logStockMovement(
+          req.params.id,
+          oldProduct.name,
+          movementType,
+          quantity,
+          "penyesuaian",
+          null,
+          previousStock,
+          newStock,
+          `Penyesuaian stok manual dari ${previousStock} ke ${newStock}`
+        );
+      }
     }
 
     const updatedProduct = await Product.findByIdAndUpdate(

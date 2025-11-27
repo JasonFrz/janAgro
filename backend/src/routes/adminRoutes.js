@@ -3,6 +3,7 @@ const router = express.Router();
 const User = require("../models/User");
 const { hashPassword } = require("../functions/passwordHasing");
 const Checkout = require("../models/Checkout");
+const StockMovement = require("../models/StockMovement");
 
 
 router.put("/checkout/cancel/:orderId", async (req, res) => {
@@ -176,4 +177,87 @@ router.post("/create-admin", async (req, res) => {
 });
 
 
+// ==========================================
+// STOCK MOVEMENT REPORTS
+// ==========================================
+
+// Get all stock movements with filters
+router.get("/stock-movement-report", async (req, res) => {
+  try {
+    const { startDate, endDate, productId, movementType, reason } = req.query;
+    let filter = {};
+
+    if (startDate && endDate) {
+      filter.createdAt = {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate),
+      };
+    }
+
+    if (productId) {
+      filter.productId = productId;
+    }
+
+    if (movementType) {
+      filter.movementType = movementType;
+    }
+
+    if (reason) {
+      filter.reason = reason;
+    }
+
+    const stockMovements = await StockMovement.find(filter)
+      .populate("productId", "name price")
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({ success: true, data: stockMovements });
+  } catch (error) {
+    console.error("Error fetching stock movements:", error);
+    res.status(500).json({ success: false, message: "Terjadi kesalahan pada server" });
+  }
+});
+
+// Get stock movement summary
+router.get("/stock-movement-summary", async (req, res) => {
+  try {
+    const { startDate, endDate } = req.query;
+    let filter = {};
+
+    if (startDate && endDate) {
+      filter.createdAt = {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate),
+      };
+    }
+
+    const summary = await StockMovement.aggregate([
+      { $match: filter },
+      {
+        $group: {
+          _id: "$productId",
+          productName: { $first: "$productName" },
+          totalIn: {
+            $sum: {
+              $cond: [{ $eq: ["$movementType", "in"] }, "$quantity", 0],
+            },
+          },
+          totalOut: {
+            $sum: {
+              $cond: [{ $eq: ["$movementType", "out"] }, "$quantity", 0],
+            },
+          },
+          movementCount: { $sum: 1 },
+        },
+      },
+      { $sort: { movementCount: -1 } },
+    ]);
+
+    res.status(200).json({ success: true, data: summary });
+  } catch (error) {
+    console.error("Error fetching stock movement summary:", error);
+    res.status(500).json({ success: false, message: "Terjadi kesalahan pada server" });
+  }
+});
+
 module.exports = router;
+

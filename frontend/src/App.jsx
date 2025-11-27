@@ -17,11 +17,13 @@ import Pesanan from "./pages/Pesanan";
 import Review from "./pages/Review";
 import LaporanPesanan from "./laporan/LaporanPesanan";
 import LaporanPesananAdmin from "./admin/laporanAdmin/LaporanPesananAdmin";
+import LaporanStokAdmin from "./admin/laporanAdmin/LaporanStokAdmin";
 import LaporanPesananCeo from "./ceo/laporanCeo/LaporanPesananCeo";
 import LaporanUserBaruCeo from "./ceo/laporanCeo/LaporanUserBaruCeo";
 import LaporanUserSetiaCeo from "./ceo/laporanCeo/LaporanUserSetiaCeo";
 import LaporanBarangTerlakuCeo from "./ceo/laporanCeo/LaporanBarangTerlakuCeo";
 import LaporanVoucherCeo from "./ceo/laporanCeo/LaporanVoucherCeo";
+import LaporanStokCeo from "./ceo/laporanCeo/LaporanStokCeo";
 import PengembalianBarang from "./pages/PengembalianBarang";
 import "./index.css";
 import axios from "axios";
@@ -732,6 +734,16 @@ function App() {
             }
           />
           <Route
+            path="/laporan-stok-admin"
+            element={
+              isAdmin ? (
+                <LaporanStokAdmin />
+              ) : (
+                <Home API_URL={API_URL} />
+              )
+            }
+          />
+          <Route
             path="/laporan-order-ceo"
             element={
               isPemilik ? (
@@ -767,6 +779,12 @@ function App() {
             path="/laporan-voucher-ceo"
             element={
               isPemilik ? <LaporanVoucherCeo /> : <Home API_URL={API_URL} />
+            }
+          />
+          <Route
+            path="/laporan-stok-ceo"
+            element={
+              isPemilik ? <LaporanStokCeo /> : <Home API_URL={API_URL} />
             }
           />
           <Route path="*" element={<Home API_URL={API_URL} />} />

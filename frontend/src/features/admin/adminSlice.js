@@ -147,6 +147,46 @@ export const fetchVoucherUsageReport = createAsyncThunk(
   }
 );
 
+// 9. Fetch Stock Movement Report (Laporan Gerakan Stok)
+export const fetchStockMovementReport = createAsyncThunk(
+  "admin/fetchStockMovementReport",
+  async (params, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("token");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      
+      const response = await axios.get(`${API_URL}/admin/stock-movement-report`, { 
+        headers,
+        params 
+      });
+      
+      return response.data.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || err.message);
+    }
+  }
+);
+
+// 10. Fetch Stock Movement Summary Report
+export const fetchStockMovementSummary = createAsyncThunk(
+  "admin/fetchStockMovementSummary",
+  async (params, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("token");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      
+      const response = await axios.get(`${API_URL}/admin/stock-movement-summary`, { 
+        headers,
+        params 
+      });
+      
+      return response.data.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.message || err.message);
+    }
+  }
+);
+
 // ==========================================
 // THUNKS: ACTIONS (PUT/DELETE/POST)
 // ==========================================
@@ -243,6 +283,8 @@ const adminSlice = createSlice({
     bestSellingData: [],    // Laporan Barang Terlaku
     reviews: [],            // Laporan Ulasan
     voucherReportData: [],  // Laporan Voucher
+    stockMovementData: [],  // Laporan Gerakan Stok
+    stockMovementSummary: [], // Ringkasan Gerakan Stok
     loading: false,
     error: null,
   },
@@ -292,6 +334,16 @@ const adminSlice = createSlice({
       .addCase(fetchVoucherUsageReport.pending, (state) => { state.loading = true; state.error = null; })
       .addCase(fetchVoucherUsageReport.fulfilled, (state, action) => { state.loading = false; state.voucherReportData = action.payload; })
       .addCase(fetchVoucherUsageReport.rejected, (state, action) => { state.loading = false; state.error = action.payload; })
+
+      // --- Fetch Stock Movement Report ---
+      .addCase(fetchStockMovementReport.pending, (state) => { state.loading = true; state.error = null; })
+      .addCase(fetchStockMovementReport.fulfilled, (state, action) => { state.loading = false; state.stockMovementData = action.payload; })
+      .addCase(fetchStockMovementReport.rejected, (state, action) => { state.loading = false; state.error = action.payload; })
+
+      // --- Fetch Stock Movement Summary ---
+      .addCase(fetchStockMovementSummary.pending, (state) => { state.loading = true; state.error = null; })
+      .addCase(fetchStockMovementSummary.fulfilled, (state, action) => { state.loading = false; state.stockMovementSummary = action.payload; })
+      .addCase(fetchStockMovementSummary.rejected, (state, action) => { state.loading = false; state.error = action.payload; })
 
       // --- Actions: Edit User ---
       .addCase(editUser.fulfilled, (state, action) => {

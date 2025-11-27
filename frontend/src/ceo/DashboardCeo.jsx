@@ -1,5 +1,6 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { Link } from "react-router-dom";
 import {
   Users,
   Package,
@@ -8,6 +9,7 @@ import {
   TrendingUp,
   TrendingDown,
   Clock,
+  FileText,
 } from "lucide-react";
 import { fetchUsers } from "../features/admin/adminSlice";
 
@@ -227,6 +229,95 @@ function DashboardCeo({ vouchers = [], produk = [], checkouts = [] }) {
               })}
             </ul>
           </div>
+        </div>
+      </div>
+      <div className="space-y-4">
+        <h2 className="text-2xl font-bold">Akses Laporan</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <Link
+            to="/laporan-order-ceo"
+            className="bg-white border-2 border-black rounded-lg p-6 hover:shadow-lg hover:scale-105 transition-all"
+          >
+            <div className="flex items-center gap-4">
+              <div className="bg-blue-500 text-white p-4 rounded-lg">
+                <FileText size={24} />
+              </div>
+              <div>
+                <h3 className="font-bold text-lg">Laporan Pesanan</h3>
+                <p className="text-sm text-gray-600">Analisis pesanan bulanan</p>
+              </div>
+            </div>
+          </Link>
+          <Link
+            to="/laporan-user-ceo"
+            className="bg-white border-2 border-black rounded-lg p-6 hover:shadow-lg hover:scale-105 transition-all"
+          >
+            <div className="flex items-center gap-4">
+              <div className="bg-green-500 text-white p-4 rounded-lg">
+                <FileText size={24} />
+              </div>
+              <div>
+                <h3 className="font-bold text-lg">Laporan User Baru</h3>
+                <p className="text-sm text-gray-600">Pengguna baru terdaftar</p>
+              </div>
+            </div>
+          </Link>
+          <Link
+            to="/laporan-barang-terlaku-ceo"
+            className="bg-white border-2 border-black rounded-lg p-6 hover:shadow-lg hover:scale-105 transition-all"
+          >
+            <div className="flex items-center gap-4">
+              <div className="bg-orange-500 text-white p-4 rounded-lg">
+                <FileText size={24} />
+              </div>
+              <div>
+                <h3 className="font-bold text-lg">Laporan Barang Terlaku</h3>
+                <p className="text-sm text-gray-600">Produk paling laris</p>
+              </div>
+            </div>
+          </Link>
+          <Link
+            to="/laporan-stok-ceo"
+            className="bg-white border-2 border-black rounded-lg p-6 hover:shadow-lg hover:scale-105 transition-all"
+          >
+            <div className="flex items-center gap-4">
+              <div className="bg-red-500 text-white p-4 rounded-lg">
+                <FileText size={24} />
+              </div>
+              <div>
+                <h3 className="font-bold text-lg">Laporan Gerakan Stok</h3>
+                <p className="text-sm text-gray-600">Tracking stok masuk/keluar</p>
+              </div>
+            </div>
+          </Link>
+          <Link
+            to="/laporan-user-setia-ceo"
+            className="bg-white border-2 border-black rounded-lg p-6 hover:shadow-lg hover:scale-105 transition-all"
+          >
+            <div className="flex items-center gap-4">
+              <div className="bg-purple-500 text-white p-4 rounded-lg">
+                <FileText size={24} />
+              </div>
+              <div>
+                <h3 className="font-bold text-lg">Laporan User Setia</h3>
+                <p className="text-sm text-gray-600">Pelanggan loyal</p>
+              </div>
+            </div>
+          </Link>
+          <Link
+            to="/laporan-voucher-ceo"
+            className="bg-white border-2 border-black rounded-lg p-6 hover:shadow-lg hover:scale-105 transition-all"
+          >
+            <div className="flex items-center gap-4">
+              <div className="bg-indigo-500 text-white p-4 rounded-lg">
+                <FileText size={24} />
+              </div>
+              <div>
+                <h3 className="font-bold text-lg">Laporan Voucher</h3>
+                <p className="text-sm text-gray-600">Penggunaan voucher</p>
+              </div>
+            </div>
+          </Link>
         </div>
       </div>
     </div>
