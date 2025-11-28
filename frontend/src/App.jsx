@@ -27,6 +27,7 @@ import LaporanVoucherCeo from "./ceo/laporanCeo/LaporanVoucherCeo";
 import LaporanStokCeo from "./ceo/laporanCeo/LaporanStokCeo";
 import LaporanMovementCeo from "./ceo/laporanCeo/LaporanMovementCeo";
 import LaporanRevenueCeo from "./ceo/laporanCeo/LaporanRevenueCeo";
+import LaporanMetodePembayaranCeo from "./ceo/laporanCeo/LaporanMetodePembayaranCeo";
 import PengembalianBarang from "./pages/PengembalianBarang";
 import "./index.css";
 import axios from "axios";
@@ -810,6 +811,12 @@ function App() {
             path="/laporan-revenue-ceo"
             element={
               isPemilik ? <LaporanRevenueCeo /> : <Home API_URL={API_URL} />
+            }
+          />
+          <Route
+            path="/laporan-metode-pembayaran-ceo"
+            element={
+              isPemilik ? <LaporanMetodePembayaranCeo /> : <Home API_URL={API_URL} />
             }
           />
           <Route path="*" element={<Home API_URL={API_URL} />} />
