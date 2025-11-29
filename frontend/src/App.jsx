@@ -15,7 +15,6 @@ import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
 import Pesanan from "./pages/Pesanan";
 import Review from "./pages/Review";
-import LaporanPesanan from "./laporan/LaporanPesanan";
 import LaporanPesananAdmin from "./admin/laporanAdmin/LaporanPesananAdmin";
 import LaporanStokAdmin from "./admin/laporanAdmin/LaporanStokAdmin";
 import LaporanMovementAdmin from "./admin/laporanAdmin/LaporanMovementAdmin";

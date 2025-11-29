@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom"; 
+import { Link } from "react-router-dom";
 
 const Jumbotron = () => {
   const images = [
@@ -30,21 +30,20 @@ const Jumbotron = () => {
       <div className="relative z-10 text-center text-white max-w-5xl mx-auto px-4 sm:px-6">
         <div className="mb-8">
           <p className="text-xs sm:text-sm md:text-base tracking-[0.2em] sm:tracking-[0.3em] uppercase text-gray-300 mb-4 sm:mb-6 font-light">
-            BERSAMA PETANI MEMBANGUN NEGERI
+            Together with Farmers, Building the Nation
           </p>
-          {/* Responsive Font Size untuk Judul */}
           <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-thin mb-6 sm:mb-8 tracking-tight">
             <span className="font-bold">JAN AGRO</span>
           </h1>
           <div className="w-16 sm:w-24 h-[2px] bg-white mx-auto mb-6 sm:mb-8"></div>
           <h2 className="text-lg sm:text-2xl md:text-4xl font-light mb-8 sm:mb-10 text-gray-200 tracking-wide leading-tight">
-            Mitra Terpercaya Dalam Solusi Pertanian & Perkebunan
+            Trusted Partner in Agricultural & Plantation Solutions
           </h2>
         </div>
 
         <p className="text-base sm:text-lg md:text-xl text-gray-300 mb-8 sm:mb-12 max-w-3xl mx-auto leading-relaxed font-light">
-          PT. Jan Agro Nusantara is committed to supporting Indonesian farmers through
-          quality organic fertilizer products and professional support.
+          PT. Jan Agro Nusantara is committed to supporting Indonesian farmers
+          through quality organic fertilizer products and professional support.
           Together with us, realize sustainable agriculture and better harvests.
         </p>
 
