@@ -5,18 +5,17 @@ import {
   Package,
   ShoppingCart,
   Ticket,
-  FileText,
   MessageSquare,
-  Menu, // Import Icon Menu
-  X, // Import Icon Close
+  Menu,
+  X,
 } from "lucide-react";
+// Import komponen halaman Anda (sesuaikan path jika perlu)
 import DashboardCeo from "../ceo/DashboardCeo";
 import ProdukCeo from "../ceo/ProdukCeo";
 import PesananCeo from "../ceo/PesananCeo";
 import VoucherCeo from "../ceo/VoucherCeo";
 import UserCeo from "../ceo/UserCeo";
 import UlasanCeo from "../ceo/UlasanCeo";
-import { Link } from "react-router-dom";
 
 function Ceo({
   users,
@@ -38,15 +37,15 @@ function Ceo({
   onRejectCancellation,
 }) {
   const [activeTab, setActiveTab] = useState("dashboard");
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // State untuk Mobile Menu
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const NavButton = ({ tabName, icon, children }) => (
     <button
       onClick={() => {
         setActiveTab(tabName);
-        setIsSidebarOpen(false); // Tutup sidebar saat klik di mobile
+        setIsSidebarOpen(false);
       }}
-      className={`flex items-center w-full px-4 py-3 rounded-lg font-bold transition-all duration-200 border-2 ${
+      className={`flex items-center w-full px-4 py-3 rounded-lg font-bold transition-all duration-200 border-2 mb-2 ${
         activeTab === tabName
           ? "bg-black text-white border-black"
           : "bg-white text-black border-transparent hover:border-black hover:bg-gray-100"
@@ -115,64 +114,93 @@ function Ceo({
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-100 pt-20 sm:pt-24 text-black relative">
-      {/* Overlay untuk Mobile ketika sidebar terbuka */}
+    // CONTAINER UTAMA
+    // pt-20: Memberi padding atas agar konten tidak tertutup Navbar Fixed (asumsi tinggi navbar 5rem/80px)
+    <div className="flex flex-col md:flex-row min-h-screen bg-gray-100 text-black pt-20">
+      
+      {/* OVERLAY MOBILE */}
       {isSidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-30 md:hidden"
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
 
-      {/* Sidebar - Responsive */}
-      <aside 
-        className={`fixed md:sticky top-0 left-0 h-screen md:h-[calc(100vh-6rem)] w-72 bg-white shadow-2xl p-6 border-r-2 border-black z-40 transition-transform duration-300 ease-in-out md:translate-x-0 ${
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } pt-24 md:pt-6 overflow-y-auto`}
+      {/* 
+        SIDEBAR COMPONENT 
+        ------------------
+        Mobile: 'fixed' (melayang), z-50.
+        Desktop (md): 
+          - 'md:sticky': Membuat sidebar menempel saat discroll.
+          - 'md:top-20': INI KUNCINYA. Memberi jarak 80px dari atas agar TIDAK NABRAK Navbar.
+          - 'md:h-[calc(100vh-5rem)]': Mengatur tinggi sidebar agar pas mengisi sisa layar (Layar - Tinggi Navbar).
+      */}
+      <aside
+        className={`
+          fixed inset-y-0 left-0 z-50 w-72 bg-white border-r-2 border-black
+          transform transition-transform duration-300 ease-in-out shadow-2xl md:shadow-none
+          ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}
+          
+          md:translate-x-0 
+          md:sticky 
+          md:top-20 
+          md:h-[calc(100vh-5rem)] 
+          md:overflow-y-auto
+        `}
       >
-        <div className="flex justify-between items-center mb-8 border-b-2 border-black pb-4">
-          <h1 className="text-3xl font-black">CEO PANEL</h1>
-          <button onClick={() => setIsSidebarOpen(false)} className="md:hidden">
-            <X size={24} />
-          </button>
+        <div className="flex flex-col h-full p-6">
+          <div className="flex justify-between items-center mb-8 border-b-2 border-black pb-4">
+            <h1 className="text-3xl font-black tracking-tighter">CEO PANEL</h1>
+            <button
+              onClick={() => setIsSidebarOpen(false)}
+              className="md:hidden hover:bg-gray-100 p-1 rounded-md transition-colors"
+            >
+              <X size={24} />
+            </button>
+          </div>
+
+          <nav className="flex-1 space-y-1">
+            <NavButton tabName="dashboard" icon={<LayoutDashboard className="mr-3 h-6 w-6" />}>
+              Dashboard
+            </NavButton>
+            <NavButton tabName="users" icon={<Users className="mr-3 h-6 w-6" />}>
+              Users
+            </NavButton>
+            <NavButton tabName="produk" icon={<Package className="mr-3 h-6 w-6" />}>
+              Products
+            </NavButton>
+            <NavButton tabName="vouchers" icon={<Ticket className="mr-3 h-6 w-6" />}>
+              Vouchers
+            </NavButton>
+            <NavButton tabName="pesanan" icon={<ShoppingCart className="mr-3 h-6 w-6" />}>
+              Orders
+            </NavButton>
+            <NavButton tabName="ulasan" icon={<MessageSquare className="mr-3 h-6 w-6" />}>
+              Reviews
+            </NavButton>
+          </nav>
+
+          <div className="pt-6 mt-auto">
+             <p className="text-xs text-gray-400 font-bold">Panel CEO v1.0</p>
+          </div>
         </div>
-        
-        <nav className="space-y-3">
-          <NavButton tabName="dashboard" icon={<LayoutDashboard className="mr-3 h-6 w-6" />}>
-            Dashboard
-          </NavButton>
-          <NavButton tabName="users" icon={<Users className="mr-3 h-6 w-6" />}>
-            Users
-          </NavButton>
-          <NavButton tabName="produk" icon={<Package className="mr-3 h-6 w-6" />}>
-            Products
-          </NavButton>
-          <NavButton tabName="vouchers" icon={<Ticket className="mr-3 h-6 w-6" />}>
-            Vouchers
-          </NavButton>
-          <NavButton tabName="pesanan" icon={<ShoppingCart className="mr-3 h-6 w-6" />}>
-            Orders
-          </NavButton>
-          <NavButton tabName="ulasan" icon={<MessageSquare className="mr-3 h-6 w-6" />}>
-            Reviews
-          </NavButton>
-        </nav>
       </aside>
 
-      {/* Main Content */}
-      <main className="flex-1 p-4 sm:p-6 md:p-8 space-y-6 overflow-x-hidden w-full">
-        {/* Tombol Toggle Mobile */}
-        <div className="md:hidden mb-4">
-          <button 
+      <main className="flex-1 w-full p-4 sm:p-6 md:p-8 overflow-hidden min-h-[80vh]">
+        <div className="md:hidden mb-6 flex items-center justify-between bg-white border-2 border-black p-4 rounded-lg shadow-md">
+          <span className="font-bold text-lg">Menu Panel</span>
+          <button
             onClick={() => setIsSidebarOpen(true)}
-            className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-lg font-bold shadow-lg"
+            className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-lg font-bold active:scale-95 transition-transform"
           >
             <Menu size={20} />
-            <span>Menu Panel</span>
+            <span>Buka Menu</span>
           </button>
         </div>
-        
-        {renderContent()}
+
+        <div className="animate-fade-in-up">
+          {renderContent()}
+        </div>
       </main>
     </div>
   );
