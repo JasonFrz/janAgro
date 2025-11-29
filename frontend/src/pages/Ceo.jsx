@@ -98,7 +98,7 @@ function Ceo({
     }
   };
 
-  // --- KOMPONEN BUTTON (UPDATED STYLE) ---
+  // --- KOMPONEN BUTTON ---
   const NavButton = ({ tabName, icon, children, badgeCount }) => (
     <button
       onClick={() => {
@@ -107,12 +107,11 @@ function Ceo({
       }}
       className={`relative flex items-center w-full px-4 py-3 rounded-lg font-bold transition-all duration-200 border-2 mb-2 ${
         activeTab === tabName
-          ? "bg-white text-black border-black shadow-md" // AKTIF: Background Putih, Border Hitam, Shadow
-          : "bg-white text-gray-500 border-transparent hover:text-black hover:bg-gray-50" // NON-AKTIF
+          ? "bg-white text-black border-black shadow-md"
+          : "bg-white text-gray-500 border-transparent hover:text-black hover:bg-gray-50"
       }`}
     >
       {icon} {children}
-      {/* BADGE NOTIFIKASI */}
       {badgeCount > 0 && (
         <span className="absolute top-3 right-3 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full border border-white shadow-sm">
           {badgeCount > 99 ? "99+" : badgeCount}
@@ -182,23 +181,29 @@ function Ceo({
   };
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen bg-gray-100 text-black pt-20">
+    // PERBAIKAN 1: Tambahkan 'items-start' dan 'sm:pt-24'
+    <div className="flex flex-col md:flex-row min-h-screen bg-gray-100 text-black pt-20 sm:pt-24 items-start">
+      
+      {/* Overlay Mobile */}
       {isSidebarOpen && (
         <div
           className="fixed inset-0 bg-black/50 z-40 md:hidden"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
+
+      {/* Sidebar Responsive */}
       <aside
         className={`
-          fixed inset-y-0 left-0 z-50 w-72 bg-white border-r-2 border-black
+          fixed inset-y-0 left-0 z-40 w-72 bg-white border-r-2 border-black
           transform transition-transform duration-300 ease-in-out shadow-2xl md:shadow-none
           ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}
           
+          /* Desktop Styles (Sticky) */
           md:translate-x-0 
           md:sticky 
-          md:top-20 
-          md:h-[calc(100vh-5rem)] 
+          md:top-24               /* Turunkan agar pas di bawah navbar (sesuai pt-24) */
+          md:h-[calc(100vh-6rem)] /* Tinggi layar dikurangi navbar */
           md:overflow-y-auto
         `}
       >

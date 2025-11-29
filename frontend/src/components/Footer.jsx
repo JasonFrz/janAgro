@@ -64,7 +64,7 @@ const Footer = () => {
               ))}
               <li>
                 <Link to="/shop" className="text-white font-medium hover:underline mt-2 inline-block">
-                  Lihat Semua Produk &rarr;
+                  View All Products &rarr;
                 </Link>
               </li>
             </ul>

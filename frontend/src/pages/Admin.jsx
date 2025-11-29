@@ -15,7 +15,7 @@ import UserAdmin from "../admin/UserAdmin";
 import ProdukAdmin from "../admin/ProdukAdmin";
 import SettingAdmin from "../admin/SettingAdmin";
 import Voucher from "../admin/Voucher";
-import ChatAdmin from "../admin/ChatAdmin"; // IMPORT KOMPONEN BARU
+import ChatAdmin from "../admin/ChatAdmin"; 
 
 // --- CONFIG URL & SOCKET ---
 const rawUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
@@ -72,7 +72,7 @@ function Admin({
       }
     });
 
-    // Listen Status Update (misal dibaca di tab lain)
+    // Listen Status Update
     socketRef.current.on("message_status_update", () => {
       fetchUnreadCount();
     });
@@ -149,7 +149,7 @@ function Admin({
           />
         );
       case "chats":
-        return <ChatAdmin />; // TAB BARU
+        return <ChatAdmin />;
       default:
         return <DashboardAdmin users={users} vouchers={vouchers} />;
     }
@@ -162,16 +162,18 @@ function Admin({
         setActiveTab(tab);
         setIsSidebarOpen(false);
       }}
-      className={`relative flex items-center w-full px-3 py-3 rounded-lg transition-all duration-200 border-2 border-transparent ${
+      className={`relative flex items-center w-full px-3 py-3 rounded-lg transition-all duration-200 border-2 mb-1 ${
         activeTab === tab
           ? "bg-white text-black border-black shadow-md"
-          : "text-gray-700 hover:bg-gray-100"
+          : "text-gray-700 border-transparent hover:bg-gray-100"
       }`}
     >
-      {/* Jika ada customIcon (gambar), pakai itu. Jika tidak, pakai komponen Icon */}
-      {customIcon ? customIcon : <Icon className="mr-3 h-5 w-5" />}
+      {/* Icon Wrapper */}
+      <div className="flex-shrink-0 w-6 flex justify-center">
+        {customIcon ? customIcon : <Icon className="h-5 w-5" />}
+      </div>
 
-      <span className="font-medium">{label}</span>
+      <span className="font-medium ml-3">{label}</span>
 
       {/* BADGE NOTIFIKASI */}
       {badgeCount > 0 && (
@@ -183,7 +185,9 @@ function Admin({
   );
 
   return (
-    <div className="flex min-h-screen bg-gray-100 pt-20 sm:pt-24 text-black relative">
+    // 'items-start' penting agar sidebar tidak ketarik ke bawah
+    <div className="flex flex-col md:flex-row min-h-screen bg-gray-100 text-black pt-20 sm:pt-24 items-start">
+      
       {/* Overlay untuk Mobile */}
       {isSidebarOpen && (
         <div
@@ -192,14 +196,24 @@ function Admin({
         />
       )}
 
-      {/* Sidebar Responsive */}
+      {/* Sidebar Responsive & Sticky Fix */}
       <aside
-        className={`fixed md:sticky top-0 left-0 h-screen md:h-[calc(100vh-6rem)] w-64 bg-white shadow-xl p-6 z-50 transition-transform duration-300 ease-in-out md:translate-x-0 ${
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } pt-24 md:pt-6 overflow-y-auto`}
+        className={`
+          fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-gray-200 shadow-xl p-6
+          transform transition-transform duration-300 ease-in-out 
+          ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}
+          
+          /* Desktop Styles (Sticky Logic) */
+          md:translate-x-0 
+          md:sticky 
+          md:top-24               /* Turun 96px (sesuai pt-24 di main container) agar di bawah navbar */
+          md:h-[calc(100vh-6rem)] /* Tinggi sidebar = Layar - Navbar (6rem) */
+          md:overflow-y-auto      /* Scrollable internal jika menu panjang */
+          md:shadow-none          
+        `}
       >
-        <div className="flex justify-between items-center mb-8 md:mb-6">
-          <h1 className="text-2xl font-bold">Admin Panel</h1>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-2xl font-bold tracking-tight">Admin Panel</h1>
           <button
             onClick={() => setIsSidebarOpen(false)}
             className="md:hidden p-1 hover:bg-gray-100 rounded"
@@ -208,10 +222,20 @@ function Admin({
           </button>
         </div>
 
-        <nav className="space-y-2">
+        <nav className="space-y-1">
           <NavItem tab="dashboard" icon={LayoutDashboard} label="Dashboard" />
           <NavItem tab="users" icon={Users} label="Users" />
-          <NavItem tab="produk" icon={Package} label="Product" />
+          <NavItem
+            tab="produk"
+            customIcon={
+              <img
+                src="/icon/produk.png"
+                alt="Product"
+                className="h-5 w-5 object-contain"
+              />
+            }
+            label="Product"
+          />
           <NavItem tab="vouchers" icon={Ticket} label="Vouchers" />
           <NavItem tab="settings" icon={ShoppingCart} label="Orders" />
 
@@ -221,7 +245,7 @@ function Admin({
               <img
                 src="/icon/chat.png"
                 alt="Chat"
-                className="mr-3 h-5 w-5 object-contain"
+                className="h-5 w-5 object-contain"
               />
             }
             label="Live Chat"
@@ -231,15 +255,16 @@ function Admin({
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 p-4 sm:p-6 md:p-8 overflow-x-hidden w-full">
+      <main className="flex-1 p-4 sm:p-6 md:p-8 w-full min-w-0">
         {/* Tombol Toggle Mobile */}
-        <div className="md:hidden mb-4">
+        <div className="md:hidden mb-6 flex justify-between items-center bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+          <span className="font-bold text-lg">Menu Admin</span>
           <button
             onClick={() => setIsSidebarOpen(true)}
-            className="flex items-center gap-2 bg-white text-black px-4 py-2 rounded-lg font-bold shadow-md border border-gray-200"
+            className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-lg font-bold text-sm active:scale-95 transition-transform"
           >
-            <Menu size={20} />
-            <span>Menu Admin</span>
+            <Menu size={18} />
+            <span>Buka Menu</span>
           </button>
         </div>
 

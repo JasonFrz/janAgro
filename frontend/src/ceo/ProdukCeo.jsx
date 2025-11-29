@@ -29,14 +29,14 @@ function ProdukCeo({ produk = [], onAdd, onUpdate, onDelete }) {
       setImageFile(null);
       setImagePreview(null);
       e.target.value = null;
-      alert("Silakan pilih file gambar yang valid (PNG atau JPG).");
+      alert("Please select a valid image file (PNG or JPG).");
     }
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!imagePreview) {
-      alert("Silakan pilih gambar produk dengan mengunggah file baru.");
+      alert("Please select a product image by uploading a new file.");
       return;
     }
     const formData = new FormData();
@@ -104,7 +104,7 @@ function ProdukCeo({ produk = [], onAdd, onUpdate, onDelete }) {
   };
 
   const handleDelete = (id, name) => {
-    if (window.confirm(`Anda yakin ingin menghapus produk "${name}"?`)) {
+    if (window.confirm(`Are you sure you want to delete the product "${name}"?`)) {
       onDelete(id);
     }
   };
@@ -120,11 +120,10 @@ function ProdukCeo({ produk = [], onAdd, onUpdate, onDelete }) {
   return (
     <>
       <div className="space-y-8">
-        {/* Form Section */}
         <div className="bg-white text-black shadow-lg rounded-lg p-6 border-2 border-black">
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 pb-4 border-b-2 border-black gap-4">
             <h2 className="text-2xl font-bold">
-              {editingId ? "Edit Detail Produk" : "Tambah Produk Baru"}
+              {editingId ? "Edit Product Details" : "Add New Products"}
             </h2>
             
             <div className="flex flex-wrap gap-2 w-full lg:w-auto">
@@ -133,21 +132,21 @@ function ProdukCeo({ produk = [], onAdd, onUpdate, onDelete }) {
                 className="flex items-center justify-center flex-1 lg:flex-none gap-2 bg-black text-white px-3 py-2 rounded-lg hover:bg-gray-800 transition shadow-md font-bold text-sm"
               >
                 <FileText size={16} />
-                <span>Barang</span>
+                <span>Product</span>
               </button>
               <button
                 onClick={() => navigate("/laporan-stok-ceo")}
                 className="flex items-center justify-center flex-1 lg:flex-none gap-2 bg-purple-600 text-white px-3 py-2 rounded-lg hover:bg-purple-700 transition shadow-md font-bold text-sm"
               >
                 <FileText size={16} />
-                <span>Stok</span>
+                <span>Stock</span>
               </button>
               <button
                 onClick={() => navigate("/laporan-movement-ceo")}
                 className="flex items-center justify-center flex-1 lg:flex-none gap-2 bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 transition shadow-md font-bold text-sm"
               >
                 <FileText size={16} />
-                <span>Masuk/Keluar</span>
+                <span>Enter/Exit</span>
               </button>
             </div>
           </div>
@@ -158,11 +157,11 @@ function ProdukCeo({ produk = [], onAdd, onUpdate, onDelete }) {
           >
             <div className="md:col-span-2">
               <label className="block text-sm font-bold mb-1">
-                Nama Produk
+                Product name
               </label>
               <input
                 type="text"
-                placeholder="Contoh: Pupuk Organik Super"
+                placeholder="Example: Pupuk Organik Super"
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 className="w-full p-3 border-2 border-black rounded"
@@ -170,7 +169,7 @@ function ProdukCeo({ produk = [], onAdd, onUpdate, onDelete }) {
               />
             </div>
             <div>
-              <label className="block text-sm font-bold mb-1">Kategori</label>
+              <label className="block text-sm font-bold mb-1">Category</label>
               <select
                 value={form.category}
                 onChange={(e) => setForm({ ...form, category: e.target.value })}
@@ -178,7 +177,7 @@ function ProdukCeo({ produk = [], onAdd, onUpdate, onDelete }) {
                 required
               >
                 <option value="" disabled>
-                  Pilih Kategori
+                  Select Category
                 </option>
                 <option value="Pupuk">Pupuk</option>
                 <option value="Alat">Alat</option>
@@ -187,7 +186,7 @@ function ProdukCeo({ produk = [], onAdd, onUpdate, onDelete }) {
             </div>
             <div>
               <label className="block text-sm font-bold mb-1">
-                Gambar Produk (PNG/JPG)
+                Product Image (PNG/JPG)
               </label>
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                 <div className="w-24 h-24 flex items-center justify-center border-2 border-black rounded bg-gray-100 overflow-hidden shrink-0">
@@ -198,7 +197,7 @@ function ProdukCeo({ produk = [], onAdd, onUpdate, onDelete }) {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <span className="text-gray-400 text-sm">Pratinjau</span>
+                    <span className="text-gray-400 text-sm">Preview</span>
                   )}
                 </div>
                 <div className="w-full">
@@ -220,10 +219,10 @@ function ProdukCeo({ produk = [], onAdd, onUpdate, onDelete }) {
             </div>
             <div className="md:col-span-2">
               <label className="block text-sm font-bold mb-1">
-                Deskripsi Singkat
+                Short Description
               </label>
               <textarea
-                placeholder="Ringkasan singkat tentang produk"
+                placeholder="A brief summary of the product"
                 value={form.description}
                 onChange={(e) =>
                   setForm({ ...form, description: e.target.value })
@@ -234,10 +233,10 @@ function ProdukCeo({ produk = [], onAdd, onUpdate, onDelete }) {
             </div>
             <div className="md:col-span-2">
               <label className="block text-sm font-bold mb-1">
-                Detail Lengkap (Wajib)
+                Full Details (Required)
               </label>
               <textarea
-                placeholder="Spesifikasi dan informasi lengkap produk"
+                placeholder="Complete product specifications and information"
                 value={form.detail}
                 onChange={(e) => setForm({ ...form, detail: e.target.value })}
                 className="w-full p-3 border-2 border-black rounded"
@@ -247,11 +246,11 @@ function ProdukCeo({ produk = [], onAdd, onUpdate, onDelete }) {
             </div>
             <div>
               <label className="block text-sm font-bold mb-1">
-                Harga (IDR)
+                Price (IDR)
               </label>
               <input
                 type="number"
-                placeholder="Contoh: 25000"
+                placeholder="Example: 25000"
                 value={form.price}
                 onChange={(e) =>
                   setForm({
@@ -265,11 +264,11 @@ function ProdukCeo({ produk = [], onAdd, onUpdate, onDelete }) {
             </div>
             <div>
               <label className="block text-sm font-bold mb-1">
-                Jumlah Stok
+                Stock Quantity
               </label>
               <input
                 type="number"
-                placeholder="Contoh: 100"
+                placeholder="Example: 100"
                 value={form.stock}
                 onChange={(e) =>
                   setForm({
@@ -292,7 +291,7 @@ function ProdukCeo({ produk = [], onAdd, onUpdate, onDelete }) {
                 }`}
               >
                 <Plus className="mr-2 h-5 w-5" />{" "}
-                {editingId ? "Perbarui Produk" : "Tambah Produk"}
+                {editingId ? "Update Products" : "Add Product"}
               </button>
               {editingId && (
                 <button
@@ -300,37 +299,36 @@ function ProdukCeo({ produk = [], onAdd, onUpdate, onDelete }) {
                   onClick={handleCancel}
                   className="bg-white text-black border-2 border-black px-6 py-3 rounded font-bold flex items-center justify-center hover:bg-gray-100"
                 >
-                  <X className="w-5 h-5 mr-2" /> Batal Edit
+                  <X className="w-5 h-5 mr-2" /> Cancel Edit
                 </button>
               )}
             </div>
           </form>
         </div>
 
-        {/* List Produk Section */}
         <div className="bg-white text-black shadow-lg rounded-lg p-6 border-2 border-black">
-          <h2 className="text-2xl font-bold mb-4">Daftar Inventaris Produk</h2>
+          <h2 className="text-2xl font-bold mb-4">Product Inventory List</h2>
           <div className="overflow-x-auto max-h-96 overflow-y-auto border-2 border-black rounded-lg">
             <table className="w-full border-collapse">
               <thead className="bg-gray-100 sticky top-0">
                 <tr>
                   <th className="p-3 border-2 border-black text-left font-bold min-w-[80px]">
-                    Gambar
+                    Image
                   </th>
                   <th className="p-3 border-2 border-black text-left font-bold min-w-[150px]">
-                    Nama Produk
+                    Product Name
                   </th>
                   <th className="p-3 border-2 border-black text-left font-bold min-w-[100px]">
-                    Kategori
+                    Category
                   </th>
                   <th className="p-3 border-2 border-black text-left font-bold min-w-[120px]">
-                    Harga
+                    Price
                   </th>
                   <th className="p-3 border-2 border-black text-left font-bold min-w-[80px]">
-                    Stok
+                    Stock
                   </th>
                   <th className="p-3 border-2 border-black text-center font-bold min-w-[100px]">
-                    Aksi
+                    Action
                   </th>
                 </tr>
               </thead>
@@ -341,7 +339,7 @@ function ProdukCeo({ produk = [], onAdd, onUpdate, onDelete }) {
                       colSpan="6"
                       className="p-10 text-center text-gray-500 italic"
                     >
-                      Belum ada produk atau sedang memuat...
+                      There are no products yet or they are loading...
                     </td>
                   </tr>
                 ) : (

@@ -92,7 +92,6 @@ function ProdukAdmin({ produk = [], onAdd, onUpdate, onDelete }) {
     } else {
       setImagePreview(null);
     }
-    // Scroll ke atas agar form terlihat di mobile
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -196,9 +195,19 @@ function ProdukAdmin({ produk = [], onAdd, onUpdate, onDelete }) {
           </div>
 
           {produk.length === 0 ? (<p className="text-gray-500 text-center py-8">Belum ada data produk.</p>) : (
-            <div className="overflow-x-auto rounded-lg border border-gray-200">
+            // PERUBAHAN DISINI:
+            // 1. max-h-[450px]: Memberi batas tinggi kira-kira untuk 5 baris produk.
+            // 2. overflow-y-auto: Memunculkan scrollbar jika lebih dari tinggi tsb.
+            <div className="overflow-x-auto overflow-y-auto max-h-[450px] rounded-lg border border-gray-200">
               <table className="w-full border-collapse min-w-[700px]">
-                <thead className="bg-gray-50">
+                {/* 
+                   PERUBAHAN HEADER:
+                   sticky: Agar header menempel saat di scroll.
+                   top-0: Posisi menempel di atas.
+                   z-10: Agar berada di atas konten saat di scroll.
+                   bg-gray-50: Memberi warna background agar tulisan di baliknya tidak tembus.
+                */}
+                <thead className="bg-gray-50 sticky top-0 z-10 shadow-sm">
                   <tr>
                     <th className="p-3 text-left font-semibold text-gray-600 border-b w-20">Gambar</th>
                     <th className="p-3 text-left font-semibold text-gray-600 border-b">Nama Produk</th>
