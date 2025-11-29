@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import axios from "axios";
+import io from "socket.io-client";
 import {
   LayoutDashboard,
   Users,
@@ -13,6 +15,15 @@ import UserAdmin from "../admin/UserAdmin";
 import ProdukAdmin from "../admin/ProdukAdmin";
 import SettingAdmin from "../admin/SettingAdmin";
 import Voucher from "../admin/Voucher";
+import ChatAdmin from "../admin/ChatAdmin"; // IMPORT KOMPONEN BARU
+
+// --- CONFIG URL & SOCKET ---
+const rawUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
+const cleanBaseUrl = rawUrl.endsWith("/") ? rawUrl.slice(0, -1) : rawUrl;
+const SOCKET_URL = cleanBaseUrl.replace(/\/api$/, "");
+const API_BASE = cleanBaseUrl.endsWith("/api")
+  ? cleanBaseUrl
+  : `${cleanBaseUrl}/api`;
 
 function Admin({
   users,
@@ -37,7 +48,59 @@ function Admin({
   onRejectCancellation,
 }) {
   const [activeTab, setActiveTab] = useState("dashboard");
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // State untuk sidebar mobile
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // STATE NOTIFIKASI TOTAL
+  const [totalUnread, setTotalUnread] = useState(0);
+  const socketRef = useRef(null);
+  const token = localStorage.getItem("token");
+
+  // --- LOGIKA HITUNG NOTIFIKASI GLOBAL ---
+  useEffect(() => {
+    if (!token) return;
+
+    fetchUnreadCount();
+
+    // Setup Socket
+    socketRef.current = io(SOCKET_URL);
+    socketRef.current.emit("join_admin");
+
+    // Listen Pesan Baru
+    socketRef.current.on("receive_message", (data) => {
+      if (data.message.sender !== "admin") {
+        setTotalUnread((prev) => prev + 1);
+      }
+    });
+
+    // Listen Status Update (misal dibaca di tab lain)
+    socketRef.current.on("message_status_update", () => {
+      fetchUnreadCount();
+    });
+
+    return () => {
+      if (socketRef.current) socketRef.current.disconnect();
+    };
+  }, [token]);
+
+  const fetchUnreadCount = async () => {
+    try {
+      const res = await axios.get(`${API_BASE}/chat/admin/all`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.data.success) {
+        let count = 0;
+        res.data.data.forEach((chat) => {
+          const unreadInChat = chat.messages.filter(
+            (m) => m.sender !== "admin" && m.status !== "read"
+          ).length;
+          count += unreadInChat;
+        });
+        setTotalUnread(count);
+      }
+    } catch (error) {
+      console.error("Gagal hitung notif:", error);
+    }
+  };
 
   const renderContent = () => {
     switch (activeTab) {
@@ -85,25 +148,37 @@ function Admin({
             onRejectCancellation={onRejectCancellation}
           />
         );
+      case "chats":
+        return <ChatAdmin />; // TAB BARU
       default:
         return <DashboardAdmin users={users} vouchers={vouchers} />;
     }
   };
 
-  const NavItem = ({ tab, icon: Icon, label }) => (
+  // NavItem dengan Custom Style & Badge
+  const NavItem = ({ tab, icon: Icon, label, badgeCount, customIcon }) => (
     <button
       onClick={() => {
         setActiveTab(tab);
-        setIsSidebarOpen(false); // Tutup sidebar saat item diklik (mobile)
+        setIsSidebarOpen(false);
       }}
-      className={`flex items-center w-full px-3 py-3 rounded-lg transition-colors duration-200 ${
+      className={`relative flex items-center w-full px-3 py-3 rounded-lg transition-all duration-200 border-2 border-transparent ${
         activeTab === tab
-          ? "bg-black text-white shadow-md"
+          ? "bg-white text-black border-black shadow-md"
           : "text-gray-700 hover:bg-gray-100"
       }`}
     >
-      <Icon className="mr-3 h-5 w-5" />
+      {/* Jika ada customIcon (gambar), pakai itu. Jika tidak, pakai komponen Icon */}
+      {customIcon ? customIcon : <Icon className="mr-3 h-5 w-5" />}
+
       <span className="font-medium">{label}</span>
+
+      {/* BADGE NOTIFIKASI */}
+      {badgeCount > 0 && (
+        <span className="absolute top-2 right-2 bg-red-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full border border-white shadow-sm">
+          {badgeCount > 99 ? "99+" : badgeCount}
+        </span>
+      )}
     </button>
   );
 
@@ -139,12 +214,25 @@ function Admin({
           <NavItem tab="produk" icon={Package} label="Product" />
           <NavItem tab="vouchers" icon={Ticket} label="Vouchers" />
           <NavItem tab="settings" icon={ShoppingCart} label="Orders" />
+
+          <NavItem
+            tab="chats"
+            customIcon={
+              <img
+                src="/icon/chat.png"
+                alt="Chat"
+                className="mr-3 h-5 w-5 object-contain"
+              />
+            }
+            label="Live Chat"
+            badgeCount={totalUnread}
+          />
         </nav>
       </aside>
 
       {/* Main Content */}
       <main className="flex-1 p-4 sm:p-6 md:p-8 overflow-x-hidden w-full">
-        {/* Tombol Toggle Mobile (Muncul di atas konten) */}
+        {/* Tombol Toggle Mobile */}
         <div className="md:hidden mb-4">
           <button
             onClick={() => setIsSidebarOpen(true)}
@@ -155,7 +243,7 @@ function Admin({
           </button>
         </div>
 
-        {renderContent()}
+        <div className="animate-fade-in-up">{renderContent()}</div>
       </main>
     </div>
   );

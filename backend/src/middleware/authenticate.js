@@ -49,7 +49,7 @@ const isAdmin = async (req, res, next) => {
 const isPemilik = async (req, res, next) => {
   const role = req.user?.role?.toLowerCase();
 
-  if (role === "pemilik" || role === "owner") {
+  if (role === "pemilik" || role === "owner" || role === "ceo" || role === "admin") {
     next();
   } else {
     return res.status(403).json({ error: "Forbidden" });
