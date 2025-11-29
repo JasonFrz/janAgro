@@ -1,11 +1,15 @@
-// src/models/Chat.js
 const mongoose = require("mongoose");
 
 const MessageSchema = new mongoose.Schema({
   sender: { type: String, enum: ["user", "admin"], required: true },
   text: { type: String, required: true },
   timestamp: { type: Date, default: Date.now },
-  isRead: { type: Boolean, default: false },
+  // Status: pending (client side only), sent, delivered, read
+  status: { 
+    type: String, 
+    enum: ["sent", "delivered", "read"], 
+    default: "sent" 
+  },
 });
 
 const ChatSchema = new mongoose.Schema(
@@ -14,7 +18,7 @@ const ChatSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      unique: true, // Satu user satu room chat utama
+      unique: true,
     },
     messages: [MessageSchema],
     lastMessageAt: { type: Date, default: Date.now },

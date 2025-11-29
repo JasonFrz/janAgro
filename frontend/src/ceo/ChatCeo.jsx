@@ -1,21 +1,36 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import io from "socket.io-client";
-import { Send, User, MessageSquare, AlertTriangle } from "lucide-react";
+import {
+  Send,
+  MessageSquare,
+  AlertTriangle,
+  Check,
+  CheckCheck,
+  Clock,
+} from "lucide-react";
 
-// --- LOGIC URL CLEANER (Agar tidak double /api/api) ---
+// --- CONFIG URL ---
 const rawUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
-// Hapus slash di akhir jika ada
 const cleanBaseUrl = rawUrl.endsWith("/") ? rawUrl.slice(0, -1) : rawUrl;
-// Socket URL (Biasanya hanya host, misal localhost:3000 tanpa /api)
 const SOCKET_URL = cleanBaseUrl.replace(/\/api$/, "");
-// API URL (Pastikan berakhiran /api)
 const API_BASE = cleanBaseUrl.endsWith("/api")
   ? cleanBaseUrl
   : `${cleanBaseUrl}/api`;
 
-// Inisialisasi Socket
 const socket = io(SOCKET_URL);
+
+// --- KOMPONEN IKON STATUS ---
+const StatusIcon = ({ status }) => {
+  if (status === "pending")
+    return <Clock size={14} className="text-gray-400" />;
+  if (status === "sent") return <Check size={14} className="text-gray-400" />;
+  if (status === "delivered")
+    return <CheckCheck size={14} className="text-gray-400" />;
+  if (status === "read")
+    return <CheckCheck size={14} className="text-blue-500" />;
+  return <Check size={14} className="text-gray-400" />;
+};
 
 const ChatCeo = () => {
   const [chats, setChats] = useState([]);
@@ -25,61 +40,62 @@ const ChatCeo = () => {
 
   const token = localStorage.getItem("token");
   const messagesEndRef = useRef(null);
+  
+  // Ref untuk selected chat agar tidak stale closure
+  const selectedChatRef = useRef(null);
 
-  // Helper: Decode JWT
-  const debugTokenRole = (token) => {
+  // Sync Ref
+  useEffect(() => {
+    selectedChatRef.current = selectedChat;
+    // Auto read jika chat terbuka
+    if (selectedChat) {
+      updateMessageStatus(selectedChat._id, "read");
+    }
+  }, [selectedChat]);
+
+  const updateMessageStatus = async (chatId, status) => {
     try {
-      const base64Url = token.split(".")[1];
-      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-      const jsonPayload = decodeURIComponent(
-        window
-          .atob(base64)
-          .split("")
-          .map(function (c) {
-            return "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2);
-          })
-          .join("")
+      await axios.post(
+        `${API_BASE}/chat/update-status`,
+        { chatId, status },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-      const decoded = JSON.parse(jsonPayload);
-
-      console.log("🔍 DEBUG INFO:");
-      console.log("- URL API Final:", API_BASE);
-      console.log("- Role di Token:", decoded.role);
-
-      if (decoded.role !== "Pemilik") {
-        console.warn(
-          "⚠️ PERINGATAN ROLE: Middleware Backend mewajibkan 'Pemilik' (P Besar). Role Anda: '" +
-            decoded.role +
-            "'"
-        );
-      }
-    } catch (e) {
-      console.error("Gagal decode token", e);
+    } catch (err) {
+      // Silent fail
     }
   };
 
   useEffect(() => {
-    if (token) {
-      debugTokenRole(token);
-      fetchChats();
-    } else {
-      setErrorMsg("Token tidak ditemukan. Silakan Login ulang.");
-    }
+    if (token) fetchChats();
+    else setErrorMsg("Token missing.");
 
     socket.emit("join_admin");
 
-    socket.on("receive_message", (data) => {
-      setChats((prevChats) => {
-        const existingIdx = prevChats.findIndex(
-          (c) => c.userId._id === data.userId
-        );
-        let newChats = [...prevChats];
+    // --- 1. PESAN MASUK ---
+    const handleReceiveMessage = (data) => {
+      if (data.message.sender === "admin") return;
 
-        if (existingIdx !== -1) {
-          const updatedChat = { ...newChats[existingIdx] };
+      const currentSelected = selectedChatRef.current;
+      
+      const isCurrentChat = 
+         (currentSelected && currentSelected._id === data.chatId) || 
+         (currentSelected && currentSelected.userId?._id === data.userId);
+
+      if (isCurrentChat) {
+        updateMessageStatus(data.chatId, "read");
+      } else {
+        updateMessageStatus(data.chatId, "delivered");
+      }
+
+      setChats((prev) => {
+        const idx = prev.findIndex((c) => c.userId?._id === data.userId);
+        let newChats = [...prev];
+
+        if (idx !== -1) {
+          const updatedChat = { ...newChats[idx] };
           updatedChat.messages = [...updatedChat.messages, data.message];
           updatedChat.lastMessageAt = new Date();
-          newChats.splice(existingIdx, 1);
+          newChats.splice(idx, 1);
           newChats.unshift(updatedChat);
         } else {
           fetchChats();
@@ -88,48 +104,87 @@ const ChatCeo = () => {
       });
 
       setSelectedChat((prev) => {
-        if (prev && prev.userId._id === data.userId) {
-          return {
-            ...prev,
-            messages: [...prev.messages, data.message],
-          };
+        if (prev && prev.userId && prev.userId._id === data.userId) {
+          return { ...prev, messages: [...prev.messages, data.message] };
         }
         return prev;
       });
-    });
+    };
+
+    // --- 2. STATUS UPDATE ---
+    const handleStatusUpdate = (data) => {
+      setChats((prev) =>
+        prev.map((c) => {
+          const isTargetChat = 
+             c._id === data.chatId || 
+             c.userId?._id === data.userId;
+
+          if (isTargetChat) {
+            const updatedMsgs = c.messages.map((m) => {
+              if (m.sender === "admin") {
+                if (data.status === "read") return { ...m, status: "read" };
+                if (data.status === "delivered" && m.status === "sent") return { ...m, status: "delivered" };
+              }
+              return m;
+            });
+            return { ...c, messages: updatedMsgs };
+          }
+          return c;
+        })
+      );
+
+      setSelectedChat((prev) => {
+        if (!prev) return null;
+        const isTargetChat = 
+             prev._id === data.chatId || 
+             prev.userId?._id === data.userId;
+
+        if (isTargetChat) {
+          const updatedMsgs = prev.messages.map((m) => {
+            if (m.sender === "admin") {
+                if (data.status === "read") return { ...m, status: "read" };
+                if (data.status === "delivered" && m.status === "sent") return { ...m, status: "delivered" };
+            }
+            return m;
+          });
+          return { ...prev, messages: updatedMsgs };
+        }
+        return prev;
+      });
+    };
+
+    socket.on("receive_message", handleReceiveMessage);
+    socket.on("message_status_update", handleStatusUpdate);
 
     return () => {
-      socket.off("receive_message");
+      socket.off("receive_message", handleReceiveMessage);
+      socket.off("message_status_update", handleStatusUpdate);
     };
   }, [token]);
 
+  useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+      });
+    }
+  }, [selectedChat?.messages]);
+
   const fetchChats = async () => {
     try {
-      setErrorMsg(null);
-      // URL sudah dipastikan benar oleh logic di atas
-      const response = await axios.get(`${API_BASE}/chat/admin/all`, {
+      const res = await axios.get(`${API_BASE}/chat/admin/all`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (response.data.success) {
-        setChats(response.data.data);
+      if (res.data.success) {
+        const validChats = res.data.data.filter((c) => c.userId !== null);
+        setChats(validChats);
       }
-    } catch (error) {
-      console.error("Error fetching chats:", error);
-      if (error.response?.status === 404) {
-        setErrorMsg(`URL Salah (404): ${error.config.url}`);
-      } else if (error.response?.status === 403) {
-        setErrorMsg(
-          "AKSES DITOLAK (403): Role user di database harus 'Pemilik' (P besar)."
-        );
-      } else {
-        setErrorMsg("Gagal memuat chat. Pastikan server backend jalan.");
-      }
+    } catch (e) {
+      if (e.response?.status === 403)
+        setErrorMsg("Akses Ditolak: Role bukan Pemilik.");
     }
   };
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [selectedChat?.messages]);
 
   const handleReply = async (e) => {
     e.preventDefault();
@@ -139,199 +194,246 @@ const ChatCeo = () => {
       sender: "admin",
       text: replyText,
       timestamp: new Date(),
+      status: "pending",
     };
-    setSelectedChat((prev) => ({
-      ...prev,
-      messages: [...prev.messages, optimisticMsg],
-    }));
-    setChats((prev) => {
-      const idx = prev.findIndex((c) => c._id === selectedChat._id);
-      if (idx === -1) return prev;
-      const updated = [...prev];
-      updated[idx].messages.push(optimisticMsg);
-      return updated;
-    });
 
     const msgToSend = replyText;
     setReplyText("");
 
+    setSelectedChat((prev) => ({
+      ...prev,
+      messages: [...prev.messages, optimisticMsg],
+    }));
+
+    setChats((prev) => {
+      const idx = prev.findIndex((c) => c._id === selectedChat._id);
+      if (idx === -1) return prev;
+
+      const updated = [...prev];
+      const chatToUpdate = { ...updated[idx] };
+      chatToUpdate.messages = [...chatToUpdate.messages, optimisticMsg];
+      chatToUpdate.lastMessageAt = new Date();
+
+      updated.splice(idx, 1);
+      updated.unshift(chatToUpdate);
+
+      return updated;
+    });
+
     try {
-      await axios.post(
+      const res = await axios.post(
         `${API_BASE}/chat/admin/reply`,
         { targetUserId: selectedChat.userId._id, text: msgToSend },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+
+      if (res.data.success) {
+        const serverMsg =
+          res.data.data.messages[res.data.data.messages.length - 1];
+        
+        setSelectedChat((prev) => ({
+          ...prev,
+          messages: prev.messages.map((m) =>
+            m === optimisticMsg ? serverMsg : m
+          ),
+        }));
+
+        setChats((prev) => {
+          const idx = prev.findIndex((c) => c._id === selectedChat._id);
+          if (idx === -1) return prev;
+          const updated = [...prev];
+          const chatClone = { ...updated[idx] };
+          chatClone.messages = chatClone.messages.map((m) =>
+            m.text === optimisticMsg.text && m.status === "pending"
+              ? serverMsg
+              : m
+          );
+          updated[idx] = chatClone;
+          return updated;
+        });
+      }
     } catch (error) {
       console.error("Gagal reply:", error);
-      alert("Gagal mengirim pesan.");
     }
   };
 
-  // Tampilan Error
-  if (errorMsg) {
-    return (
-      <div className="flex h-[80vh] items-center justify-center bg-white border-4 border-black mt-4 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-        <div className="text-center p-8 max-w-lg">
-          <AlertTriangle size={64} className="mx-auto mb-4 text-black" />
-          <h2 className="text-2xl font-black uppercase mb-2">
-            Terjadi Masalah
-          </h2>
-          <p className="font-mono text-sm mb-6 bg-red-100 p-4 border border-red-300 break-words">
-            {errorMsg}
-          </p>
-          <div className="text-xs text-left bg-gray-100 p-4 border border-gray-300">
-            <strong>Checklist Perbaikan:</strong>
-            <ul className="list-disc pl-4 mt-2 space-y-1">
-              <li>
-                Jika error <b>403</b>: Buka MongoDB, cari user Anda, ubah field{" "}
-                <code>role</code> menjadi <b>Pemilik</b> (Persis seperti ini).
-              </li>
-              <li>
-                Jika error <b>404</b>: Cek console browser (F12) untuk melihat
-                URL API Final yang salah.
-              </li>
-            </ul>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const handleChatClick = (chat) => {
+    if (selectedChat && selectedChat._id === chat._id) {
+        setSelectedChat(null);
+    } else {
+        setSelectedChat(chat);
+    }
+  };
+
+  if (errorMsg) return <div className="p-10 text-center">{errorMsg}</div>;
 
   return (
-    <div className="flex h-[80vh] bg-white border-4 border-black font-sans text-black mt-4 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+    <div className="flex h-[calc(100vh-140px)] bg-white rounded-2xl shadow-xl border border-gray-200 mt-4 font-sans">
       {/* SIDEBAR */}
-      <div className="w-1/3 border-r-4 border-black flex flex-col bg-gray-50">
-        <div className="p-6 border-b-4 border-black bg-black text-white">
-          <h2 className="font-black text-2xl tracking-tighter uppercase">
-            INBOX
-          </h2>
+      <div className="w-1/3 border-r border-gray-100 flex flex-col bg-white">
+        <div className="p-5 border-b border-gray-100 flex justify-between">
+          <h2 className="font-bold text-xl text-gray-900">Pesan Masuk</h2>
+          <span className="bg-gray-100 text-xs font-bold px-2 py-1 rounded-full">
+            {chats.length}
+          </span>
         </div>
-        <div className="flex-1 overflow-y-auto">
-          {chats.length === 0 ? (
-            <div className="p-6 text-center text-gray-400 font-mono text-sm">
-              Belum ada percakapan
-            </div>
-          ) : (
-            chats.map((chat) => (
-              <div
-                key={chat._id}
-                onClick={() => setSelectedChat(chat)}
-                className={`p-5 border-b-2 border-black cursor-pointer transition-all duration-200 group relative
-                  ${
-                    selectedChat?._id === chat._id
-                      ? "bg-black text-white"
-                      : "hover:bg-gray-200 bg-white text-black"
-                  }`}
-              >
-                <div className="flex items-center gap-4">
-                  <div
-                    className={`w-12 h-12 border-2 border-black flex items-center justify-center font-bold text-lg shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]
-                      ${
-                        selectedChat?._id === chat._id
-                          ? "bg-white text-black"
-                          : "bg-white text-black"
-                      }
-                  `}
-                  >
-                    {chat.userId?.name?.charAt(0).toUpperCase() || "?"}
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-2">
+          {chats.map((chat) => (
+            <div
+              key={chat._id}
+              onClick={() => handleChatClick(chat)}
+              className={`p-3 rounded-xl cursor-pointer flex items-center gap-3 border ${
+                selectedChat?._id === chat._id
+                  ? "bg-black text-white"
+                  : "bg-white hover:bg-gray-50"
+              }`}
+            >
+              {/* --- AVATAR PADA SIDEBAR --- */}
+              <div className="w-10 h-10 flex-shrink-0">
+                {chat.userId?.avatar ? (
+                  <img 
+                    src={chat.userId.avatar} 
+                    alt={chat.userId.name} 
+                    className="w-full h-full rounded-full object-cover bg-white border border-gray-200"
+                  />
+                ) : (
+                  <div className="w-full h-full rounded-full bg-gray-200 flex items-center justify-center font-bold text-gray-700 uppercase">
+                    {chat.userId?.name?.charAt(0) || "?"}
                   </div>
-                  <div className="flex-1 overflow-hidden">
-                    <h4 className="font-black text-base uppercase truncate">
-                      {chat.userId?.name || "Unknown"}
-                    </h4>
-                    <p
-                      className={`text-xs font-mono truncate mt-1 ${
-                        selectedChat?._id === chat._id
-                          ? "text-gray-400"
-                          : "text-gray-600"
-                      }`}
-                    >
-                      {chat.messages[chat.messages.length - 1]?.text || "..."}
-                    </p>
-                  </div>
-                </div>
+                )}
               </div>
-            ))
-          )}
-        </div>
-      </div>
 
-      {/* CHAT AREA */}
-      <div className="w-2/3 flex flex-col bg-white relative">
-        {selectedChat ? (
-          <>
-            <div className="p-4 border-b-4 border-black flex items-center justify-between bg-white z-10">
-              <div>
-                <h2 className="font-black text-xl uppercase tracking-tight">
-                  {selectedChat.userId?.name}
-                </h2>
-                <span className="text-xs font-mono bg-black text-white px-2 py-1">
-                  ID: {selectedChat.userId?._id}
-                </span>
-              </div>
-            </div>
-
-            <div className="flex-1 p-8 overflow-y-auto flex flex-col gap-6 bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px]">
-              {selectedChat.messages.map((msg, idx) => (
-                <div
-                  key={idx}
-                  className={`max-w-[70%] p-4 border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] ${
-                    msg.sender === "admin"
-                      ? "self-end bg-black text-white"
-                      : "self-start bg-white text-black"
-                  }`}
-                >
-                  <p className="text-sm font-bold leading-relaxed">
-                    {msg.text}
-                  </p>
+              <div className="flex-1 min-w-0">
+                <div className="flex justify-between">
+                  <h4 className="font-semibold text-sm truncate">
+                    {chat.userId?.name || "Unknown"}
+                  </h4>
                   <span
-                    className={`text-[10px] block mt-3 text-right font-mono uppercase tracking-widest ${
-                      msg.sender === "admin" ? "text-gray-500" : "text-gray-400"
+                    className={`text-[10px] ${
+                      selectedChat?._id === chat._id
+                        ? "text-gray-300"
+                        : "text-gray-400"
                     }`}
                   >
-                    {new Date(msg.timestamp).toLocaleTimeString([], {
+                    {new Date(chat.lastMessageAt).toLocaleTimeString([], {
                       hour: "2-digit",
                       minute: "2-digit",
                     })}
                   </span>
                 </div>
-              ))}
+                <div className="flex items-center gap-1">
+                  {chat.messages.length > 0 &&
+                    chat.messages[chat.messages.length - 1]?.sender ===
+                      "admin" && (
+                      <StatusIcon
+                        status={chat.messages[chat.messages.length - 1]?.status}
+                      />
+                    )}
+                  <p
+                    className={`text-xs truncate ${
+                      selectedChat?._id === chat._id
+                        ? "text-gray-300"
+                        : "text-gray-500"
+                    }`}
+                  >
+                    {chat.messages[chat.messages.length - 1]?.text}
+                  </p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* CHAT AREA */}
+      <div className="w-2/3 flex flex-col bg-gray-50 relative">
+        {selectedChat ? (
+          <>
+            {/* HEADER CHAT AKTIF */}
+            <div className="px-6 py-4 bg-white border-b border-gray-100 shadow-sm z-10 flex items-center gap-3">
+              {/* --- AVATAR PADA HEADER --- */}
+              <div className="w-10 h-10 flex-shrink-0">
+                {selectedChat.userId?.avatar ? (
+                  <img 
+                    src={selectedChat.userId.avatar} 
+                    alt={selectedChat.userId.name} 
+                    className="w-full h-full rounded-full object-cover border border-gray-200"
+                  />
+                ) : (
+                  <div className="w-full h-full rounded-full bg-black text-white flex items-center justify-center font-bold text-lg uppercase">
+                    {selectedChat.userId?.name?.charAt(0)}
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <h2 className="font-bold text-gray-900">
+                  {selectedChat.userId?.name}
+                </h2>
+                <p className="text-xs text-green-600">Online Customer</p>
+              </div>
+            </div>
+
+            <div className="flex-1 p-6 overflow-y-auto flex flex-col gap-3">
+              {selectedChat.messages.map((msg, idx) => {
+                const isAdmin = msg.sender === "admin";
+                return (
+                  <div
+                    key={idx}
+                    className={`max-w-[75%] flex flex-col ${
+                      isAdmin ? "items-end self-end" : "items-start self-start"
+                    }`}
+                  >
+                    <div
+                      className={`px-4 py-2 text-sm shadow-sm ${
+                        isAdmin
+                          ? "bg-black text-white rounded-2xl rounded-tr-none"
+                          : "bg-white text-gray-800 border rounded-2xl rounded-tl-none"
+                      }`}
+                    >
+                      {msg.text}
+                    </div>
+                    <div className="flex items-center gap-1 mt-1 px-1">
+                      <span className="text-[10px] text-gray-400">
+                        {new Date(msg.timestamp).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
+                      {isAdmin && <StatusIcon status={msg.status} />}
+                    </div>
+                  </div>
+                );
+              })}
               <div ref={messagesEndRef} />
             </div>
 
-            <form
-              onSubmit={handleReply}
-              className="p-0 border-t-4 border-black bg-white flex"
-            >
-              <input
-                type="text"
-                value={replyText}
-                onChange={(e) => setReplyText(e.target.value)}
-                placeholder="TYPE MESSAGE..."
-                className="flex-1 px-6 py-5 focus:outline-none font-mono text-sm placeholder:text-gray-400 bg-white text-black"
-              />
-              <button
-                type="submit"
-                disabled={!replyText.trim()}
-                className="bg-black text-white px-10 border-l-4 border-black font-black uppercase tracking-widest hover:bg-white hover:text-black transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            <div className="p-4 bg-white border-t border-gray-100">
+              <form
+                onSubmit={handleReply}
+                className="flex items-center gap-2 bg-gray-100 rounded-full px-2 py-2"
               >
-                SEND
-              </button>
-            </form>
+                <input
+                  type="text"
+                  value={replyText}
+                  onChange={(e) => setReplyText(e.target.value)}
+                  className="flex-1 bg-transparent px-4 py-2 focus:outline-none text-sm"
+                  placeholder="Balas pesan..."
+                />
+                <button
+                  type="submit"
+                  disabled={!replyText.trim()}
+                  className="bg-black text-white p-2.5 rounded-full disabled:opacity-50"
+                >
+                  <Send size={18} />
+                </button>
+              </form>
+            </div>
           </>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center bg-gray-50">
-            <div className="p-6 border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] bg-white text-center">
-              <MessageSquare
-                size={64}
-                strokeWidth={2.5}
-                className="mx-auto mb-4"
-              />
-              <h3 className="font-black text-xl uppercase">No Chat Selected</h3>
-              <p className="font-mono text-sm mt-2 text-gray-500">
-                Select a user from the sidebar
-              </p>
-            </div>
+          <div className="flex-1 flex items-center justify-center text-gray-400 flex-col">
+            <MessageSquare size={40} className="mb-2 opacity-30" />
+            <p>Pilih percakapan untuk memulai</p>
           </div>
         )}
       </div>
