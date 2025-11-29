@@ -9,13 +9,13 @@ import {
   Menu,
   X,
 } from "lucide-react";
-// Import komponen halaman Anda (sesuaikan path jika perlu)
 import DashboardCeo from "../ceo/DashboardCeo";
 import ProdukCeo from "../ceo/ProdukCeo";
 import PesananCeo from "../ceo/PesananCeo";
 import VoucherCeo from "../ceo/VoucherCeo";
 import UserCeo from "../ceo/UserCeo";
 import UlasanCeo from "../ceo/UlasanCeo";
+import ChatCeo from '../ceo/ChatCeo';
 
 function Ceo({
   users,
@@ -101,6 +101,8 @@ function Ceo({
         );
       case "ulasan":
         return <UlasanCeo />;
+      case "chats":
+        return <ChatCeo />;
       default:
         return (
           <DashboardCeo
@@ -114,27 +116,14 @@ function Ceo({
   };
 
   return (
-    // CONTAINER UTAMA
-    // pt-20: Memberi padding atas agar konten tidak tertutup Navbar Fixed (asumsi tinggi navbar 5rem/80px)
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-100 text-black pt-20">
       
-      {/* OVERLAY MOBILE */}
       {isSidebarOpen && (
         <div
           className="fixed inset-0 bg-black/50 z-40 md:hidden"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
-
-      {/* 
-        SIDEBAR COMPONENT 
-        ------------------
-        Mobile: 'fixed' (melayang), z-50.
-        Desktop (md): 
-          - 'md:sticky': Membuat sidebar menempel saat discroll.
-          - 'md:top-20': INI KUNCINYA. Memberi jarak 80px dari atas agar TIDAK NABRAK Navbar.
-          - 'md:h-[calc(100vh-5rem)]': Mengatur tinggi sidebar agar pas mengisi sisa layar (Layar - Tinggi Navbar).
-      */}
       <aside
         className={`
           fixed inset-y-0 left-0 z-50 w-72 bg-white border-r-2 border-black
@@ -178,6 +167,9 @@ function Ceo({
             <NavButton tabName="ulasan" icon={<MessageSquare className="mr-3 h-6 w-6" />}>
               Reviews
             </NavButton>
+            <NavButton tabName="chats" icon={<MessageSquare className="mr-3 h-6 w-6" />}>
+           Live Chat
+         </NavButton>
           </nav>
 
           <div className="pt-6 mt-auto">

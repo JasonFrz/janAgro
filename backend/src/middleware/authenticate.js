@@ -2,6 +2,7 @@ const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
 dotenv.config();
 
+// ... (authenticateToken dan authenticateRefreshToken tetap sama) ...
 const authenticateToken = async (req, res, next) => {
   const authHeader = req.header("Authorization");
   if (!authHeader) {
@@ -37,18 +38,30 @@ const authenticateRefreshToken = async (req, res, next) => {
   }
 };
 
+// --- PERUBAHAN DI SINI ---
+
 const isAdmin = async (req, res, next) => {
-  if (req.user.role !== "Admin") {
+  // Gunakan optional chaining (?.) untuk keamanan jika role tidak ada
+  const role = req.user?.role?.toLowerCase(); 
+  
+  if (role === "admin") {
+    next();
+  } else {
     return res.status(403).json({ error: "Forbidden" });
   }
-  next();
 };
 
 const isPemilik = async (req, res, next) => {
-  if (req.user.role !== "Pemilik") {
+  // 1. Ambil role dan ubah ke huruf kecil semua (lowercase)
+  // Ini akan mengubah "Pemilik" -> "pemilik", "OWNER" -> "owner", dll.
+  const role = req.user?.role?.toLowerCase();
+
+  // 2. Cek apakah role adalah "pemilik" ATAU "owner"
+  if (role === "pemilik" || role === "owner") {
+    next();
+  } else {
     return res.status(403).json({ error: "Forbidden" });
   }
-  next();
 };
 
 module.exports = {
