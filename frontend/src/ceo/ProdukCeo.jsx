@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import { Plus, X, Edit, Trash2, Upload, FileText } from "lucide-react"; // Tambah FileText
-import { useNavigate } from "react-router-dom"; // Tambah useNavigate
+import { Plus, X, Edit, Trash2, Upload, FileText } from "lucide-react"; 
+import { useNavigate } from "react-router-dom"; 
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
 function ProdukCeo({ produk = [], onAdd, onUpdate, onDelete }) {
-  const navigate = useNavigate(); // Init hook
+  const navigate = useNavigate(); 
   const [form, setForm] = useState({
     name: "",
     category: "",
@@ -19,7 +19,6 @@ function ProdukCeo({ produk = [], onAdd, onUpdate, onDelete }) {
   const [imagePreview, setImagePreview] = useState(null);
   const [editingId, setEditingId] = useState(null);
 
-  // ... (handleImageChange, handleSubmit, handleCancel, handleEdit, handleDelete - TIDAK BERUBAH)
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file && (file.type === "image/png" || file.type === "image/jpeg")) {
@@ -123,32 +122,32 @@ function ProdukCeo({ produk = [], onAdd, onUpdate, onDelete }) {
       <div className="space-y-8">
         {/* Form Section */}
         <div className="bg-white text-black shadow-lg rounded-lg p-6 border-2 border-black">
-          <div className="flex flex-col sm:flex-row justify-between items-center mb-6 pb-4 border-b-2 border-black gap-4">
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 pb-4 border-b-2 border-black gap-4">
             <h2 className="text-2xl font-bold">
               {editingId ? "Edit Detail Produk" : "Tambah Produk Baru"}
             </h2>
             
-            <div className="flex gap-2 flex-wrap">
+            <div className="flex flex-wrap gap-2 w-full lg:w-auto">
               <button
                 onClick={() => navigate("/laporan-barang-terlaku-ceo")}
-                className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition shadow-md font-bold"
+                className="flex items-center justify-center flex-1 lg:flex-none gap-2 bg-black text-white px-3 py-2 rounded-lg hover:bg-gray-800 transition shadow-md font-bold text-sm"
               >
-                <FileText size={20} />
-                <span>Laporan Barang</span>
+                <FileText size={16} />
+                <span>Barang</span>
               </button>
               <button
                 onClick={() => navigate("/laporan-stok-ceo")}
-                className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition shadow-md font-bold"
+                className="flex items-center justify-center flex-1 lg:flex-none gap-2 bg-purple-600 text-white px-3 py-2 rounded-lg hover:bg-purple-700 transition shadow-md font-bold text-sm"
               >
-                <FileText size={20} />
-                <span>Laporan Stok</span>
+                <FileText size={16} />
+                <span>Stok</span>
               </button>
               <button
                 onClick={() => navigate("/laporan-movement-ceo")}
-                className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition shadow-md font-bold"
+                className="flex items-center justify-center flex-1 lg:flex-none gap-2 bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 transition shadow-md font-bold text-sm"
               >
-                <FileText size={20} />
-                <span>Laporan Masuk/Keluar</span>
+                <FileText size={16} />
+                <span>Masuk/Keluar</span>
               </button>
             </div>
           </div>
@@ -157,7 +156,6 @@ function ProdukCeo({ produk = [], onAdd, onUpdate, onDelete }) {
             onSubmit={handleSubmit}
             className="grid grid-cols-1 md:grid-cols-2 gap-6"
           >
-            {/* ... (Isi form SAMA PERSIS dengan kode Anda sebelumnya) ... */}
             <div className="md:col-span-2">
               <label className="block text-sm font-bold mb-1">
                 Nama Produk
@@ -191,8 +189,8 @@ function ProdukCeo({ produk = [], onAdd, onUpdate, onDelete }) {
               <label className="block text-sm font-bold mb-1">
                 Gambar Produk (PNG/JPG)
               </label>
-              <div className="flex items-center gap-4">
-                <div className="w-24 h-24 flex items-center justify-center border-2 border-black rounded bg-gray-100 overflow-hidden">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                <div className="w-24 h-24 flex items-center justify-center border-2 border-black rounded bg-gray-100 overflow-hidden shrink-0">
                   {imagePreview ? (
                     <img
                       src={imagePreview}
@@ -203,7 +201,7 @@ function ProdukCeo({ produk = [], onAdd, onUpdate, onDelete }) {
                     <span className="text-gray-400 text-sm">Pratinjau</span>
                   )}
                 </div>
-                <div>
+                <div className="w-full">
                   <input
                     type="file"
                     id="image-upload"
@@ -213,7 +211,7 @@ function ProdukCeo({ produk = [], onAdd, onUpdate, onDelete }) {
                   />
                   <label
                     htmlFor="image-upload"
-                    className="bg-blue-600 text-white px-5 py-3 rounded font-bold hover:bg-black cursor-pointer flex items-center text-sm"
+                    className="bg-blue-600 text-white px-5 py-3 rounded font-bold hover:bg-black cursor-pointer flex items-center justify-center sm:justify-start text-sm w-full sm:w-auto"
                   >
                     <Upload size={16} className="mr-2" /> Upload Image
                   </label>
@@ -283,11 +281,11 @@ function ProdukCeo({ produk = [], onAdd, onUpdate, onDelete }) {
                 required
               />
             </div>
-            <div className="flex space-x-4 md:col-span-2">
+            <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 md:col-span-2">
               <button
                 type="submit"
                 disabled={isFormInvalid}
-                className={`bg-black text-white px-6 py-3 rounded font-bold flex items-center ${
+                className={`bg-black text-white px-6 py-3 rounded font-bold flex items-center justify-center ${
                   isFormInvalid
                     ? "opacity-50 cursor-not-allowed"
                     : "hover:bg-gray-800"
@@ -300,7 +298,7 @@ function ProdukCeo({ produk = [], onAdd, onUpdate, onDelete }) {
                 <button
                   type="button"
                   onClick={handleCancel}
-                  className="bg-white text-black border-2 border-black px-6 py-3 rounded font-bold flex items-center hover:bg-gray-100"
+                  className="bg-white text-black border-2 border-black px-6 py-3 rounded font-bold flex items-center justify-center hover:bg-gray-100"
                 >
                   <X className="w-5 h-5 mr-2" /> Batal Edit
                 </button>
@@ -309,29 +307,29 @@ function ProdukCeo({ produk = [], onAdd, onUpdate, onDelete }) {
           </form>
         </div>
 
-        {/* List Produk Section - Tidak Berubah */}
+        {/* List Produk Section */}
         <div className="bg-white text-black shadow-lg rounded-lg p-6 border-2 border-black">
           <h2 className="text-2xl font-bold mb-4">Daftar Inventaris Produk</h2>
           <div className="overflow-x-auto max-h-96 overflow-y-auto border-2 border-black rounded-lg">
             <table className="w-full border-collapse">
               <thead className="bg-gray-100 sticky top-0">
                 <tr>
-                  <th className="p-3 border-2 border-black text-left font-bold">
+                  <th className="p-3 border-2 border-black text-left font-bold min-w-[80px]">
                     Gambar
                   </th>
-                  <th className="p-3 border-2 border-black text-left font-bold">
+                  <th className="p-3 border-2 border-black text-left font-bold min-w-[150px]">
                     Nama Produk
                   </th>
-                  <th className="p-3 border-2 border-black text-left font-bold">
+                  <th className="p-3 border-2 border-black text-left font-bold min-w-[100px]">
                     Kategori
                   </th>
-                  <th className="p-3 border-2 border-black text-left font-bold">
+                  <th className="p-3 border-2 border-black text-left font-bold min-w-[120px]">
                     Harga
                   </th>
-                  <th className="p-3 border-2 border-black text-left font-bold">
+                  <th className="p-3 border-2 border-black text-left font-bold min-w-[80px]">
                     Stok
                   </th>
-                  <th className="p-3 border-2 border-black text-center font-bold">
+                  <th className="p-3 border-2 border-black text-center font-bold min-w-[100px]">
                     Aksi
                   </th>
                 </tr>
@@ -372,7 +370,7 @@ function ProdukCeo({ produk = [], onAdd, onUpdate, onDelete }) {
                         Rp {p.price.toLocaleString("id-ID")}
                       </td>
                       <td className="p-3 border-x-2 border-black">{p.stock}</td>
-                      <td className="p-3 border-x-2 border-black text-center space-x-2">
+                      <td className="p-3 border-x-2 border-black text-center space-x-2 whitespace-nowrap">
                         <button
                           onClick={() => handleEdit(p)}
                           className="p-2 text-black hover:bg-gray-200 rounded-full transition-colors"

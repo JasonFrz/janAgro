@@ -1,6 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, FileText, CreditCard, Percent, TrendingUp } from "lucide-react";
+import {
+  ArrowLeft,
+  FileText,
+  CreditCard,
+  Percent,
+  TrendingUp,
+} from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useDispatch, useSelector } from "react-redux";
@@ -100,7 +106,10 @@ const LaporanMetodePembayaranCeo = () => {
       legend: { display: true },
       title: {
         display: true,
-        text: `Distribusi Metode Pembayaran - ${new Date(2024, filterMonth - 1).toLocaleString("id-ID", { month: "long" })} ${filterYear}`,
+        text: `Distribusi Metode Pembayaran - ${new Date(
+          2024,
+          filterMonth - 1
+        ).toLocaleString("id-ID", { month: "long" })} ${filterYear}`,
         font: { size: 16, weight: "bold" },
         color: "#000",
       },
@@ -135,7 +144,8 @@ const LaporanMetodePembayaranCeo = () => {
 
     let rowNum = 1;
     Object.entries(paymentStats).forEach(([method, data]) => {
-      const percentage = totalRevenue > 0 ? ((data.total / totalRevenue) * 100).toFixed(1) : 0;
+      const percentage =
+        totalRevenue > 0 ? ((data.total / totalRevenue) * 100).toFixed(1) : 0;
       tableRows.push([
         rowNum++,
         method,
@@ -146,8 +156,12 @@ const LaporanMetodePembayaranCeo = () => {
     });
 
     const date = new Date();
-    const fullDate = `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}`;
-    const monthName = new Date(2024, filterMonth - 1).toLocaleString("id-ID", { month: "long" });
+    const fullDate = `${date.getDate()}-${
+      date.getMonth() + 1
+    }-${date.getFullYear()}`;
+    const monthName = new Date(2024, filterMonth - 1).toLocaleString("id-ID", {
+      month: "long",
+    });
 
     autoTable(doc, {
       head: [tableColumn],
@@ -218,7 +232,11 @@ const LaporanMetodePembayaranCeo = () => {
         // Summary
         doc.setFontSize(9);
         doc.setFont("helvetica", "bold");
-        doc.text(`Total Revenue: Rp ${totalRevenue.toLocaleString("id-ID")}`, margin, 50);
+        doc.text(
+          `Total Revenue: Rp ${totalRevenue.toLocaleString("id-ID")}`,
+          margin,
+          50
+        );
         doc.text(`Total Transaksi: ${filteredOrders.length}`, margin + 100, 50);
 
         if (data.pageNumber === doc.internal.getNumberOfPages()) {
@@ -247,7 +265,12 @@ const LaporanMetodePembayaranCeo = () => {
           });
           const nameWidth = doc.getTextWidth("J.Alamsjah, S.H");
           doc.setLineWidth(0.5);
-          doc.line(signatureX - nameWidth, finalY + 21, signatureX, finalY + 21);
+          doc.line(
+            signatureX - nameWidth,
+            finalY + 21,
+            signatureX,
+            finalY + 21
+          );
           doc.setFont("helvetica", "normal");
           doc.setFontSize(9);
           doc.text("Ceo & Founder", signatureX, finalY + 25, {
@@ -256,7 +279,9 @@ const LaporanMetodePembayaranCeo = () => {
         }
       },
     });
-    doc.save(`laporan_metode_pembayaran_${filterYear}-${filterMonth}_${fullDate}.pdf`);
+    doc.save(
+      `laporan_metode_pembayaran_${filterYear}-${filterMonth}_${fullDate}.pdf`
+    );
   };
 
   const years = useMemo(() => {
@@ -268,43 +293,49 @@ const LaporanMetodePembayaranCeo = () => {
   }, [ceoReportData]);
 
   return (
-    <div className="bg-white min-h-screen pt-24 text-black font-sans pb-12">
+    <div className="bg-white min-h-screen pt-20 sm:pt-24 text-black font-sans pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        {/* Header */}
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center border-b-4 border-black pb-4 gap-4">
           <div>
-            <h1 className="text-4xl font-black uppercase tracking-tight">
+            <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tight">
               Laporan Metode Pembayaran
             </h1>
-            <p className="text-gray-600 font-medium mt-1">
+            <p className="text-gray-600 font-medium mt-1 text-sm sm:text-base">
               Analisis distribusi dan performa setiap metode pembayaran.
             </p>
           </div>
           <Link
             to="/ceo"
-            className="flex items-center bg-black text-white px-5 py-2.5 rounded-lg font-bold hover:bg-gray-800 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]"
+            className="flex w-full md:w-auto items-center justify-center bg-black text-white px-5 py-2.5 rounded-lg font-bold hover:bg-gray-800 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]"
           >
             <ArrowLeft className="mr-2 h-5 w-5" /> KEMBALI
           </Link>
         </header>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {/* Stats Cards - Responsive Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {Object.entries(paymentStats).map(([method, data]) => {
-            const percentage = totalRevenue > 0 ? ((data.total / totalRevenue) * 100).toFixed(1) : 0;
+            const percentage =
+              totalRevenue > 0
+                ? ((data.total / totalRevenue) * 100).toFixed(1)
+                : 0;
             return (
               <div
                 key={method}
                 className="bg-white border-2 border-black p-6 rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"
               >
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-gray-600 text-xs font-bold uppercase">{method}</p>
+                  <div className="overflow-hidden">
+                    <p className="text-gray-600 text-xs font-bold uppercase truncate">
+                      {method}
+                    </p>
                     <p className="text-2xl font-black">{data.count}</p>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <p className="text-sm text-gray-500 mt-1 truncate">
                       {percentage}% dari revenue
                     </p>
                   </div>
-                  <CreditCard className="h-12 w-12 text-blue-600" />
+                  <CreditCard className="h-10 w-10 sm:h-12 sm:w-12 text-blue-600 shrink-0" />
                 </div>
               </div>
             );
@@ -317,50 +348,58 @@ const LaporanMetodePembayaranCeo = () => {
             <div className="animate-spin rounded-full h-12 w-12 border-4 border-black border-t-transparent"></div>
           </div>
         ) : (
-          <div className="bg-white border-2 border-black p-6 rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-            <div className="h-80 w-full">
+          <div className="bg-white border-2 border-black p-4 sm:p-6 rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+            <div className="h-64 sm:h-80 w-full">
               <Bar data={chartData} options={chartOptions} />
             </div>
           </div>
         )}
 
-        {/* Filter & Export */}
+        {/* Filter & Export - Stack on mobile */}
         <div className="bg-white border-2 border-black p-6 rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
           <div className="flex flex-col md:flex-row justify-between items-end md:items-center gap-4">
-            <div className="flex gap-3">
-              <select
-                value={filterMonth}
-                onChange={(e) => setFilterMonth(parseInt(e.target.value))}
-                className="border-2 border-black rounded px-3 py-2 font-bold focus:outline-none focus:ring-2 focus:ring-black"
-              >
-                {Array.from({ length: 12 }, (_, i) => (
-                  <option key={i + 1} value={i + 1}>
-                    {new Date(0, i).toLocaleString("id-ID", { month: "long" })}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={filterYear}
-                onChange={(e) => setFilterYear(parseInt(e.target.value))}
-                className="border-2 border-black rounded px-3 py-2 font-bold focus:outline-none focus:ring-2 focus:ring-black"
-              >
-                {years.map((y) => (
-                  <option key={y} value={y}>
-                    {y}
-                  </option>
-                ))}
-              </select>
+            <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+              <div className="flex flex-col w-full sm:w-auto">
+                <label className="text-xs font-bold uppercase mb-1 md:hidden">Bulan</label>
+                <select
+                  value={filterMonth}
+                  onChange={(e) => setFilterMonth(parseInt(e.target.value))}
+                  className="border-2 border-black rounded px-3 py-2 font-bold focus:outline-none focus:ring-2 focus:ring-black w-full sm:w-auto"
+                >
+                  {Array.from({ length: 12 }, (_, i) => (
+                    <option key={i + 1} value={i + 1}>
+                      {new Date(0, i).toLocaleString("id-ID", { month: "long" })}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              <div className="flex flex-col w-full sm:w-auto">
+                <label className="text-xs font-bold uppercase mb-1 md:hidden">Tahun</label>
+                <select
+                  value={filterYear}
+                  onChange={(e) => setFilterYear(parseInt(e.target.value))}
+                  className="border-2 border-black rounded px-3 py-2 font-bold focus:outline-none focus:ring-2 focus:ring-black w-full sm:w-auto"
+                >
+                  {years.map((y) => (
+                    <option key={y} value={y}>
+                      {y}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
+            
             <button
               onClick={handleExportPDF}
-              className="bg-green-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-green-700 transition-all border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] flex items-center gap-2"
+              className="w-full sm:w-auto bg-green-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-green-700 transition-all border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] flex items-center justify-center gap-2"
             >
               <FileText size={20} /> Export PDF
             </button>
           </div>
         </div>
 
-        {/* Table */}
+        {/* Table - Scrollable */}
         {loading ? (
           <div className="flex justify-center items-center h-64 border-2 border-black rounded-lg bg-gray-50">
             <div className="animate-spin rounded-full h-12 w-12 border-4 border-black border-t-transparent"></div>
@@ -372,7 +411,7 @@ const LaporanMetodePembayaranCeo = () => {
             </h2>
             <div className="bg-white border-2 border-black rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
               <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
+                <table className="w-full text-left border-collapse min-w-[700px]">
                   <thead className="bg-black text-white sticky top-0 z-10">
                     <tr>
                       <th className="p-4 font-bold border-r border-gray-700 w-16 text-center">
@@ -387,45 +426,40 @@ const LaporanMetodePembayaranCeo = () => {
                       <th className="p-4 font-bold border-r border-gray-700 text-right">
                         Total Revenue
                       </th>
-                      <th className="p-4 font-bold text-center">
-                        Persentase
-                      </th>
+                      <th className="p-4 font-bold text-center">Persentase</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {Object.entries(paymentStats).map(
-                      ([method, data], idx) => {
-                        const percentage =
-                          totalRevenue > 0
-                            ? ((data.total / totalRevenue) * 100).toFixed(1)
-                            : 0;
-                        return (
-                          <tr
-                            key={method}
-                            className="border-b-2 border-gray-200 hover:bg-gray-50 transition-colors"
-                          >
-                            <td className="p-4 font-black text-center border-r-2 border-gray-200 text-lg">
-                              {idx + 1}
-                            </td>
-                            <td className="p-4 border-r-2 border-gray-200 font-bold">
-                              {method}
-                            </td>
-                            <td className="p-4 border-r-2 border-gray-200 text-center font-bold">
-                              {data.count}
-                            </td>
-                            <td className="p-4 border-r-2 border-gray-200 text-right font-mono">
-                              Rp{" "}
-                              {data.total.toLocaleString("id-ID")}
-                            </td>
-                            <td className="p-4 text-center">
-                              <span className="px-3 py-1 rounded-full font-bold text-white bg-blue-600">
-                                {percentage}%
-                              </span>
-                            </td>
-                          </tr>
-                        );
-                      }
-                    )}
+                    {Object.entries(paymentStats).map(([method, data], idx) => {
+                      const percentage =
+                        totalRevenue > 0
+                          ? ((data.total / totalRevenue) * 100).toFixed(1)
+                          : 0;
+                      return (
+                        <tr
+                          key={method}
+                          className="border-b-2 border-gray-200 hover:bg-gray-50 transition-colors"
+                        >
+                          <td className="p-4 font-black text-center border-r-2 border-gray-200 text-lg">
+                            {idx + 1}
+                          </td>
+                          <td className="p-4 border-r-2 border-gray-200 font-bold">
+                            {method}
+                          </td>
+                          <td className="p-4 border-r-2 border-gray-200 text-center font-bold">
+                            {data.count}
+                          </td>
+                          <td className="p-4 border-r-2 border-gray-200 text-right font-mono whitespace-nowrap">
+                            Rp {data.total.toLocaleString("id-ID")}
+                          </td>
+                          <td className="p-4 text-center">
+                            <span className="px-3 py-1 rounded-full font-bold text-white bg-blue-600 text-sm">
+                              {percentage}%
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
                     <tr className="border-t-4 border-black bg-gray-100">
                       <td colSpan="2" className="p-4 font-black text-lg">
                         TOTAL
@@ -433,7 +467,7 @@ const LaporanMetodePembayaranCeo = () => {
                       <td className="p-4 font-black text-center text-lg">
                         {filteredOrders.length}
                       </td>
-                      <td className="p-4 text-right font-mono font-black">
+                      <td className="p-4 text-right font-mono font-black whitespace-nowrap">
                         Rp {totalRevenue.toLocaleString("id-ID")}
                       </td>
                       <td className="p-4 text-center font-bold">100%</td>

@@ -24,15 +24,11 @@ const formatPhoneNumber = (phone) => {
 };
 
 const Profile = ({ user, onProfileSave, onAvatarUpdateSuccess }) => {
-  // console.log("Data user yang diterima di Profile:", user);
-  
   const [preview, setPreview] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const fileInputRef = useRef(null);
   const [uploadError, setUploadError] = useState('');
 
-  // --- PERUBAHAN DI SINI ---
-  // Menggunakan user.avatar langsung karena URL Cloudinary sudah lengkap (absolute)
   useEffect(() => {
     if (user && user.avatar) {
       setPreview(user.avatar);
@@ -46,9 +42,6 @@ const Profile = ({ user, onProfileSave, onAvatarUpdateSuccess }) => {
     if (!file) return;
 
     if (file && file.type.startsWith("image/")) {
-      // Opsi: Tampilkan preview lokal segera sebelum upload selesai (agar terasa cepat)
-      // setPreview(URL.createObjectURL(file)); 
-
       const formData = new FormData();
       formData.append("avatar", file);
 
@@ -59,7 +52,6 @@ const Profile = ({ user, onProfileSave, onAvatarUpdateSuccess }) => {
             return;
         }
 
-        // Request ke backend (yang akan upload ke Cloudinary)
         const response = await axios.put(
           `${API_URL}/users/update-avatar/${user._id}`,
           formData,
@@ -72,10 +64,7 @@ const Profile = ({ user, onProfileSave, onAvatarUpdateSuccess }) => {
         );
         
         if (response.data.success) {
-          // Update state global di parent component (App.jsx / Layout)
           onAvatarUpdateSuccess(response.data.user); 
-          
-          // Update preview lokal dengan URL baru dari Cloudinary
           setPreview(response.data.user.avatar); 
           setUploadError('');
         }
@@ -83,8 +72,6 @@ const Profile = ({ user, onProfileSave, onAvatarUpdateSuccess }) => {
         console.error("Upload error:", error);
         const message = error.response?.data?.message || "Gagal mengupload gambar.";
         setUploadError(message);
-        
-        // Kembalikan preview ke gambar lama jika gagal
         setPreview(user?.avatar || null);
       }
     } else {
@@ -117,21 +104,21 @@ const Profile = ({ user, onProfileSave, onAvatarUpdateSuccess }) => {
 
       <div className="bg-white min-h-screen pt-24 pb-12">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white p-8 md:p-12 rounded-lg border border-gray-200 shadow-sm">
-            <div className="text-center mb-10">
-              <h1 className="text-4xl font-bold text-black">
+          <div className="bg-white p-6 sm:p-8 md:p-12 rounded-lg border border-gray-200 shadow-sm">
+            <div className="text-center mb-8 sm:mb-10">
+              <h1 className="text-3xl sm:text-4xl font-bold text-black">
                 Pengaturan Akun
               </h1>
-              <p className="text-gray-500 mt-2">
+              <p className="text-sm sm:text-base text-gray-500 mt-2">
                 Kelola detail profil dan akun Anda.
               </p>
             </div>
             
             {uploadError && <p className="text-center text-red-500 mb-4">{uploadError}</p>}
             
-            <div className="flex flex-col items-center space-y-4 mb-12">
+            <div className="flex flex-col items-center space-y-4 mb-8 sm:mb-12">
               <div className="relative">
-                <div className="w-32 h-32 rounded-full bg-gray-100 flex items-center justify-center border-2 border-gray-200 overflow-hidden">
+                <div className="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-gray-100 flex items-center justify-center border-2 border-gray-200 overflow-hidden">
                   {preview ? (
                     <img
                       src={preview}
@@ -144,10 +131,10 @@ const Profile = ({ user, onProfileSave, onAvatarUpdateSuccess }) => {
                 </div>
                 <button
                   onClick={handleCameraClick}
-                  className="absolute bottom-1 right-1 w-10 h-10 bg-black rounded-full flex items-center justify-center text-white hover:bg-gray-800 transition-colors border-2 border-white"
+                  className="absolute bottom-1 right-1 w-8 h-8 sm:w-10 sm:h-10 bg-black rounded-full flex items-center justify-center text-white hover:bg-gray-800 transition-colors border-2 border-white"
                   aria-label="Change avatar"
                 >
-                  <Camera size={20} />
+                  <Camera size={18} />
                 </button>
                 <input
                   type="file"
@@ -157,60 +144,35 @@ const Profile = ({ user, onProfileSave, onAvatarUpdateSuccess }) => {
                   accept="image/png, image/jpeg"
                 />
               </div>
-              <h2 className="text-2xl font-semibold text-black">{user.name}</h2>
+              <h2 className="text-xl sm:text-2xl font-semibold text-black">{user.name}</h2>
             </div>
 
-            <div className="border-t border-gray-200 pt-8">
-              <h3 className="text-xl font-semibold text-black mb-6">
+            <div className="border-t border-gray-200 pt-6 sm:pt-8">
+              <h3 className="text-lg sm:text-xl font-semibold text-black mb-4 sm:mb-6">
                 Informasi Profil
               </h3>
               <div className="space-y-4">
-                <div className="flex items-center p-4 bg-gray-50 rounded-lg">
-                  <User className="text-gray-400 mr-4 flex-shrink-0" size={20} />
-                  <div className="flex-grow">
-                    <p className="text-sm text-gray-500">Nama Lengkap</p>
-                    <p className="text-black font-medium">{user.name}</p>
-                  </div>
-                </div>
-                <div className="flex items-center p-4 bg-gray-50 rounded-lg">
-                  <AtSign className="text-gray-400 mr-4 flex-shrink-0" size={20} />
-                  <div className="flex-grow">
-                    <p className="text-sm text-gray-500">Username</p>
-                    <p className="text-black font-medium">{user.username}</p>
-                  </div>
-                </div>
-                <div className="flex items-center p-4 bg-gray-50 rounded-lg">
-                  <Mail className="text-gray-400 mr-4 flex-shrink-0" size={20} />
-                  <div className="flex-grow">
-                    <p className="text-sm text-gray-500">Email</p>
-                    <p className="text-black font-medium">{user.email}</p>
-                  </div>
-                </div>
-                <div className="flex items-center p-4 bg-gray-50 rounded-lg">
-                  <Phone className="text-gray-400 mr-4 flex-shrink-0" size={20} />
-                  <div className="flex-grow">
-                    <p className="text-sm text-gray-500">Phone Number</p>
-                    <p className="text-black font-medium">
-                       {formatPhoneNumber(user.phone)}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-start p-4 bg-gray-50 rounded-lg">
-                  <MapPin className="text-gray-400 mr-4 flex-shrink-0 mt-1" size={20} />
-                  <div className="flex-grow">
-                    <p className="text-sm text-gray-500">Address</p>
-                    <p className="text-black font-medium whitespace-pre-line">
-                      {user.address || "Alamat belum diatur"}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center p-4 bg-gray-50 rounded-lg">
-                  <Calendar className="text-gray-400 mr-4 flex-shrink-0" size={20} />
-                  <div className="flex-grow">
-                    <p className="text-sm text-gray-500">Joined Since</p>
-                    <p className="text-black font-medium">{user.joinDate || new Date(user.createdAt).toLocaleDateString("id-ID")}</p>
-                  </div>
-                </div>
+                {[
+                    { Icon: User, label: "Nama Lengkap", val: user.name },
+                    { Icon: AtSign, label: "Username", val: user.username },
+                    { Icon: Mail, label: "Email", val: user.email },
+                    { Icon: Phone, label: "Phone Number", val: formatPhoneNumber(user.phone) },
+                    { Icon: MapPin, label: "Address", val: user.address || "Alamat belum diatur", multiline: true },
+                    { Icon: Calendar, label: "Joined Since", val: user.joinDate || new Date(user.createdAt).toLocaleDateString("id-ID") },
+                ].map((item, idx) => (
+                    <div key={idx} className="flex flex-col sm:flex-row sm:items-start p-4 bg-gray-50 rounded-lg">
+                        <div className="flex items-center mb-2 sm:mb-0">
+                            <item.Icon className="text-gray-400 mr-4 flex-shrink-0" size={20} />
+                            <p className="text-sm text-gray-500 sm:w-32 sm:hidden">{item.label}</p>
+                        </div>
+                        <div className="flex-grow sm:ml-4">
+                            <p className="hidden sm:block text-sm text-gray-500">{item.label}</p>
+                            <p className={`text-black font-medium text-sm sm:text-base ${item.multiline ? 'whitespace-pre-line break-words' : 'break-all'}`}>
+                                {item.val}
+                            </p>
+                        </div>
+                    </div>
+                ))}
               </div>
             </div>
             <div className="border-t border-gray-200 mt-8 pt-8">

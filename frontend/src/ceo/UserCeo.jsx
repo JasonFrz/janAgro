@@ -38,7 +38,6 @@ function UserCeo() {
   const navigate = useNavigate();
 
   const API_URL = import.meta.env.VITE_API_URL;
-  // const BASE_SERVER_URL = API_URL.replace("/api", ""); // HAPUS INI
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -159,11 +158,10 @@ function UserCeo() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="flex-shrink-0 h-12 w-12">
-                        {/* --- PERUBAHAN DI SINI --- */}
                         {user.avatar ? (
                           <img
                             className="h-12 w-12 rounded-full object-cover"
-                            src={user.avatar} // Langsung pakai URL Cloudinary
+                            src={user.avatar} 
                             alt={user.name}
                           />
                         ) : (
@@ -299,22 +297,20 @@ function UserCeo() {
         confirmButtonText={details.btnText}
         confirmButtonColor={details.btnColor}
       />
-      <div className="bg-white border-2 border-black rounded-lg p-6 space-y-8 shadow-xl">
-        <div className="flex justify-between items-center pb-4 border-b-2 border-black">
+      <div className="bg-white border-2 border-black rounded-lg p-4 sm:p-6 space-y-8 shadow-xl">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-4 border-b-2 border-black gap-4">
           <h2 className="text-2xl font-black">User Management</h2>
-          <div className="flex gap-3">
-            {" "}
-            {/* Bungkus tombol dalam div flex */}
+          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
             <button
-              onClick={() => navigate("/laporan-user-ceo")} // Navigasi ke laporan
-              className="flex items-center justify-center px-4 py-2 bg-white text-black font-bold rounded-lg border-2 border-black hover:bg-gray-100 transition-colors shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]"
+              onClick={() => navigate("/laporan-user-ceo")}
+              className="flex items-center justify-center px-4 py-2 bg-white text-black font-bold rounded-lg border-2 border-black hover:bg-gray-100 transition-colors shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] w-full sm:w-auto"
             >
               <FileText size={20} className="mr-2" />
-              Laporan Register User
+              Laporan User
             </button>
               <button
               onClick={() => setCreateAdminModalOpen(true)}
-              className="flex items-center justify-center px-4 py-2 bg-black text-white font-bold rounded-lg hover:bg-gray-800 transition-colors shadow-[2px_2px_0px_0px_rgba(0,0,0,0.5)]"
+              className="flex items-center justify-center px-4 py-2 bg-black text-white font-bold rounded-lg hover:bg-gray-800 transition-colors shadow-[2px_2px_0px_0px_rgba(0,0,0,0.5)] w-full sm:w-auto"
             >
               <PlusCircle size={20} className="mr-2" />
               Create Admin

@@ -18,9 +18,8 @@ const Review = () => {
   const { productId } = useParams();
   const navigate = useNavigate();
   
-  // Dua ref berbeda untuk kebutuhan berbeda
-  const galleryInputRef = useRef(null); // Untuk multiple select dari gallery
-  const cameraInputRef = useRef(null);  // Untuk capture langsung
+  const galleryInputRef = useRef(null); 
+  const cameraInputRef = useRef(null);  
 
   const { token } = useSelector((state) => state.users);
 
@@ -31,7 +30,6 @@ const Review = () => {
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState("");
   
-  // State untuk menyimpan Array File
   const [selectedFiles, setSelectedFiles] = useState([]); 
   const [previews, setPreviews] = useState([]);
   
@@ -55,19 +53,16 @@ const Review = () => {
     if (productId) fetchProduct();
   }, [productId]);
 
-  // Handle ketika user memilih file (dari galeri atau kamera)
   const handleFileChange = (event) => {
     const files = Array.from(event.target.files);
     
     if (files.length === 0) return;
 
-    // Validasi jumlah total max 6
     if (selectedFiles.length + files.length > 6) {
       alert("You can only upload a maximum of 6 photos/videos.");
       return;
     }
 
-    // Validasi tipe file & size (opsional: max 10MB per file)
     const validFiles = files.filter(file => {
       const isMedia = file.type.startsWith("image/") || file.type.startsWith("video/");
       const isSizeOk = file.size <= 10 * 1024 * 1024; // 10MB
@@ -78,10 +73,8 @@ const Review = () => {
       alert("Some files were rejected. Only Images/Videos under 10MB allowed.");
     }
 
-    // Tambahkan ke state yang ada
     setSelectedFiles(prev => [...prev, ...validFiles]);
 
-    // Buat Preview URL
     const newPreviews = validFiles.map(file => ({
       url: URL.createObjectURL(file),
       type: file.type.startsWith("video") ? "video" : "image"
@@ -93,7 +86,6 @@ const Review = () => {
     const newFiles = [...selectedFiles];
     const newPreviews = [...previews];
     
-    // Revoke object URL agar tidak memory leak
     URL.revokeObjectURL(newPreviews[index].url);
     
     newFiles.splice(index, 1);
@@ -118,7 +110,6 @@ const Review = () => {
       formData.append("rating", rating);
       formData.append("comment", comment);
 
-      // Append semua file ke key yang sama 'media' agar jadi array di backend
       selectedFiles.forEach((file) => {
         formData.append("media", file);
       });
@@ -154,12 +145,13 @@ const Review = () => {
           
           {/* Product Card */}
           {product && (
-            <div className="flex gap-4 items-center bg-gray-50 p-4 rounded-md mb-8 border">
-              <div className="w-16 h-16 bg-white rounded border overflow-hidden">
+            <div className="flex flex-col sm:flex-row gap-4 items-center bg-gray-50 p-4 rounded-md mb-8 border">
+              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-white rounded border overflow-hidden shrink-0">
                 <img src={product.image || "/placeholder.png"} alt={product.name} className="w-full h-full object-cover" />
               </div>
-              <div>
+              <div className="text-center sm:text-left">
                 <p className="font-bold text-gray-900">{product.name}</p>
+                <p className="text-sm text-gray-500">{product.category}</p>
               </div>
             </div>
           )}
@@ -174,6 +166,7 @@ const Review = () => {
                   onClick={() => setRating(star)}
                   onMouseEnter={() => setHoverRating(star)}
                   onMouseLeave={() => setHoverRating(0)}
+                  className="focus:outline-none transition-transform hover:scale-110"
                 >
                   <Star size={32} className={(hoverRating || rating) >= star ? "text-yellow-400 fill-yellow-400" : "text-gray-300"} />
                 </button>
@@ -187,7 +180,7 @@ const Review = () => {
             <textarea
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              className="w-full p-3 border rounded-md focus:ring-2 focus:ring-black"
+              className="w-full p-3 border rounded-md focus:ring-2 focus:ring-black text-sm sm:text-base"
               rows="4"
               placeholder="How was the quality?"
             ></textarea>
@@ -197,17 +190,15 @@ const Review = () => {
           <div className="mb-8">
             <label className="block text-sm font-bold mb-2">Add Photos/Videos (Max 6)</label>
             
-            {/* Input Hidden untuk Galeri (Multiple) */}
             <input
               type="file"
               ref={galleryInputRef}
               onChange={handleFileChange}
               className="hidden"
-              accept="image/*,video/mp4,video/quicktime" // jpg, png, mp4, mov
+              accept="image/*,video/mp4,video/quicktime"
               multiple
             />
             
-            {/* Input Hidden untuk Kamera (Environment/Belakang) */}
             <input
               type="file"
               ref={cameraInputRef}
@@ -217,51 +208,48 @@ const Review = () => {
               capture="environment" 
             />
 
-            <div className="grid grid-cols-3 sm:grid-cols-4 gap-4 mb-4">
+            <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 sm:gap-4 mb-4">
               {/* Preview List */}
               {previews.map((file, idx) => (
-                <div key={idx} className="relative w-full aspect-square border rounded-md overflow-hidden bg-black">
+                <div key={idx} className="relative w-full aspect-square border rounded-md overflow-hidden bg-black group">
                   {file.type === 'video' ? (
                     <video src={file.url} className="w-full h-full object-cover opacity-80" />
                   ) : (
                     <img src={file.url} alt="preview" className="w-full h-full object-cover" />
                   )}
                   
-                  {/* Icon Play Overlay jika Video */}
                   {file.type === 'video' && (
                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <Video className="text-white w-8 h-8" />
+                      <Video className="text-white w-8 h-8 drop-shadow-md" />
                     </div>
                   )}
 
                   <button
                     onClick={() => removeFile(idx)}
-                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                    className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
                   >
                     <X size={12} />
                   </button>
                 </div>
               ))}
 
-              {/* Add Button (Shows if < 6 files) */}
+              {/* Add Button */}
               {selectedFiles.length < 6 && (
                 <div className="flex flex-col gap-2 w-full aspect-square">
-                   {/* Tombol Gallery */}
                    <button
                     onClick={() => galleryInputRef.current.click()}
-                    className="flex-1 border-2 border-dashed border-gray-300 rounded-md flex flex-col items-center justify-center hover:bg-gray-50 text-gray-500"
+                    className="flex-1 border-2 border-dashed border-gray-300 rounded-md flex flex-col items-center justify-center hover:bg-gray-50 text-gray-500 transition-colors"
                   >
                     <ImageIcon size={20} />
-                    <span className="text-xs mt-1">Gallery</span>
+                    <span className="text-[10px] sm:text-xs mt-1">Gallery</span>
                   </button>
                   
-                  {/* Tombol Camera */}
                   <button
                     onClick={() => cameraInputRef.current.click()}
-                    className="flex-1 border-2 border-dashed border-gray-300 rounded-md flex flex-col items-center justify-center hover:bg-gray-50 text-gray-500"
+                    className="flex-1 border-2 border-dashed border-gray-300 rounded-md flex flex-col items-center justify-center hover:bg-gray-50 text-gray-500 transition-colors"
                   >
                     <Camera size={20} />
-                    <span className="text-xs mt-1">Camera</span>
+                    <span className="text-[10px] sm:text-xs mt-1">Camera</span>
                   </button>
                 </div>
               )}
@@ -273,7 +261,7 @@ const Review = () => {
           <button
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className="w-full bg-black text-white py-4 rounded-md font-bold hover:bg-gray-800 disabled:opacity-50"
+            className="w-full bg-black text-white py-4 rounded-md font-bold hover:bg-gray-800 disabled:opacity-50 transition-colors"
           >
             {isSubmitting ? "Submitting..." : "Submit Review"}
           </button>

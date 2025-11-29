@@ -33,7 +33,7 @@ function DashboardAdmin() {
       return { text: "Out of Stock", color: "bg-red-100 text-red-600" };
     if (stock <= 10)
       return {
-        text: "Stock Running Out",
+        text: "Low Stock", // Text dipersingkat untuk mobile
         color: "bg-yellow-100 text-yellow-600",
       };
     return { text: "Available", color: "bg-green-100 text-green-600" };
@@ -79,68 +79,71 @@ function DashboardAdmin() {
 
   return (
     <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      {/* Stats Cards - Responsive Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {cards.map((card, idx) => (
           <div
             key={idx}
-            className="bg-white shadow rounded-lg p-4 flex items-center space-x-4"
+            className="bg-white shadow-md rounded-lg p-5 flex items-center space-x-4 border border-gray-100"
           >
-            <img src={card.icon} alt={card.title} className="w-12 h-12" />
+            <div className="w-12 h-12 flex-shrink-0">
+                <img src={card.icon} alt={card.title} className="w-full h-full object-contain" />
+            </div>
             <div>
-              <p className="text-gray-600">{card.title}</p>
-              <p className="text-3xl font-bold">{card.count}</p>
+              <p className="text-gray-500 text-sm font-medium uppercase tracking-wide">{card.title}</p>
+              <p className="text-3xl font-bold text-gray-900">{card.count}</p>
             </div>
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* User Section */}
-        <div className="bg-white shadow rounded-lg p-4">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold flex items-center space-x-2">
-              <span>Latest Users</span>
-              <button
+        <div className="bg-white shadow-md rounded-lg p-4 sm:p-6 border border-gray-100">
+          <div className="flex items-center justify-between mb-6 pb-2 border-b border-gray-100">
+            <h2 className="text-lg sm:text-xl font-bold text-gray-800 flex items-center gap-2">
+              Latest Users
+            </h2>
+            <button
                 onClick={() => setUserSortAsc(!userSortAsc)}
-                className="p-1 rounded border hover:bg-gray-100"
+                className="p-2 rounded-full hover:bg-gray-100 transition-colors"
                 title={`Sort By Name ${userSortAsc ? "DESC" : "ASC"}`}
               >
                 <img
                   src="/icon/down.png"
                   alt="Sort"
-                  className={`w-4 h-4 transition-transform duration-300 ${
+                  className={`w-5 h-5 transition-transform duration-300 ${
                     userSortAsc ? "rotate-180" : ""
                   }`}
                 />
               </button>
-            </h2>
           </div>
 
           {loading ? (
-            <p className="text-gray-500">Loading...</p>
+            <div className="text-center py-10 text-gray-500">Loading data...</div>
           ) : error ? (
-            <p className="text-red-500">{error}</p>
+            <p className="text-red-500 text-center py-10">{error}</p>
           ) : users?.length === 0 ? (
-            <p className="text-gray-500">No Users Available</p>
+            <p className="text-gray-500 text-center py-10">No Users Available</p>
           ) : (
-            <div className="overflow-y-auto max-h-96">
-              <ul className="divide-y divide-gray-200">
+            <div className="overflow-y-auto max-h-[400px] pr-2 custom-scrollbar">
+              <ul className="divide-y divide-gray-100">
                 {sortedUsers.slice(0, 6).map((user) => {
                   const status = getUserStatus(user.isBanned);
                   return (
                     <li
                       key={user._id}
-                      className="flex items-center justify-between py-3"
+                      className="flex items-center justify-between py-4"
                     >
-                      <div>
-                        <p className="font-medium text-black">{user.name}</p>
-                        <p className="text-sm text-gray-500">
+                      <div className="flex-1 min-w-0 pr-4">
+                        <p className="font-bold text-gray-900 truncate">{user.name}</p>
+                        <p className="text-sm text-gray-500 truncate">
                           @{user.username}
                         </p>
                       </div>
-                      <div className="flex items-center space-x-3">
+                      <div className="flex-shrink-0">
                         <span
-                          className={`px-2 py-1 text-xs rounded-full font-medium ${status.color}`}
+                          className={`px-3 py-1 text-xs rounded-full font-bold uppercase tracking-wider ${status.color}`}
                         >
                           {status.text}
                         </span>
@@ -154,45 +157,45 @@ function DashboardAdmin() {
         </div>
 
         {/* Product Section */}
-        <div className="bg-white shadow rounded-lg p-4">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold flex items-center space-x-2">
-              <span>Product Inventory</span>
-              <button
+        <div className="bg-white shadow-md rounded-lg p-4 sm:p-6 border border-gray-100">
+          <div className="flex items-center justify-between mb-6 pb-2 border-b border-gray-100">
+            <h2 className="text-lg sm:text-xl font-bold text-gray-800">
+              Product Inventory
+            </h2>
+            <button
                 onClick={() => setProdukSortAsc(!produkSortAsc)}
-                className="p-1 rounded border hover:bg-gray-100"
+                className="p-2 rounded-full hover:bg-gray-100 transition-colors"
                 title={`Sort By Stock ${produkSortAsc ? "DESC" : "ASC"}`}
               >
                 <img
                   src="/icon/down.png"
                   alt="Sort"
-                  className={`w-4 h-4 transition-transform duration-300 ${
+                  className={`w-5 h-5 transition-transform duration-300 ${
                     produkSortAsc ? "rotate-180" : ""
                   }`}
                 />
               </button>
-            </h2>
           </div>
 
-          <div className="overflow-y-auto max-h-96">
-            <ul className="divide-y divide-gray-200">
+          <div className="overflow-y-auto max-h-[400px] pr-2 custom-scrollbar">
+            <ul className="divide-y divide-gray-100">
               {sortedProduk.slice(0, 6).map((p) => {
                 const status = getProdukStatus(p.stock);
                 return (
                   <li
                     key={p._id}
-                    className="flex items-center justify-between py-3"
+                    className="flex flex-col sm:flex-row sm:items-center justify-between py-4 gap-2 sm:gap-4"
                   >
-                    <div>
-                      <p className="font-medium">{p.name}</p>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-gray-900 truncate">{p.name}</p>
                       <p className="text-sm text-gray-500">{p.category}</p>
                     </div>
-                    <div className="flex items-center space-x-3">
-                      <span className="text-sm font-semibold">
+                    <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
+                      <span className="text-sm font-semibold text-gray-700">
                         Stock: {p.stock}
                       </span>
                       <span
-                        className={`px-2 py-1 text-xs rounded-full ${status.color}`}
+                        className={`px-3 py-1 text-xs rounded-full font-bold uppercase tracking-wider ${status.color}`}
                       >
                         {status.text}
                       </span>

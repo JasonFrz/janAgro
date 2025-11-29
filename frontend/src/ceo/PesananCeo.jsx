@@ -24,7 +24,7 @@ const StatusBadge = ({ status }) => {
     statusStyles[status] || "bg-gray-100 text-gray-800 border-gray-800";
   return (
     <span
-      className={`px-3 py-1 text-xs rounded-md font-bold border-2 ${style}`}
+      className={`px-3 py-1 text-xs rounded-md font-bold border-2 whitespace-nowrap ${style}`}
     >
       {status ? status.charAt(0).toUpperCase() + status.slice(1) : "Unknown"}
     </span>
@@ -94,8 +94,6 @@ const StatusButton = ({
   );
 };
 
-// --- Main Component ---
-
 function PesananCeo({
   checkouts,
   onUpdateOrderStatus,
@@ -152,10 +150,13 @@ function PesananCeo({
       setActiveDropdown(null);
     } else {
       const rect = e.currentTarget.getBoundingClientRect();
+      // Adjust dropdown position for mobile
+      const leftPos = Math.max(10, Math.min(rect.left + window.scrollX - 100, window.innerWidth - 200));
+      
       setActiveDropdown({
         order,
         top: rect.bottom + window.scrollY,
-        left: rect.left + window.scrollX - 100,
+        left: leftPos,
       });
     }
   };
@@ -182,7 +183,7 @@ function PesananCeo({
   };
 
   const ActionCard = ({ title, count, children }) => (
-    <div className="bg-white p-6 rounded-lg border-2 border-black shadow-lg">
+    <div className="bg-white p-4 sm:p-6 rounded-lg border-2 border-black shadow-lg">
       <h3 className="font-bold text-xl mb-4 pb-2 border-b-2 border-black flex justify-between items-center">
         <span>{title}</span>
         <span className="font-mono bg-black text-white rounded-full px-2.5 py-1 text-sm">
@@ -203,12 +204,12 @@ function PesananCeo({
     <div className="p-3 border-b-2 border-gray-300 last:border-b-0">
       <div className="flex justify-between items-start mb-2">
         <div>
-          <p className="font-bold text-black">
+          <p className="font-bold text-black text-sm sm:text-base">
             Order #{order._id.substring(0, 8)}
           </p>
-          <p className="text-sm text-gray-600">{order.nama}</p>
+          <p className="text-xs sm:text-sm text-gray-600">{order.nama}</p>
         </div>
-        <p className="text-sm font-mono">{formatDate(order.createdAt)}</p>
+        <p className="text-xs sm:text-sm font-mono">{formatDate(order.createdAt)}</p>
       </div>
       <div className="mt-2 flex space-x-2">
         <button
@@ -229,30 +230,29 @@ function PesananCeo({
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h2 className="text-3xl font-black">Order & Request Management</h2>
+      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
+        <h2 className="text-2xl sm:text-3xl font-black">Order & Request Management</h2>
 
-        <div className="flex gap-3">
-          {" "}
+        <div className="flex flex-wrap gap-3 w-full xl:w-auto">
           <button
             onClick={() => navigate("/laporan-user-setia-ceo")}
-            className="flex items-center gap-2 bg-white text-black border-2 border-black px-4 py-2 rounded-lg hover:bg-gray-100 transition shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] font-bold"
+            className="flex-1 xl:flex-none flex items-center justify-center gap-2 bg-white text-black border-2 border-black px-4 py-2 rounded-lg hover:bg-gray-100 transition shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] font-bold text-sm"
           >
-            <Users size={20} />
-            <span>Top Leaderboard Customers</span>
+            <Users size={18} />
+            <span>Top Customers</span>
           </button>
           <button
             onClick={() => navigate("/laporan-order-ceo")}
-            className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition shadow-md font-bold border-2 border-black"
+            className="flex-1 xl:flex-none flex items-center justify-center gap-2 bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition shadow-md font-bold border-2 border-black text-sm"
           >
-            <FileText size={20} />
+            <FileText size={18} />
             <span>Laporan Pesanan</span>
           </button>
           <button
             onClick={() => navigate("/laporan-stok-ceo")}
-            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition shadow-md font-bold border-2 border-blue-600"
+            className="flex-1 xl:flex-none flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition shadow-md font-bold border-2 border-blue-600 text-sm"
           >
-            <FileText size={20} />
+            <FileText size={18} />
             <span>Laporan Stok</span>
           </button>
         </div>
@@ -284,12 +284,12 @@ function PesananCeo({
         </ActionCard>
       </div>
 
-      <div className="bg-white text-black shadow-lg rounded-lg p-6 border-2 border-black">
-        <div className="flex flex-col sm:flex-row justify-between items-center mb-6 pb-4 border-b-2 border-black">
-          <h2 className="text-2xl font-bold mb-4 sm:mb-0">
+      <div className="bg-white text-black shadow-lg rounded-lg p-4 sm:p-6 border-2 border-black">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 pb-4 border-b-2 border-black gap-4">
+          <h2 className="text-xl sm:text-2xl font-bold">
             Comprehensive Order Log
           </h2>
-          <div className="relative w-full sm:w-72">
+          <div className="relative w-full md:w-72">
             <Search
               className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
               size={20}
@@ -307,22 +307,22 @@ function PesananCeo({
           <table className="w-full border-collapse">
             <thead className="bg-gray-100 sticky top-0">
               <tr>
-                <th className="p-3 border-2 border-black text-left font-bold">
+                <th className="p-3 border-2 border-black text-left font-bold min-w-[100px]">
                   Order ID
                 </th>
-                <th className="p-3 border-2 border-black text-left font-bold">
+                <th className="p-3 border-2 border-black text-left font-bold min-w-[150px]">
                   Customer
                 </th>
-                <th className="p-3 border-2 border-black text-left font-bold">
+                <th className="p-3 border-2 border-black text-left font-bold min-w-[120px]">
                   Date
                 </th>
-                <th className="p-3 border-2 border-black text-left font-bold">
+                <th className="p-3 border-2 border-black text-left font-bold min-w-[120px]">
                   Total
                 </th>
-                <th className="p-3 border-2 border-black text-center font-bold">
+                <th className="p-3 border-2 border-black text-center font-bold min-w-[150px]">
                   Status
                 </th>
-                <th className="p-3 border-2 border-black text-center font-bold">
+                <th className="p-3 border-2 border-black text-center font-bold min-w-[180px]">
                   Actions
                 </th>
               </tr>

@@ -160,7 +160,7 @@ const UlasanCeo = () => {
         const logoHeight = 22;
         const margin = data.settings.margin.left;
         const pageWidth = doc.internal.pageSize.getWidth();
-        const textX = margin + logoWidth + 5; // Posisi X teks agar sejajar (BUKAN margin kiri)
+        const textX = margin + logoWidth + 5; 
 
         try {
           doc.addImage(
@@ -193,7 +193,6 @@ const UlasanCeo = () => {
           28
         );
 
-        // Filter Text yang sudah dirapikan (sejajar teks header, bukan di bawah logo)
         doc.setFontSize(8).setFont("helvetica", "italic");
         doc.text(filterText, textX, 32);
 
@@ -244,27 +243,27 @@ const UlasanCeo = () => {
     <div className="space-y-8">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b-2 border-black">
         <div>
-          <h1 className="text-4xl font-black uppercase tracking-tight">
+          <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tight">
             Customer Reviews
           </h1>
           <p className="text-gray-600 font-medium mt-1">
             Monitor feedback dan kepuasan pelanggan.
           </p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3 w-full md:w-auto">
           <button
             onClick={handleExportPDF}
-            className="bg-green-600 text-white border-2 border-black px-4 py-2 rounded-lg font-bold flex items-center gap-2 hover:bg-green-600 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]"
+            className="flex-1 md:flex-none bg-green-600 text-white border-2 border-black px-4 py-2 rounded-lg font-bold flex items-center justify-center gap-2 hover:bg-green-600 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]"
           >
             <FileText size={20} /> <span>Export PDF</span>
           </button>
-          <div className="bg-black text-white px-4 py-2 rounded-lg font-bold flex items-center gap-2 shadow-lg">
+          <div className="flex-1 md:flex-none bg-black text-white px-4 py-2 rounded-lg font-bold flex items-center justify-center gap-2 shadow-lg">
             <MessageSquare size={20} />{" "}
             <span>Total: {filteredReviews.length}</span>
           </div>
         </div>
       </div>
-      <div className="bg-white border-2 border-black p-6 rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+      <div className="bg-white border-2 border-black p-4 sm:p-6 rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="col-span-1 md:col-span-2 lg:col-span-1">
             <label className="text-xs font-bold uppercase mb-2 block">
@@ -277,7 +276,7 @@ const UlasanCeo = () => {
               />
               <input
                 type="text"
-                placeholder="Nama user, produk, atau isi ulasan..."
+                placeholder="Nama user, produk, atau isi..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2.5 border-2 border-black rounded-md font-medium focus:outline-none focus:ring-2 focus:ring-black"
@@ -362,7 +361,7 @@ const UlasanCeo = () => {
               filteredReviews.map((review) => (
                 <div
                   key={review._id}
-                  className="bg-white border-2 border-black rounded-lg p-6 shadow-sm hover:border-gray-500 transition-all duration-200"
+                  className="bg-white border-2 border-black rounded-lg p-4 sm:p-6 shadow-sm hover:border-gray-500 transition-all duration-200"
                 >
                   <div className="flex flex-col md:flex-row gap-6">
                     <div className="md:w-1/4 border-b-2 md:border-b-0 md:border-r-2 border-gray-100 pb-4 md:pb-0 md:pr-6">

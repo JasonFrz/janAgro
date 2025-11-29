@@ -138,72 +138,73 @@ const LaporanStokHabisCeo = () => {
   };
 
   return (
-    <div className="bg-white min-h-screen pt-24 text-black font-sans pb-12">
+    <div className="bg-white min-h-screen pt-20 sm:pt-24 text-black font-sans pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        {/* Header - Responsive */}
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center border-b-4 border-black pb-4 gap-4">
           <div>
-            <h1 className="text-4xl font-black uppercase tracking-tight">
+            <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tight">
               Out of Stock Report
             </h1>
-            <p className="text-gray-600 font-medium mt-1">
+            <p className="text-gray-600 font-medium mt-1 text-sm sm:text-base">
               Pantau semua produk yang telah habis.
             </p>
           </div>
           <Link
             to="/ceo"
-            className="flex items-center bg-black text-white px-5 py-2.5 rounded-lg font-bold hover:bg-gray-800 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]"
+            className="flex w-full md:w-auto items-center justify-center bg-black text-white px-5 py-2.5 rounded-lg font-bold hover:bg-gray-800 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]"
           >
             <ArrowLeft className="mr-2 h-5 w-5" /> KEMBALI
           </Link>
         </header>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="bg-white border-2 border-black p-6 rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+        {/* Stats Cards - Responsive Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="bg-white border-2 border-black p-4 sm:p-6 rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm font-bold">TOTAL PRODUK HABIS</p>
-                <p className="text-3xl font-black">{stockStats.totalOutOfStock}</p>
+                <p className="text-gray-600 text-xs sm:text-sm font-bold">TOTAL PRODUK HABIS</p>
+                <p className="text-2xl sm:text-3xl font-black">{stockStats.totalOutOfStock}</p>
               </div>
-              <AlertTriangle className="h-12 w-12 text-red-600" />
+              <AlertTriangle className="h-10 w-10 sm:h-12 sm:w-12 text-red-600" />
             </div>
           </div>
-          <div className="bg-white border-2 border-black p-6 rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+          <div className="bg-white border-2 border-black p-4 sm:p-6 rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm font-bold">TOTAL NILAI PRODUK</p>
-                <p className="text-3xl font-black">Rp {stockStats.estimatedLoss.toLocaleString("id-ID")}</p>
+                <p className="text-gray-600 text-xs sm:text-sm font-bold">TOTAL NILAI PRODUK</p>
+                <p className="text-2xl sm:text-3xl font-black truncate">Rp {stockStats.estimatedLoss.toLocaleString("id-ID")}</p>
               </div>
-              <Package className="h-12 w-12 text-blue-600" />
+              <Package className="h-10 w-10 sm:h-12 sm:w-12 text-blue-600" />
             </div>
           </div>
         </div>
 
         {/* Export Button */}
-        <div className="bg-white border-2 border-black p-6 rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+        <div className="bg-white border-2 border-black p-4 sm:p-6 rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
           <div className="flex justify-end">
             <button
               onClick={handleExportPDF}
-              className="bg-green-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-green-700 transition-all border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] flex items-center gap-2"
+              className="w-full sm:w-auto bg-green-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-green-700 transition-all border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] flex items-center justify-center gap-2"
             >
               <FileText size={20} /> Export PDF
             </button>
           </div>
         </div>
 
-        {/* Table */}
+        {/* Table - Scrollable */}
         {loading ? (
           <div className="flex justify-center items-center h-64 border-2 border-black rounded-lg bg-gray-50">
             <div className="animate-spin rounded-full h-12 w-12 border-4 border-black border-t-transparent"></div>
           </div>
         ) : (
           <div className="space-y-4">
-            <h2 className="text-2xl font-black uppercase flex items-center gap-2">
+            <h2 className="text-xl sm:text-2xl font-black uppercase flex items-center gap-2">
               <Package className="text-black" /> Detail Produk Habis
             </h2>
             <div className="bg-white border-2 border-black rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
               <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
-                <table className="w-full text-left border-collapse">
+                <table className="w-full text-left border-collapse min-w-[600px]">
                   <thead className="bg-black text-white sticky top-0 z-10">
                     <tr>
                       <th className="p-4 font-bold border-r border-gray-700 w-16 text-center">#</th>
@@ -233,7 +234,7 @@ const LaporanStokHabisCeo = () => {
                           </td>
                           <td className="p-4 border-r-2 border-gray-200 font-bold text-lg">{item.name}</td>
                           <td className="p-4 border-r-2 border-gray-200 text-gray-700">{item.category || "-"}</td>
-                          <td className="p-4 text-right font-mono font-bold text-green-700">
+                          <td className="p-4 text-right font-mono font-bold text-green-700 whitespace-nowrap">
                             Rp {item.price.toLocaleString("id-ID")}
                           </td>
                         </tr>

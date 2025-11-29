@@ -27,36 +27,37 @@ const Jumbotron = () => {
     >
       <div className="absolute inset-0 bg-black/60"></div>
 
-      <div className="relative z-10 text-center text-white max-w-5xl mx-auto px-4">
+      <div className="relative z-10 text-center text-white max-w-5xl mx-auto px-4 sm:px-6">
         <div className="mb-8">
-          <p className="text-sm md:text-base tracking-[0.3em] uppercase text-gray-300 mb-6 font-light">
+          <p className="text-xs sm:text-sm md:text-base tracking-[0.2em] sm:tracking-[0.3em] uppercase text-gray-300 mb-4 sm:mb-6 font-light">
             BERSAMA PETANI MEMBANGUN NEGERI
           </p>
-          <h1 className="text-7xl md:text-9xl font-thin mb-8 tracking-tight">
+          {/* Responsive Font Size untuk Judul */}
+          <h1 className="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-thin mb-6 sm:mb-8 tracking-tight">
             <span className="font-bold">JAN AGRO</span>
           </h1>
-          <div className="w-24 h-[2px] bg-white mx-auto mb-8"></div>
-          <h2 className="text-2xl md:text-4xl font-light mb-10 text-gray-200 tracking-wide">
+          <div className="w-16 sm:w-24 h-[2px] bg-white mx-auto mb-6 sm:mb-8"></div>
+          <h2 className="text-lg sm:text-2xl md:text-4xl font-light mb-8 sm:mb-10 text-gray-200 tracking-wide leading-tight">
             Mitra Terpercaya Dalam Solusi Pertanian & Perkebunan
           </h2>
         </div>
 
-        <p className="text-lg md:text-xl text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed font-light">
+        <p className="text-base sm:text-lg md:text-xl text-gray-300 mb-8 sm:mb-12 max-w-3xl mx-auto leading-relaxed font-light">
           PT. Jan Agro Nusantara is committed to supporting Indonesian farmers through
           quality organic fertilizer products and professional support.
           Together with us, realize sustainable agriculture and better harvests.
         </p>
 
-        <div className="flex flex-col sm:flex-row gap-6 justify-center">
-          <Link to="/shop">
-            <button className="group w-full sm:w-auto px-10 py-4 bg-white text-black rounded-sm font-medium transition-all duration-500 transform hover:scale-105 hover:shadow-2xl uppercase tracking-wider text-sm">
+        <div className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center w-full sm:w-auto">
+          <Link to="/shop" className="w-full sm:w-auto">
+            <button className="group w-full sm:w-auto px-8 sm:px-10 py-3 sm:py-4 bg-white text-black rounded-sm font-medium transition-all duration-500 transform hover:scale-105 hover:shadow-2xl uppercase tracking-wider text-xs sm:text-sm">
               <span className="group-hover:tracking-widest transition-all duration-300">
                 View Product
               </span>
             </button>
           </Link>
-          <Link to="/location">
-            <button className="group w-full sm:w-auto px-10 py-4 border border-white text-white rounded-sm font-medium transition-all duration-500 hover:bg-white hover:text-black uppercase tracking-wider text-sm">
+          <Link to="/location" className="w-full sm:w-auto">
+            <button className="group w-full sm:w-auto px-8 sm:px-10 py-3 sm:py-4 border border-white text-white rounded-sm font-medium transition-all duration-500 hover:bg-white hover:text-black uppercase tracking-wider text-xs sm:text-sm">
               <span className="group-hover:tracking-widest transition-all duration-300">
                 Contact Us
               </span>
@@ -65,9 +66,9 @@ const Jumbotron = () => {
         </div>
       </div>
 
-      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
+      <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 hidden sm:block">
         <div className="flex flex-col items-center">
-          <div className="w-[1px] h-16 bg-white/30 mb-3"></div>
+          <div className="w-[1px] h-12 sm:h-16 bg-white/30 mb-3"></div>
           <div className="w-2 h-2 bg-white rounded-full animate-bounce"></div>
           <p className="text-white/50 text-xs mt-3 tracking-widest">SCROLL</p>
         </div>

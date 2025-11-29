@@ -47,9 +47,7 @@ function DashboardCeo({ vouchers = [], produk = [], checkouts = [] }) {
         o.status === "pending"
     ).length;
 
-    const lowStockProducts = produk.filter(
-      (p) => p.stock <= 10 
-    ).length;
+    const lowStockProducts = produk.filter((p) => p.stock <= 10).length;
 
     return { totalRevenue, successfulOrders, pendingOrders, lowStockProducts };
   }, [checkouts, produk]);
@@ -81,7 +79,9 @@ function DashboardCeo({ vouchers = [], produk = [], checkouts = [] }) {
           {isLoading ? (
             <div className="mt-4 bg-gray-200 h-9 w-2/3 rounded animate-pulse"></div>
           ) : (
-            <p className="text-4xl font-extrabold mt-4">{value}</p>
+            <p className="text-3xl sm:text-4xl font-extrabold mt-4 break-words">
+              {value}
+            </p>
           )}
           <p className="text-gray-600 font-semibold">{title}</p>
         </div>
@@ -101,12 +101,13 @@ function DashboardCeo({ vouchers = [], produk = [], checkouts = [] }) {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-4xl font-black">CEO Dashboard</h1>
-        <p className="text-gray-600 text-lg">
+        <h1 className="text-3xl sm:text-4xl font-black">CEO Dashboard</h1>
+        <p className="text-gray-600 text-base sm:text-lg">
           High-level overview of JanAgro's performance.
         </p>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           icon={<BarChart2 size={24} />}
           title="Total Revenue"
@@ -136,8 +137,9 @@ function DashboardCeo({ vouchers = [], produk = [], checkouts = [] }) {
           trend="down"
         />
       </div>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 bg-white border-2 border-black rounded-lg p-6 shadow-xl">
+
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+        <div className="xl:col-span-2 bg-white border-2 border-black rounded-lg p-4 sm:p-6 shadow-xl">
           <h2 className="text-xl font-bold mb-4 pb-2 border-b-2 border-black">
             Recent Activities
           </h2>
@@ -147,23 +149,23 @@ function DashboardCeo({ vouchers = [], produk = [], checkouts = [] }) {
                 recentActivities.map((activity) => (
                   <li
                     key={activity._id}
-                    className="flex items-center justify-between py-4"
+                    className="flex flex-col sm:flex-row sm:items-center justify-between py-4 gap-2"
                   >
                     <div className="flex items-center">
-                      <div className="bg-gray-100 border-2 border-black rounded-full p-3 mr-4">
+                      <div className="bg-gray-100 border-2 border-black rounded-full p-3 mr-4 shrink-0">
                         <Clock size={20} />
                       </div>
                       <div>
-                        <p className="font-bold">
+                        <p className="font-bold text-sm sm:text-base">
                           New Order #{activity._id.substring(0, 8)}
                         </p>
-                        <p className="text-sm text-gray-600">
+                        <p className="text-xs sm:text-sm text-gray-600">
                           by {activity.nama} - Rp{" "}
                           {activity.totalHarga.toLocaleString("id-ID")}
                         </p>
                       </div>
                     </div>
-                    <span className="font-mono text-sm text-gray-500">
+                    <span className="font-mono text-xs sm:text-sm text-gray-500 pl-14 sm:pl-0">
                       {new Date(activity.createdAt).toLocaleTimeString(
                         "id-ID",
                         { hour: "2-digit", minute: "2-digit" }
@@ -179,7 +181,7 @@ function DashboardCeo({ vouchers = [], produk = [], checkouts = [] }) {
             </ul>
           </div>
         </div>
-        <div className="bg-white border-2 border-black rounded-lg p-6 shadow-xl">
+        <div className="bg-white border-2 border-black rounded-lg p-4 sm:p-6 shadow-xl">
           <div className="flex justify-between items-center mb-4 pb-2 border-b-2 border-black">
             <h2 className="text-xl font-bold">Inventory Status</h2>
             <button
@@ -203,21 +205,29 @@ function DashboardCeo({ vouchers = [], produk = [], checkouts = [] }) {
               {sortedProducts.map((p) => {
                 const stockStatus =
                   p.stock === 0
-                    ? "bg-red-600" 
+                    ? "bg-red-600"
                     : p.stock <= 10
                     ? "bg-yellow-400"
-                    : "bg-green-500"; 
+                    : "bg-green-500";
                 return (
                   <li
                     key={p._id}
                     className="flex items-center justify-between py-3"
                   >
-                    <div>
-                      <p className="font-semibold">{p.name}</p>
-                      <p className="text-sm text-gray-500">{p.category}</p>
+                    <div className="pr-2">
+                      <p className="font-semibold text-sm sm:text-base line-clamp-1">
+                        {p.name}
+                      </p>
+                      <p className="text-xs sm:text-sm text-gray-500">
+                        {p.category}
+                      </p>
                     </div>
-                    <div className="flex items-center space-x-3">
-                      <span className={`font-bold text-lg ${p.stock === 0 ? 'text-red-600' : ''}`}>
+                    <div className="flex items-center space-x-3 shrink-0">
+                      <span
+                        className={`font-bold text-lg ${
+                          p.stock === 0 ? "text-red-600" : ""
+                        }`}
+                      >
                         {p.stock === 0 ? "Empty" : p.stock}
                       </span>
                       <div
@@ -231,135 +241,84 @@ function DashboardCeo({ vouchers = [], produk = [], checkouts = [] }) {
           </div>
         </div>
       </div>
+
       <div className="space-y-4">
         <h2 className="text-2xl font-bold">Akses Laporan</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Link
-            to="/laporan-order-ceo"
-            className="bg-white border-2 border-black rounded-lg p-6 hover:shadow-lg hover:scale-105 transition-all"
-          >
-            <div className="flex items-center gap-4">
-              <div className="bg-blue-500 text-white p-4 rounded-lg">
-                <FileText size={24} />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[
+            {
+              to: "/laporan-order-ceo",
+              bg: "bg-blue-500",
+              title: "Laporan Pesanan",
+              desc: "Analisis pesanan bulanan",
+            },
+            {
+              to: "/laporan-user-ceo",
+              bg: "bg-green-500",
+              title: "Laporan User Baru",
+              desc: "Pengguna baru terdaftar",
+            },
+            {
+              to: "/laporan-barang-terlaku-ceo",
+              bg: "bg-orange-500",
+              title: "Laporan Barang Terlaku",
+              desc: "Produk paling laris",
+            },
+            {
+              to: "/laporan-stok-ceo",
+              bg: "bg-red-500",
+              title: "Laporan Stok",
+              desc: "Produk dengan stok kritis",
+            },
+            {
+              to: "/laporan-movement-ceo",
+              bg: "bg-blue-700",
+              title: "Laporan Gerakan Stok",
+              desc: "Tracking stok masuk/keluar",
+            },
+            {
+              to: "/laporan-user-setia-ceo",
+              bg: "bg-purple-500",
+              title: "Laporan User Setia",
+              desc: "Pelanggan loyal",
+            },
+            {
+              to: "/laporan-voucher-ceo",
+              bg: "bg-indigo-500",
+              title: "Laporan Voucher",
+              desc: "Penggunaan voucher",
+            },
+            {
+              to: "/laporan-revenue-ceo",
+              bg: "bg-pink-500",
+              title: "Laporan Revenue",
+              desc: "Analisis omzet",
+            },
+            {
+              to: "/laporan-metode-pembayaran-ceo",
+              bg: "bg-cyan-500",
+              title: "Metode Pembayaran",
+              desc: "Distribusi pembayaran",
+            },
+          ].map((item, index) => (
+            <Link
+              key={index}
+              to={item.to}
+              className="bg-white border-2 border-black rounded-lg p-6 hover:shadow-lg hover:scale-105 transition-all"
+            >
+              <div className="flex items-center gap-4">
+                <div
+                  className={`${item.bg} text-white p-4 rounded-lg shrink-0`}
+                >
+                  <FileText size={24} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg">{item.title}</h3>
+                  <p className="text-sm text-gray-600">{item.desc}</p>
+                </div>
               </div>
-              <div>
-                <h3 className="font-bold text-lg">Laporan Pesanan</h3>
-                <p className="text-sm text-gray-600">Analisis pesanan bulanan</p>
-              </div>
-            </div>
-          </Link>
-          <Link
-            to="/laporan-user-ceo"
-            className="bg-white border-2 border-black rounded-lg p-6 hover:shadow-lg hover:scale-105 transition-all"
-          >
-            <div className="flex items-center gap-4">
-              <div className="bg-green-500 text-white p-4 rounded-lg">
-                <FileText size={24} />
-              </div>
-              <div>
-                <h3 className="font-bold text-lg">Laporan User Baru</h3>
-                <p className="text-sm text-gray-600">Pengguna baru terdaftar</p>
-              </div>
-            </div>
-          </Link>
-          <Link
-            to="/laporan-barang-terlaku-ceo"
-            className="bg-white border-2 border-black rounded-lg p-6 hover:shadow-lg hover:scale-105 transition-all"
-          >
-            <div className="flex items-center gap-4">
-              <div className="bg-orange-500 text-white p-4 rounded-lg">
-                <FileText size={24} />
-              </div>
-              <div>
-                <h3 className="font-bold text-lg">Laporan Barang Terlaku</h3>
-                <p className="text-sm text-gray-600">Produk paling laris</p>
-              </div>
-            </div>
-          </Link>
-          <Link
-            to="/laporan-stok-ceo"
-            className="bg-white border-2 border-black rounded-lg p-6 hover:shadow-lg hover:scale-105 transition-all"
-          >
-            <div className="flex items-center gap-4">
-              <div className="bg-red-500 text-white p-4 rounded-lg">
-                <FileText size={24} />
-              </div>
-              <div>
-                <h3 className="font-bold text-lg">Laporan Stok (Habis/Menipis)</h3>
-                <p className="text-sm text-gray-600">Produk dengan stok kritis</p>
-              </div>
-            </div>
-          </Link>
-          <Link
-            to="/laporan-movement-ceo"
-            className="bg-white border-2 border-black rounded-lg p-6 hover:shadow-lg hover:scale-105 transition-all"
-          >
-            <div className="flex items-center gap-4">
-              <div className="bg-blue-700 text-white p-4 rounded-lg">
-                <FileText size={24} />
-              </div>
-              <div>
-                <h3 className="font-bold text-lg">Laporan Gerakan Stok</h3>
-                <p className="text-sm text-gray-600">Tracking stok masuk/keluar</p>
-              </div>
-            </div>
-          </Link>
-          <Link
-            to="/laporan-user-setia-ceo"
-            className="bg-white border-2 border-black rounded-lg p-6 hover:shadow-lg hover:scale-105 transition-all"
-          >
-            <div className="flex items-center gap-4">
-              <div className="bg-purple-500 text-white p-4 rounded-lg">
-                <FileText size={24} />
-              </div>
-              <div>
-                <h3 className="font-bold text-lg">Laporan User Setia</h3>
-                <p className="text-sm text-gray-600">Pelanggan loyal</p>
-              </div>
-            </div>
-          </Link>
-          <Link
-            to="/laporan-voucher-ceo"
-            className="bg-white border-2 border-black rounded-lg p-6 hover:shadow-lg hover:scale-105 transition-all"
-          >
-            <div className="flex items-center gap-4">
-              <div className="bg-indigo-500 text-white p-4 rounded-lg">
-                <FileText size={24} />
-              </div>
-              <div>
-                <h3 className="font-bold text-lg">Laporan Voucher</h3>
-                <p className="text-sm text-gray-600">Penggunaan voucher</p>
-              </div>
-            </div>
-          </Link>
-          <Link
-            to="/laporan-revenue-ceo"
-            className="bg-white border-2 border-black rounded-lg p-6 hover:shadow-lg hover:scale-105 transition-all"
-          >
-            <div className="flex items-center gap-4">
-              <div className="bg-pink-500 text-white p-4 rounded-lg">
-                <FileText size={24} />
-              </div>
-              <div>
-                <h3 className="font-bold text-lg">Laporan Revenue</h3>
-                <p className="text-sm text-gray-600">Analisis omzet dan pendapatan</p>
-              </div>
-            </div>
-          </Link>
-          <Link
-            to="/laporan-metode-pembayaran-ceo"
-            className="bg-white border-2 border-black rounded-lg p-6 hover:shadow-lg hover:scale-105 transition-all"
-          >
-            <div className="flex items-center gap-4">
-              <div className="bg-cyan-500 text-white p-4 rounded-lg">
-                <FileText size={24} />
-              </div>
-              <div>
-                <h3 className="font-bold text-lg">Laporan Metode Pembayaran</h3>
-                <p className="text-sm text-gray-600">Distribusi metode pembayaran</p>
-              </div>
-            </div>
-          </Link>
+            </Link>
+          ))}
         </div>
       </div>
     </div>

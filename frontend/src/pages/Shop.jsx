@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchProducts } from "../features/products/productSlice";
-// Tambahkan import fetchCart dari slice cart Anda
 import { fetchCart } from "../features/cart/cartSlice"; 
 import {
   Search,
@@ -17,12 +16,12 @@ const Notification = ({ message, type }) => {
   const isError = type === "error";
   return (
     <div
-      className={`fixed top-5 left-1/2 -translate-x-1/2 z-50 p-4 rounded-md shadow-lg flex items-center gap-3 transition-transform animate-fade-in-down ${
+      className={`fixed top-5 left-1/2 -translate-x-1/2 z-[60] p-4 rounded-md shadow-lg flex items-center gap-3 transition-transform animate-fade-in-down w-[90%] sm:w-auto ${
         isError ? "bg-red-600 text-white" : "bg-green-600 text-white"
       }`}
     >
-      {isError ? <AlertCircle size={20} /> : <CheckCircle size={20} />}
-      <span>{message}</span>
+      {isError ? <AlertCircle size={20} className="shrink-0" /> : <CheckCircle size={20} className="shrink-0" />}
+      <span className="text-sm sm:text-base">{message}</span>
     </div>
   );
 };
@@ -30,31 +29,25 @@ const Notification = ({ message, type }) => {
 const Shop = ({ user, onAddToCart }) => {
   const dispatch = useDispatch();
 
-  // 1. Ambil data produk
   const {
     items: produk,
     status: productStatus,
     error,
   } = useSelector((state) => state.products);
 
-  // 2. Ambil data cart dari Redux untuk menghitung badge secara real-time
   const { items: cartItems } = useSelector((state) => state.cart);
-
-  // Hitung total quantity barang di keranjang
   const totalCartItems = cartItems.reduce((total, item) => total + item.quantity, 0);
 
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [notification, setNotification] = useState(null);
 
-  // Fetch Produk saat load
   useEffect(() => {
     if (productStatus === "idle") {
       dispatch(fetchProducts());
     }
   }, [productStatus, dispatch]);
 
-  // 3. Fetch Cart saat load (agar angka badge sinkron saat halaman di-refresh)
   useEffect(() => {
     if (user) {
       dispatch(fetchCart());
@@ -73,7 +66,6 @@ const Shop = ({ user, onAddToCart }) => {
   const handleAddToCartClick = async (productId) => {
     const productToAdd = produk.find((p) => p._id === productId);
     
-    // Cek Stok Frontend
     if (productToAdd && productToAdd.stock === 0) {
       setNotification({
         type: "error",
@@ -82,7 +74,6 @@ const Shop = ({ user, onAddToCart }) => {
       return;
     }
 
-    // Cek Login
     if (!user) {
       setNotification({
         type: "error",
@@ -91,10 +82,8 @@ const Shop = ({ user, onAddToCart }) => {
       return;
     }
 
-    // Eksekusi fungsi onAddToCart (yang seharusnya melakukan dispatch ke Redux)
     const resultMessage = await onAddToCart(productId);
     
-    // Jika berhasil, fetch cart ulang untuk memastikan badge update (opsional jika Redux state sudah update otomatis)
     if (!resultMessage.toLowerCase().includes("gagal")) {
        dispatch(fetchCart());
     }
@@ -139,16 +128,14 @@ const Shop = ({ user, onAddToCart }) => {
     <>
       <Notification message={notification?.message} type={notification?.type} />
 
-      {/* ICON KERANJANG & BADGE */}
-      <div className="fixed top-24 right-4 sm:right-8 z-30 flex flex-col gap-4">
+      {/* ICON KERANJANG & BADGE (Responsive Position) */}
+      <div className="fixed top-20 sm:top-24 right-2 sm:right-8 z-30 flex flex-col gap-3 sm:gap-4 scale-90 sm:scale-100 origin-right">
         <Link
           to="/cart"
-          className="relative bg-white p-4 rounded-full shadow-lg border transition-transform hover:scale-110"
+          className="relative bg-white p-3 sm:p-4 rounded-full shadow-lg border transition-transform hover:scale-110"
           aria-label="Buka Keranjang"
         >
           <ShoppingCart size={24} className="text-black" />
-          
-          {/* Badge Angka Dinamis dari Redux */}
           {totalCartItems > 0 && (
             <span className="absolute -top-2 -right-2 w-6 h-6 bg-black text-white text-xs font-bold rounded-full flex items-center justify-center border-2 border-white animate-bounce-short">
               {totalCartItems}
@@ -159,7 +146,7 @@ const Shop = ({ user, onAddToCart }) => {
         {user && (
           <Link
             to="/pesanan"
-            className="relative bg-white p-4 rounded-full shadow-lg border transition-transform hover:scale-110"
+            className="relative bg-white p-3 sm:p-4 rounded-full shadow-lg border transition-transform hover:scale-110"
             aria-label="Lacak Pesanan"
           >
             <Truck size={24} className="text-black" />
@@ -167,20 +154,21 @@ const Shop = ({ user, onAddToCart }) => {
         )}
       </div>
 
-      <div className="min-h-screen bg-gray-50 pt-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="text-center mb-12">
-            <h1 className="text-5xl font-light text-black mb-4">
+      <div className="min-h-screen bg-gray-50 pt-20 sm:pt-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+          <div className="text-center mb-8 sm:mb-12">
+            <h1 className="text-3xl sm:text-5xl font-light text-black mb-4">
               Jan Agro <span className="font-bold">Shop</span>
             </h1>
-            <div className="w-24 h-[1px] bg-black mx-auto mb-6"></div>
-            <p className="text-xl text-gray-600 font-light">
+            <div className="w-16 sm:w-24 h-[1px] bg-black mx-auto mb-4 sm:mb-6"></div>
+            <p className="text-lg sm:text-xl text-gray-600 font-light px-4">
               Find your finest Fertilizers, Tools, and Seeds
             </p>
           </div>
 
+          {/* Search & Filter Section (Stack on mobile) */}
           <div className="mb-8 flex flex-col md:flex-row gap-4 items-center justify-between">
-            <div className="relative flex-1 w-full md:max-w-md">
+            <div className="relative w-full md:flex-1 md:max-w-md">
               <Search
                 className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
                 size={20}
@@ -193,12 +181,13 @@ const Shop = ({ user, onAddToCart }) => {
                 className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-sm focus:ring-2 focus:ring-black focus:border-transparent transition-all"
               />
             </div>
-            <div className="flex gap-3 flex-wrap justify-center">
+            {/* Scrollable horizontal category on very small screens */}
+            <div className="flex gap-2 sm:gap-3 flex-wrap justify-center w-full md:w-auto">
               {["all", "Fertilizer", "Tools", "Seeds"].map((category) => (
                 <button
                   key={category}
                   onClick={() => setSelectedCategory(category.toLowerCase())}
-                  className={`px-4 py-2 rounded-sm border transition ${
+                  className={`px-3 sm:px-4 py-2 text-sm sm:text-base rounded-sm border transition flex-grow sm:flex-grow-0 ${
                     selectedCategory === category.toLowerCase()
                       ? "bg-black text-white border-black"
                       : "bg-white text-gray-700 border-gray-300 hover:border-black"
@@ -210,15 +199,16 @@ const Shop = ({ user, onAddToCart }) => {
             </div>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {/* Product Grid (1 col mobile, 2 col tablet, 3 col desktop) */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             {filteredProduk.map((item) => (
               <div
                 key={item._id}
-                className={`group bg-white rounded-sm shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden border border-gray-100 ${
+                className={`group bg-white rounded-sm shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden border border-gray-100 flex flex-col h-full ${
                   item.stock === 0 ? "grayscale" : ""
                 }`}
               >
-                <div className="relative h-56 bg-gray-100 flex items-center justify-center overflow-hidden">
+                <div className="relative h-48 sm:h-56 bg-gray-100 flex items-center justify-center overflow-hidden shrink-0">
                    {item.image ? (
                     <img
                       src={item.image} 
@@ -230,40 +220,40 @@ const Shop = ({ user, onAddToCart }) => {
                   )}
                   {item.stock === 0 && (
                     <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                      <span className="text-white text-xl font-bold uppercase tracking-widest">
+                      <span className="text-white text-lg sm:text-xl font-bold uppercase tracking-widest">
                         Out of Stock
                       </span>
                     </div>
                   )}
                 </div>
-                <div className="p-6">
-                  <div className="mb-4">
-                    <h3 className="text-xl font-bold text-black mb-1 group-hover:text-gray-700 transition-colors">
+                <div className="p-4 sm:p-6 flex flex-col flex-grow">
+                  <div className="mb-2 sm:mb-4">
+                    <h3 className="text-lg sm:text-xl font-bold text-black mb-1 group-hover:text-gray-700 transition-colors line-clamp-2">
                       {item.name}
                     </h3>
-                    <p className="text-gray-600 text-sm uppercase tracking-wide">
+                    <p className="text-gray-600 text-xs sm:text-sm uppercase tracking-wide">
                       {item.category}
                     </p>
                   </div>
-                  <p className="text-gray-700 text-sm mb-4 line-clamp-3">
+                  <p className="text-gray-700 text-sm mb-4 line-clamp-3 flex-grow">
                     {item.description}
                   </p>
-                  <div className="mb-6">
+                  <div className="mb-4 sm:mb-6">
                     <p className="text-black font-semibold text-lg">
                       Rp {item.price.toLocaleString("id-ID")}
                     </p>
                   </div>
-                  <div className="flex space-x-3">
+                  <div className="flex space-x-2 sm:space-x-3 mt-auto">
                     <Link
                       to={`/product/${item._id}`}
-                      className="flex-1 text-center bg-black text-white py-3 px-4 rounded-sm transition-all duration-300 hover:bg-gray-800 text-sm font-medium uppercase tracking-wide"
+                      className="flex-1 text-center bg-black text-white py-2 sm:py-3 px-2 sm:px-4 rounded-sm transition-all duration-300 hover:bg-gray-800 text-xs sm:text-sm font-medium uppercase tracking-wide flex items-center justify-center"
                     >
-                      View Detail
+                      Detail
                     </Link>
                     <button
                       onClick={() => handleAddToCartClick(item._id)}
                       disabled={item.stock === 0}
-                      className="border border-gray-300 hover:border-black text-gray-700 hover:text-black py-3 px-4 rounded-sm transition-all duration-300 text-sm font-medium uppercase tracking-wide disabled:bg-gray-200 disabled:cursor-not-allowed disabled:text-gray-400 disabled:border-gray-200"
+                      className="flex-1 border border-gray-300 hover:border-black text-gray-700 hover:text-black py-2 sm:py-3 px-2 sm:px-4 rounded-sm transition-all duration-300 text-xs sm:text-sm font-medium uppercase tracking-wide disabled:bg-gray-200 disabled:cursor-not-allowed disabled:text-gray-400 disabled:border-gray-200"
                     >
                       Add to Cart
                     </button>

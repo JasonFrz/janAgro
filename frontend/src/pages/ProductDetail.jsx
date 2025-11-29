@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Link} from "react-router-dom"; // Tambah useParams
-import axios from "axios"; // Tambah axios
+import { Link} from "react-router-dom"; 
+import axios from "axios"; 
 import {
   Star,
   ArrowLeft,
@@ -18,12 +18,12 @@ const Notification = ({ message, type }) => {
   const isError = type === "error";
   return (
     <div
-      className={`fixed top-5 left-1/2 -translate-x-1/2 z-50 p-4 rounded-md shadow-lg flex items-center gap-3 transition-transform animate-fade-in-down ${
+      className={`fixed top-5 left-1/2 -translate-x-1/2 z-[60] p-4 rounded-md shadow-lg flex items-center gap-3 transition-transform animate-fade-in-down w-[90%] sm:w-auto ${
         isError ? "bg-red-600 text-white" : "bg-green-600 text-white"
       }`}
     >
-      {isError ? <AlertCircle size={20} /> : <CheckCircle size={20} />}
-      <span>{message}</span>
+      {isError ? <AlertCircle size={20} className="shrink-0" /> : <CheckCircle size={20} className="shrink-0" />}
+      <span className="text-sm sm:text-base">{message}</span>
     </div>
   );
 };
@@ -119,10 +119,11 @@ const ProductDetail = ({
     <>
       <Notification message={notification?.message} type={notification?.type} />
       
-      <div className="fixed top-24 right-4 sm:right-8 z-30 flex flex-col gap-4">
+      {/* Fixed Icons Responsive */}
+      <div className="fixed top-20 sm:top-24 right-2 sm:right-8 z-30 flex flex-col gap-3 sm:gap-4 scale-90 sm:scale-100 origin-right">
         <Link
           to="/cart"
-          className="relative bg-white p-4 rounded-full shadow-lg border transition-transform hover:scale-110"
+          className="relative bg-white p-3 sm:p-4 rounded-full shadow-lg border transition-transform hover:scale-110"
         >
           <ShoppingCart size={24} className="text-black" />
           {cartCount > 0 && (
@@ -134,24 +135,27 @@ const ProductDetail = ({
         {user && (
           <Link
             to="/pesanan"
-            className="relative bg-white p-4 rounded-full shadow-lg border transition-transform hover:scale-110"
+            className="relative bg-white p-3 sm:p-4 rounded-full shadow-lg border transition-transform hover:scale-110"
           >
             <Truck size={24} className="text-black" />
           </Link>
         )}
       </div>
 
-      <div className="min-h-screen bg-white pt-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="min-h-screen bg-white pt-20 sm:pt-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
           <Link
             to="/shop"
-            className="flex items-center gap-2 text-gray-600 hover:text-black mb-8 transition"
+            className="flex items-center gap-2 text-gray-600 hover:text-black mb-6 sm:mb-8 transition"
           >
             <ArrowLeft size={20} /> Kembali ke Toko
           </Link>
 
-          <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
-            <div className="lg:col-span-2 flex items-center justify-center bg-gray-100 rounded-sm h-96 overflow-hidden border">
+          {/* Main Layout: Stack on mobile, Grid on large screens */}
+          <div className="flex flex-col lg:grid lg:grid-cols-5 gap-8 lg:gap-12">
+            
+            {/* Image Section */}
+            <div className="lg:col-span-2 flex items-center justify-center bg-gray-100 rounded-sm h-64 sm:h-96 lg:h-96 overflow-hidden border shrink-0">
               {product.image ? (
                 <img
                   src={product.image}
@@ -159,21 +163,22 @@ const ProductDetail = ({
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <span className="text-8xl">🪴</span>
+                <span className="text-6xl sm:text-8xl">🪴</span>
               )}
             </div>
 
+            {/* Details Section */}
             <div className="lg:col-span-3 flex flex-col">
-              <span className="text-sm uppercase text-gray-500 tracking-wider">
+              <span className="text-xs sm:text-sm uppercase text-gray-500 tracking-wider">
                 {product.category}
               </span>
-              <h1 className="text-4xl font-bold text-gray-900 my-2">
+              <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 my-2">
                 {product.name}
               </h1>
-              <p className="text-3xl font-light text-gray-800 mb-4">
+              <p className="text-2xl sm:text-3xl font-light text-gray-800 mb-4">
                 Rp {product.price.toLocaleString("id-ID")}
               </p>
-              <p className="text-gray-600 mb-6 leading-relaxed">
+              <p className="text-gray-600 mb-6 leading-relaxed text-sm sm:text-base">
                 {product.detail}
               </p>
 
@@ -186,16 +191,17 @@ const ProductDetail = ({
               <button
                 onClick={() => handleAddToCartClick(product._id)}
                 disabled={product.stock === 0}
-                className="w-full bg-black text-white py-4 px-4 rounded-sm transition-all duration-300 hover:bg-gray-800 text-sm font-medium uppercase tracking-wide disabled:bg-gray-400 disabled:cursor-not-allowed"
+                className="w-full bg-black text-white py-3 sm:py-4 px-4 rounded-sm transition-all duration-300 hover:bg-gray-800 text-sm font-medium uppercase tracking-wide disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
                 {product.stock > 0 ? "Tambah ke Keranjang" : "Stok Habis"}
               </button>
             </div>
           </div>
 
-          <div className="mt-16 border-t pt-12">
-            <h2 className="text-3xl font-bold mb-4">Ulasan Produk ({reviewsList.length})</h2>
+          <div className="mt-12 sm:mt-16 border-t pt-8 sm:pt-12">
+            <h2 className="text-2xl sm:text-3xl font-bold mb-4">Ulasan Produk ({reviewsList.length})</h2>
             
+            {/* Filter Section Responsive */}
             <div className="flex flex-col md:flex-row gap-4 mb-8 p-4 border rounded-sm">
               <div className="flex-1">
                 <label className="block text-sm font-medium mb-2">
@@ -206,7 +212,7 @@ const ProductDetail = ({
                     <button
                       key={star}
                       onClick={() => setRatingFilter(star)}
-                      className={`px-4 py-2 text-sm rounded-sm border transition ${
+                      className={`px-3 py-2 text-xs sm:text-sm rounded-sm border transition ${
                         ratingFilter === star
                           ? "bg-black text-white border-black"
                           : "bg-white text-gray-700 border-gray-300 hover:border-black"
@@ -224,7 +230,7 @@ const ProductDetail = ({
                 <div className="flex gap-2 flex-wrap">
                   <button
                     onClick={() => setMediaFilter("all")}
-                    className={`px-4 py-2 text-sm rounded-sm border transition ${
+                    className={`px-3 py-2 text-xs sm:text-sm rounded-sm border transition ${
                       mediaFilter === "all"
                         ? "bg-black text-white border-black"
                         : "bg-white text-gray-700 border-gray-300 hover:border-black"
@@ -234,13 +240,13 @@ const ProductDetail = ({
                   </button>
                   <button
                     onClick={() => setMediaFilter("dengan-media")}
-                    className={`px-4 py-2 text-sm rounded-sm border transition ${
+                    className={`px-3 py-2 text-xs sm:text-sm rounded-sm border transition ${
                       mediaFilter === "dengan-media"
                         ? "bg-black text-white border-black"
                         : "bg-white text-gray-700 border-gray-300 hover:border-black"
                     }`}
                   >
-                    Dengan Foto/Video
+                    Foto/Video
                   </button>
                 </div>
               </div>
@@ -249,23 +255,33 @@ const ProductDetail = ({
             {loadingReviews ? (
               <p>Memuat ulasan...</p>
             ) : filteredReviews.length > 0 ? (
-              <div className="space-y-8">
+              <div className="space-y-6 sm:space-y-8">
                 {filteredReviews.map((review) => (
-                  <div key={review._id} className="flex gap-4 border-b pb-8 last:border-b-0">
-                    <div className="w-12 h-12 rounded-full bg-gray-200 flex-shrink-0 flex items-center justify-center font-bold text-gray-500 overflow-hidden border">
-                      {review.userAvatar ? (
-                        <img
-                          src={review.userAvatar}
-                          alt="avatar"
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        review.userName.charAt(0).toUpperCase()
-                      )}
+                  <div key={review._id} className="flex flex-col sm:flex-row gap-4 border-b pb-8 last:border-b-0">
+                    <div className="flex items-center gap-3 sm:block">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gray-200 flex-shrink-0 flex items-center justify-center font-bold text-gray-500 overflow-hidden border">
+                        {review.userAvatar ? (
+                            <img
+                            src={review.userAvatar}
+                            alt="avatar"
+                            className="w-full h-full object-cover"
+                            />
+                        ) : (
+                            review.userName.charAt(0).toUpperCase()
+                        )}
+                        </div>
+                        {/* Name showing next to avatar on mobile */}
+                        <div className="sm:hidden">
+                            <p className="font-semibold text-gray-900 text-sm">
+                                {review.userName}
+                            </p>
+                            <StarRating rating={review.rating} />
+                        </div>
                     </div>
 
                     <div className="flex-1">
-                      <div className="flex items-center justify-between mb-2">
+                      {/* Name header for desktop */}
+                      <div className="hidden sm:flex items-center justify-between mb-2">
                         <div>
                           <p className="font-semibold text-gray-900">
                             {review.userName}
@@ -280,15 +296,24 @@ const ProductDetail = ({
                           })}
                         </p>
                       </div>
+
+                      {/* Date for mobile */}
+                      <p className="text-xs text-gray-500 sm:hidden mb-2">
+                          {new Date(review.createdAt).toLocaleDateString("id-ID", {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          })}
+                      </p>
                       
-                      <p className="text-gray-700 mt-2 mb-4 leading-relaxed">
+                      <p className="text-gray-700 mt-2 mb-4 leading-relaxed text-sm sm:text-base">
                         {review.comment}
                       </p>
 
                       {review.media && review.media.length > 0 && (
                         <div className="flex gap-3 overflow-x-auto pb-2">
                           {review.media.map((item, idx) => (
-                            <div key={idx} className="relative w-32 h-32 flex-shrink-0 bg-black rounded-md overflow-hidden border">
+                            <div key={idx} className="relative w-24 h-24 sm:w-32 sm:h-32 flex-shrink-0 bg-black rounded-md overflow-hidden border">
                               {item.type === 'video' ? (
                                 <div className="relative w-full h-full group">
                                   <video 

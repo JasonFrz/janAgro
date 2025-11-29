@@ -5,6 +5,8 @@ import {
   Package,
   ShoppingCart,
   Ticket,
+  Menu,
+  X,
 } from "lucide-react";
 import DashboardAdmin from "../admin/DashboardAdmin";
 import UserAdmin from "../admin/UserAdmin";
@@ -35,6 +37,7 @@ function Admin({
   onRejectCancellation,
 }) {
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // State untuk sidebar mobile
 
   const renderContent = () => {
     switch (activeTab) {
@@ -87,69 +90,73 @@ function Admin({
     }
   };
 
+  const NavItem = ({ tab, icon: Icon, label }) => (
+    <button
+      onClick={() => {
+        setActiveTab(tab);
+        setIsSidebarOpen(false); // Tutup sidebar saat item diklik (mobile)
+      }}
+      className={`flex items-center w-full px-3 py-3 rounded-lg transition-colors duration-200 ${
+        activeTab === tab
+          ? "bg-black text-white shadow-md"
+          : "text-gray-700 hover:bg-gray-100"
+      }`}
+    >
+      <Icon className="mr-3 h-5 w-5" />
+      <span className="font-medium">{label}</span>
+    </button>
+  );
+
   return (
-    <div className="flex min-h-screen bg-gray-100 pt-24 px-4 sm:px-6 lg:px-8">
-      <aside className="w-64 bg-white shadow-md p-6 hidden md:block">
-        <h1 className="text-xl font-bold mb-6">Admin Panel</h1>
+    <div className="flex min-h-screen bg-gray-100 pt-20 sm:pt-24 text-black relative">
+      {/* Overlay untuk Mobile */}
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar Responsive */}
+      <aside
+        className={`fixed md:sticky top-0 left-0 h-screen md:h-[calc(100vh-6rem)] w-64 bg-white shadow-xl p-6 z-50 transition-transform duration-300 ease-in-out md:translate-x-0 ${
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+        } pt-24 md:pt-6 overflow-y-auto`}
+      >
+        <div className="flex justify-between items-center mb-8 md:mb-6">
+          <h1 className="text-2xl font-bold">Admin Panel</h1>
+          <button
+            onClick={() => setIsSidebarOpen(false)}
+            className="md:hidden p-1 hover:bg-gray-100 rounded"
+          >
+            <X size={24} />
+          </button>
+        </div>
+
         <nav className="space-y-2">
-          <button
-            onClick={() => setActiveTab("dashboard")}
-            className={`flex items-center w-full px-3 py-2 rounded ${
-              activeTab === "dashboard"
-                ? "bg-black text-white"
-                : "hover:bg-gray-200"
-            }`}
-          >
-            {" "}
-            <LayoutDashboard className="mr-2 h-5 w-5" /> Dashboard{" "}
-          </button>
-          <button
-            onClick={() => setActiveTab("users")}
-            className={`flex items-center w-full px-3 py-2 rounded ${
-              activeTab === "users"
-                ? "bg-black text-white"
-                : "hover:bg-gray-200"
-            }`}
-          >
-            {" "}
-            <Users className="mr-2 h-5 w-5" /> Users{" "}
-          </button>
-          <button
-            onClick={() => setActiveTab("produk")}
-            className={`flex items-center w-full px-3 py-2 rounded ${
-              activeTab === "produk"
-                ? "bg-black text-white"
-                : "hover:bg-gray-200"
-            }`}
-          >
-            {" "}
-            <Package className="mr-2 h-5 w-5" /> Product{" "}
-          </button>
-          <button
-            onClick={() => setActiveTab("vouchers")}
-            className={`flex items-center w-full px-3 py-2 rounded ${
-              activeTab === "vouchers"
-                ? "bg-black text-white"
-                : "hover:bg-gray-200"
-            }`}
-          >
-            {" "}
-            <Ticket className="mr-2 h-5 w-5" /> Vouchers{" "}
-          </button>
-          <button
-            onClick={() => setActiveTab("settings")}
-            className={`flex items-center w-full px-3 py-2 rounded ${
-              activeTab === "settings"
-                ? "bg-black text-white"
-                : "hover:bg-gray-200"
-            }`}
-          >
-            {" "}
-            <ShoppingCart className="mr-2 h-5 w-5" /> Orders{" "}
-          </button>
+          <NavItem tab="dashboard" icon={LayoutDashboard} label="Dashboard" />
+          <NavItem tab="users" icon={Users} label="Users" />
+          <NavItem tab="produk" icon={Package} label="Product" />
+          <NavItem tab="vouchers" icon={Ticket} label="Vouchers" />
+          <NavItem tab="settings" icon={ShoppingCart} label="Orders" />
         </nav>
       </aside>
-      <main className="flex-1 p-0 md:p-6 space-y-6">{renderContent()}</main>
+
+      {/* Main Content */}
+      <main className="flex-1 p-4 sm:p-6 md:p-8 overflow-x-hidden w-full">
+        {/* Tombol Toggle Mobile (Muncul di atas konten) */}
+        <div className="md:hidden mb-4">
+          <button
+            onClick={() => setIsSidebarOpen(true)}
+            className="flex items-center gap-2 bg-white text-black px-4 py-2 rounded-lg font-bold shadow-md border border-gray-200"
+          >
+            <Menu size={20} />
+            <span>Menu Admin</span>
+          </button>
+        </div>
+
+        {renderContent()}
+      </main>
     </div>
   );
 }

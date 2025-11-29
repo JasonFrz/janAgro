@@ -21,7 +21,7 @@ const LaporanStokMenipIsCeo = () => {
     const lowStock = lowStockReportData.filter((item) => item.stock > 0 && item.stock <= 10).length;
     const totalAffected = lowStockReportData.length;
 
-    return { outOfStock, lowStock, totalAffected };
+    return { outOfStock, lowStock, totalAffeacted };
   }, [lowStockReportData]);
 
   const handleExportPDF = () => {

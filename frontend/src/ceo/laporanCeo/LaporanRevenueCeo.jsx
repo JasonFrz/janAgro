@@ -111,18 +111,8 @@ const LaporanRevenueCeo = () => {
 
     return {
       labels: [
-        "Jan",
-        "Feb",
-        "Mar",
-        "Apr",
-        "Mei",
-        "Jun",
-        "Jul",
-        "Agu",
-        "Sep",
-        "Okt",
-        "Nov",
-        "Des",
+        "Jan", "Feb", "Mar", "Apr", "Mei", "Jun", 
+        "Jul", "Agu", "Sep", "Okt", "Nov", "Des",
       ],
       datasets: [
         {
@@ -331,65 +321,66 @@ const LaporanRevenueCeo = () => {
   };
 
   return (
-    <div className="bg-white min-h-screen pt-24 text-black font-sans pb-12">
+    <div className="bg-white min-h-screen pt-20 sm:pt-24 text-black font-sans pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        {/* Header - Responsive */}
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center border-b-4 border-black pb-4 gap-4">
           <div>
-            <h1 className="text-4xl font-black uppercase tracking-tight">
+            <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tight">
               Revenue Report
             </h1>
-            <p className="text-gray-600 font-medium mt-1">
+            <p className="text-gray-600 font-medium mt-1 text-sm sm:text-base">
               Analisis omzet dan pendapatan berdasarkan pesanan yang berhasil.
             </p>
           </div>
           <Link
             to="/ceo"
-            className="flex items-center bg-black text-white px-5 py-2.5 rounded-lg font-bold hover:bg-gray-800 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]"
+            className="flex w-full md:w-auto justify-center items-center bg-black text-white px-5 py-2.5 rounded-lg font-bold hover:bg-gray-800 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]"
           >
             <ArrowLeft className="mr-2 h-5 w-5" /> KEMBALI
           </Link>
         </header>
 
-        {/* Revenue Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {/* Revenue Stats Cards - Responsive Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-white border-2 border-black p-6 rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-bold">TOTAL OMZET</p>
-                <p className="text-2xl font-black">
+              <div className="overflow-hidden">
+                <p className="text-gray-600 text-xs font-bold uppercase truncate">TOTAL OMZET</p>
+                <p className="text-2xl font-black break-words">
                   Rp {revenueStats.totalRevenue.toLocaleString("id-ID")}
                 </p>
               </div>
-              <DollarSign className="h-12 w-12 text-green-600" />
+              <DollarSign className="h-10 w-10 sm:h-12 sm:w-12 text-green-600 shrink-0" />
             </div>
           </div>
           <div className="bg-white border-2 border-black p-6 rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm font-bold">PESANAN BERHASIL</p>
+                <p className="text-gray-600 text-xs font-bold uppercase">PESANAN BERHASIL</p>
                 <p className="text-3xl font-black">{revenueStats.successfulOrders}</p>
               </div>
-              <Calendar className="h-12 w-12 text-blue-600" />
+              <Calendar className="h-10 w-10 sm:h-12 sm:w-12 text-blue-600 shrink-0" />
             </div>
           </div>
           <div className="bg-white border-2 border-black p-6 rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm font-bold">TOTAL PESANAN</p>
+                <p className="text-gray-600 text-xs font-bold uppercase">TOTAL PESANAN</p>
                 <p className="text-3xl font-black">{revenueStats.totalOrders}</p>
               </div>
-              <FileText className="h-12 w-12 text-purple-600" />
+              <FileText className="h-10 w-10 sm:h-12 sm:w-12 text-purple-600 shrink-0" />
             </div>
           </div>
           <div className="bg-white border-2 border-black p-6 rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-600 text-sm font-bold">RATA-RATA OMZET</p>
-                <p className="text-2xl font-black">
+              <div className="overflow-hidden">
+                <p className="text-gray-600 text-xs font-bold uppercase truncate">RATA-RATA OMZET</p>
+                <p className="text-2xl font-black break-words">
                   Rp {revenueStats.averageOrderValue.toLocaleString("id-ID")}
                 </p>
               </div>
-              <DollarSign className="h-12 w-12 text-yellow-600" />
+              <DollarSign className="h-10 w-10 sm:h-12 sm:w-12 text-yellow-600 shrink-0" />
             </div>
           </div>
         </div>
@@ -400,20 +391,20 @@ const LaporanRevenueCeo = () => {
             <div className="animate-spin rounded-full h-12 w-12 border-4 border-black border-t-transparent"></div>
           </div>
         ) : (
-          <div className="bg-white border-2 border-black p-6 rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-            <div className="h-80 w-full">
+          <div className="bg-white border-2 border-black p-4 sm:p-6 rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+            <div className="h-64 sm:h-80 w-full">
               <Bar data={chartData} options={chartOptions} />
             </div>
           </div>
         )}
 
         {/* Filter & Export */}
-        <div className="bg-white border-2 border-black p-6 rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-          <div className="flex flex-col md:flex-row justify-between items-end md:items-center mb-6 border-b-2 border-gray-200 pb-4">
+        <div className="bg-white border-2 border-black p-4 sm:p-6 rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+          <div className="flex flex-col md:flex-row justify-between items-end md:items-center mb-6 border-b-2 border-gray-200 pb-4 gap-4">
             <h2 className="text-xl font-bold flex items-center gap-2">
               <Calendar className="h-6 w-6" /> Filter Laporan
             </h2>
-            <div className="flex bg-gray-100 p-1 rounded-md border border-black mt-4 md:mt-0 gap-2">
+            <div className="flex bg-gray-100 p-1 rounded-md border border-black w-full md:w-auto gap-2">
               {[
                 { id: "daily", label: "Harian", icon: <CalendarDays size={16} /> },
                 { id: "monthly", label: "Bulanan", icon: <Calendar size={16} /> },
@@ -421,7 +412,7 @@ const LaporanRevenueCeo = () => {
                 <button
                   key={type.id}
                   onClick={() => setFilterType(type.id)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded text-sm font-bold transition-all whitespace-nowrap ${
+                  className={`flex-1 md:flex-none flex items-center justify-center gap-2 px-4 py-2 rounded text-sm font-bold transition-all whitespace-nowrap ${
                     filterType === type.id
                       ? "bg-black text-white shadow-md"
                       : "text-gray-600 hover:text-black"
@@ -433,9 +424,9 @@ const LaporanRevenueCeo = () => {
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-4 items-end">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-4 items-end">
             {filterType === "daily" && (
-              <div className="flex flex-col">
+              <div className="flex flex-col w-full sm:w-auto">
                 <label className="text-xs font-bold uppercase mb-1">
                   Pilih Tanggal
                 </label>
@@ -443,21 +434,21 @@ const LaporanRevenueCeo = () => {
                   type="date"
                   value={specificDate}
                   onChange={(e) => setSpecificDate(e.target.value)}
-                  className="border-2 border-black rounded px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-black"
+                  className="border-2 border-black rounded px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-black w-full"
                 />
               </div>
             )}
 
             {filterType === "monthly" && (
-              <>
-                <div className="flex flex-col">
+              <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
+                <div className="flex flex-col w-full sm:w-auto">
                   <label className="text-xs font-bold uppercase mb-1">
                     Bulan Mulai
                   </label>
                   <select
                     value={listMonthStart}
                     onChange={(e) => setListMonthStart(parseInt(e.target.value))}
-                    className="border-2 border-black rounded px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-black min-w-[150px]"
+                    className="border-2 border-black rounded px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-black w-full sm:min-w-[140px]"
                   >
                     {Array.from({ length: 12 }, (_, i) => (
                       <option key={i + 1} value={i + 1}>
@@ -468,14 +459,14 @@ const LaporanRevenueCeo = () => {
                     ))}
                   </select>
                 </div>
-                <div className="flex flex-col">
+                <div className="flex flex-col w-full sm:w-auto">
                   <label className="text-xs font-bold uppercase mb-1">
                     Bulan Akhir
                   </label>
                   <select
                     value={listMonthEnd}
                     onChange={(e) => setListMonthEnd(parseInt(e.target.value))}
-                    className="border-2 border-black rounded px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-black min-w-[150px]"
+                    className="border-2 border-black rounded px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-black w-full sm:min-w-[140px]"
                   >
                     {Array.from({ length: 12 }, (_, i) => (
                       <option key={i + 1} value={i + 1}>
@@ -486,14 +477,14 @@ const LaporanRevenueCeo = () => {
                     ))}
                   </select>
                 </div>
-                <div className="flex flex-col">
+                <div className="flex flex-col w-full sm:w-auto">
                   <label className="text-xs font-bold uppercase mb-1">
                     Tahun
                   </label>
                   <select
                     value={listYear}
                     onChange={(e) => setListYear(parseInt(e.target.value))}
-                    className="border-2 border-black rounded px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-black min-w-[100px]"
+                    className="border-2 border-black rounded px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-black w-full sm:min-w-[100px]"
                   >
                     {years.map((y) => (
                       <option key={y} value={y}>
@@ -502,17 +493,17 @@ const LaporanRevenueCeo = () => {
                     ))}
                   </select>
                 </div>
-              </>
+              </div>
             )}
 
-            <div className="flex flex-col">
+            <div className="flex flex-col w-full sm:w-auto">
               <label className="text-xs font-bold uppercase mb-1">
                 Grafik Tahun
               </label>
               <select
                 value={chartYear}
                 onChange={(e) => setChartYear(parseInt(e.target.value))}
-                className="border-2 border-black rounded px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-black min-w-[100px]"
+                className="border-2 border-black rounded px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-black w-full sm:min-w-[100px]"
               >
                 {years.map((y) => (
                   <option key={y} value={y}>
@@ -524,7 +515,7 @@ const LaporanRevenueCeo = () => {
 
             <button
               onClick={handleExportPDF}
-              className="ml-auto bg-green-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-green-700 transition-all border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] flex items-center gap-2"
+              className="ml-auto w-full sm:w-auto bg-green-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-green-700 transition-all border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] flex items-center justify-center gap-2 mt-4 sm:mt-0"
             >
               <FileText size={20} /> Export PDF
             </button>
@@ -538,12 +529,12 @@ const LaporanRevenueCeo = () => {
           </div>
         ) : (
           <div className="space-y-4">
-            <h2 className="text-2xl font-black uppercase flex items-center gap-2">
+            <h2 className="text-xl sm:text-2xl font-black uppercase flex items-center gap-2">
               <DollarSign className="text-green-600" /> Detail Omzet
             </h2>
             <div className="bg-white border-2 border-black rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
               <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
-                <table className="w-full text-left border-collapse">
+                <table className="w-full text-left border-collapse min-w-[900px]">
                   <thead className="bg-green-600 text-white sticky top-0 z-10">
                     <tr>
                       <th className="p-4 font-bold border-r border-gray-700 w-16 text-center">
@@ -580,26 +571,26 @@ const LaporanRevenueCeo = () => {
                           <td className="p-4 font-black text-center border-r-2 border-gray-200 text-lg">
                             {idx + 1}
                           </td>
-                          <td className="p-4 border-r-2 border-gray-200 font-mono font-bold">
+                          <td className="p-4 border-r-2 border-gray-200 font-mono font-bold whitespace-nowrap">
                             #{order._id.substring(0, 8)}
                           </td>
-                          <td className="p-4 border-r-2 border-gray-200 font-bold">
+                          <td className="p-4 border-r-2 border-gray-200 font-bold whitespace-nowrap">
                             {order.nama}
                           </td>
-                          <td className="p-4 border-r-2 border-gray-200 text-sm">
+                          <td className="p-4 border-r-2 border-gray-200 text-sm whitespace-nowrap">
                             {new Date(order.tanggal).toLocaleDateString(
                               "id-ID"
                             )}
                           </td>
-                          <td className="p-4 border-r-2 border-gray-200 text-right font-mono">
+                          <td className="p-4 border-r-2 border-gray-200 text-right font-mono whitespace-nowrap">
                             Rp {order.totalHarga.toLocaleString("id-ID")}
                           </td>
-                          <td className="p-4 border-r-2 border-gray-200 text-right font-mono text-orange-600">
+                          <td className="p-4 border-r-2 border-gray-200 text-right font-mono text-orange-600 whitespace-nowrap">
                             {order.diskon > 0
                               ? `Rp ${order.diskon.toLocaleString("id-ID")}`
                               : "-"}
                           </td>
-                          <td className="p-4 border-r-2 border-gray-200 text-right font-mono font-bold text-green-700">
+                          <td className="p-4 border-r-2 border-gray-200 text-right font-mono font-bold text-green-700 whitespace-nowrap">
                             Rp{" "}
                             {(
                               order.totalHarga -
@@ -608,7 +599,7 @@ const LaporanRevenueCeo = () => {
                           </td>
                           <td className="p-4 text-center">
                             <span
-                              className={`px-3 py-1 rounded-full font-bold text-white text-xs ${
+                              className={`px-3 py-1 rounded-full font-bold text-white text-xs whitespace-nowrap ${
                                 ["selesai", "sampai"].includes(
                                   order.status
                                 )

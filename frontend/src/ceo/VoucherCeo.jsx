@@ -57,29 +57,27 @@ function VoucherCeo({ vouchers, onAdd, onUpdate, onDelete }) {
         confirmButtonColor="bg-red-700 hover:bg-red-800"
       />
       <div className="bg-white text-black shadow-lg rounded-lg p-6 border-2 border-black">
-        <div className="flex items-center justify-between mb-6 pb-4 border-b-2 border-black">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 pb-4 border-b-2 border-black gap-4">
           <h2 className="text-2xl font-bold">Voucher Management</h2>
-            <div className="flex gap-3">
-             {/* TOMBOL BARU: Laporan Voucher */}
-             <button
-                onClick={() => navigate("/laporan-voucher-ceo")}
-                className="flex items-center space-x-2 bg-white text-black border-2 border-black py-2 px-4 rounded-md font-bold hover:bg-gray-100 transition-transform"
-              >
-                <FileText size={20} />
-                <span>Laporan Voucher</span>
-              </button>
+          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+            <button
+              onClick={() => navigate("/laporan-voucher-ceo")}
+              className="flex items-center justify-center space-x-2 bg-white text-black border-2 border-black py-2 px-4 rounded-md font-bold hover:bg-gray-100 transition-transform w-full sm:w-auto"
+            >
+              <FileText size={20} />
+              <span>Laporan Voucher</span>
+            </button>
 
-             {/* Tombol Add */}
-             <button
-                onClick={() => handleOpenModal()}
-                className="flex items-center space-x-2 bg-black text-white py-2 px-4 rounded-md font-bold hover:bg-gray-800 transition-transform hover:scale-105"
-              >
-                <Plus size={20} />
-                <span>Add New Voucher</span>
-              </button>
+            <button
+              onClick={() => handleOpenModal()}
+              className="flex items-center justify-center space-x-2 bg-black text-white py-2 px-4 rounded-md font-bold hover:bg-gray-800 transition-transform hover:scale-105 w-full sm:w-auto"
+            >
+              <Plus size={20} />
+              <span>Add New Voucher</span>
+            </button>
           </div>
         </div>
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto max-h-96 border-2 border-black rounded-lg">
           <table className="min-w-full divide-y-2 divide-black">
             <thead className="bg-gray-50">
               <tr>
@@ -116,12 +114,14 @@ function VoucherCeo({ vouchers, onAdd, onUpdate, onDelete }) {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
                         className={`px-3 py-1 text-xs rounded-md font-bold border-2 ${
-                          voucher.isActive && voucher.currentUses < voucher.maxUses
+                          voucher.isActive &&
+                          voucher.currentUses < voucher.maxUses
                             ? "bg-green-100 text-green-800 border-green-800"
                             : "bg-red-500 text-gray-800 border-red-950"
                         }`}
                       >
-                        {voucher.isActive && voucher.currentUses < voucher.maxUses
+                        {voucher.isActive &&
+                        voucher.currentUses < voucher.maxUses
                           ? "Active"
                           : "Inactive"}
                       </span>
@@ -144,7 +144,10 @@ function VoucherCeo({ vouchers, onAdd, onUpdate, onDelete }) {
                 ))
               ) : (
                 <tr>
-                  <td colSpan="5" className="text-center py-12 text-gray-500 font-semibold italic">
+                  <td
+                    colSpan="5"
+                    className="text-center py-12 text-gray-500 font-semibold italic"
+                  >
                     No active vouchers found.
                   </td>
                 </tr>

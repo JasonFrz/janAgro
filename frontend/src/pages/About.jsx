@@ -52,12 +52,12 @@ const About = () => {
   return (
     <div className="min-h-screen bg-white pt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center py-20">
-          <h1 className="text-6xl font-light text-black mb-6">
+        <div className="text-center py-12 sm:py-20">
+          <h1 className="text-4xl sm:text-6xl font-light text-black mb-4 sm:mb-6">
             About <span className="font-bold">PT. Jan Agro Nusantara</span>
           </h1>
-          <div className="w-24 h-[1px] bg-black mx-auto mb-8"></div>
-          <p className="text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed font-light">
+          <div className="w-16 sm:w-24 h-[1px] bg-black mx-auto mb-6 sm:mb-8"></div>
+          <p className="text-lg sm:text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed font-light">
             PT. Jan Agro Nusantara was founded in 1997 in Makassar as a
             distributor of organic fertilizers for agriculture and aquaculture.
             Over time, the company has continued to grow, expanding its
@@ -67,27 +67,31 @@ const About = () => {
           </p>
         </div>
 
-        <div className="py-20 bg-gray-50 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
+        <div className="py-16 sm:py-20 bg-gray-50 -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto">
-            <h2 className="text-4xl font-light text-center text-black mb-4">
+            <h2 className="text-3xl sm:text-4xl font-light text-center text-black mb-4">
               Our <span className="font-bold">Journey</span>
             </h2>
-            <div className="w-24 h-[1px] bg-black mx-auto mb-12"></div>
+            <div className="w-16 sm:w-24 h-[1px] bg-black mx-auto mb-10 sm:mb-12"></div>
 
             <div className="relative">
-              <div className="absolute left-1/2 transform -translate-x-1/2 w-[1px] h-full bg-gray-300"></div>
-              <div className="space-y-12">
+              {/* Vertical Line: Hidden on mobile, visible on lg */}
+              <div className="hidden lg:block absolute left-1/2 transform -translate-x-1/2 w-[1px] h-full bg-gray-300"></div>
+              
+              <div className="space-y-8 lg:space-y-12">
                 {milestones.map((milestone, index) => (
                   <div
                     key={index}
-                    className={`flex items-center ${
-                      index % 2 === 0 ? "flex-row" : "flex-row-reverse"
+                    // Mobile: Flex column (stack), Desktop: Flex row/reverse
+                    className={`flex flex-col lg:flex-row items-center ${
+                      index % 2 === 0 ? "lg:flex-row" : "lg:flex-row-reverse"
                     }`}
                   >
+                    {/* Content Box */}
                     <div
-                      className={`w-1/2 ${
-                        index % 2 === 0 ? "pr-8 text-right" : "pl-8 text-left"
-                      }`}
+                      className={`w-full lg:w-1/2 ${
+                        index % 2 === 0 ? "lg:pr-8 lg:text-right" : "lg:pl-8 lg:text-left"
+                      } text-center lg:text-inherit mb-4 lg:mb-0`}
                     >
                       <div className="bg-white p-6 rounded-sm shadow-md border border-gray-100">
                         <div className="text-3xl mb-3">{milestone.icon}</div>
@@ -97,8 +101,12 @@ const About = () => {
                         <p className="text-gray-700">{milestone.event}</p>
                       </div>
                     </div>
-                    <div className="w-4 h-4 bg-black rounded-full relative z-10"></div>
-                    <div className="w-1/2"></div>
+
+                    {/* Dot on Center Line (Hidden on mobile) */}
+                    <div className="hidden lg:block w-4 h-4 bg-black rounded-full relative z-10 shrink-0"></div>
+                    
+                    {/* Empty Space for alignment on Desktop */}
+                    <div className="hidden lg:block w-1/2"></div>
                   </div>
                 ))}
               </div>
@@ -106,19 +114,19 @@ const About = () => {
           </div>
         </div>
 
-        <div className="py-20">
-          <h2 className="text-4xl font-light text-center text-black mb-4">
+        <div className="py-16 sm:py-20">
+          <h2 className="text-3xl sm:text-4xl font-light text-center text-black mb-4">
             Company <span className="font-bold">Values</span>
           </h2>
-          <div className="w-24 h-[1px] bg-black mx-auto mb-12"></div>
+          <div className="w-16 sm:w-24 h-[1px] bg-black mx-auto mb-10 sm:mb-12"></div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {values.map((value, index) => (
               <div
                 key={index}
                 className="group text-center p-8 rounded-sm hover:shadow-xl transition-all duration-300 border border-gray-100"
               >
-                <div className="w-20 h-20 bg-black rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-gray-800 transition-colors">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-black rounded-full flex items-center justify-center mx-auto mb-6 group-hover:bg-gray-800 transition-colors">
                   <span className="text-white text-2xl">{value.icon}</span>
                 </div>
                 <h3 className="text-xl font-bold mb-4 text-black">
@@ -133,17 +141,17 @@ const About = () => {
         </div>
 
         {/* Mission */}
-        <div className="py-20 bg-white text-black -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
+        <div className="py-16 sm:py-20 bg-white text-black -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8">
           <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-4xl font-light mb-6">
+            <h2 className="text-3xl sm:text-4xl font-light mb-6">
               <span className="font-bold">Vision & Mission</span>
             </h2>
-            <p className="text-xl leading-relaxed font-light mb-8">
+            <p className="text-lg sm:text-xl leading-relaxed font-light mb-6 sm:mb-8">
               “To become a trusted organic fertilizer company that supports
               sustainable agriculture and improves the welfare of farmers
               throughout Indonesia.”
             </p>
-            <p className="text-lg leading-relaxed">
+            <p className="text-base sm:text-lg leading-relaxed">
               We are committed to providing high-quality, environmentally
               friendly products that meet the needs of the modern market.
             </p>

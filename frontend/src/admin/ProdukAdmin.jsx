@@ -2,10 +2,6 @@ import React, { useState } from "react";
 import { Plus, X, Upload, Edit, Trash2, FileText } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
-// Tidak perlu lagi SERVER_URL untuk gambar Cloudinary
-// const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
-// const SERVER_URL = API_URL.replace("/api", "");
-
 function ProdukAdmin({ produk = [], onAdd, onUpdate, onDelete }) {
   const navigate = useNavigate();
   const [form, setForm] = useState({
@@ -19,7 +15,6 @@ function ProdukAdmin({ produk = [], onAdd, onUpdate, onDelete }) {
     const file = e.target.files[0];
     if (file && (file.type === "image/png" || file.type === "image/jpeg")) {
       setImageFile(file);
-      // Untuk file baru dari komputer, kita buat local preview URL
       setImagePreview(URL.createObjectURL(file));
       setForm({ ...form, image: "" });
     } else {
@@ -46,10 +41,8 @@ function ProdukAdmin({ produk = [], onAdd, onUpdate, onDelete }) {
     formData.append("detail", form.detail);
 
     if (imageFile) {
-      // Jika ada file baru yang diupload
       formData.append("image", imageFile);
     } else if (form.image) {
-      // Jika menggunakan gambar lama (URL String)
       formData.append("image", form.image);
     }
 
@@ -94,113 +87,161 @@ function ProdukAdmin({ produk = [], onAdd, onUpdate, onDelete }) {
     setEditingId(p._id);
     setImageFile(null);
 
-    // --- PERUBAHAN DI SINI ---
-    // Langsung gunakan URL dari database karena itu adalah URL Cloudinary
     if (p.image) {
       setImagePreview(p.image); 
     } else {
       setImagePreview(null);
     }
+    // Scroll ke atas agar form terlihat di mobile
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const isFormInvalid = !form.name || !form.category || !imagePreview || !form.detail || form.price <= 0 || form.stock < 0;
 
   return (
     <>
-      <div className="space-y-6">
-        <div className="bg-white shadow rounded-lg p-6">
-          <h2 className="text-xl font-semibold mb-4">
-            {editingId ? "Edit Produk" : "Tambah Produk"}
+      <div className="space-y-8">
+        {/* Form Section */}
+        <div className="bg-white shadow-md rounded-lg p-6 border border-gray-100">
+          <h2 className="text-xl font-bold mb-6 text-gray-800">
+            {editingId ? "Edit Produk" : "Tambah Produk Baru"}
           </h2>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <input type="text" placeholder="Nama Produk" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full p-2 border rounded" required />
-            <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="w-full p-2 border rounded" required>
-              <option value="" disabled>Pilih Kategori Produk</option>
-              <option value="Pupuk">Pupuk</option>
-              <option value="Alat">Alat</option>
-              <option value="Bibit">Bibit</option>
-            </select>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Gambar Produk</label>
-              <div className="flex items-center gap-4">
-                <div className="w-20 h-20 flex items-center justify-center border rounded-md bg-gray-100 overflow-hidden">
-                  {imagePreview ? (<img src={imagePreview} alt="Pratinjau" className="w-full h-full object-cover"/>) : (<span className="text-gray-500 text-sm">Pratinjau</span>)}
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className="md:col-span-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Nama Produk</label>
+                    <input type="text" placeholder="Contoh: Pupuk Urea" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:border-transparent outline-none" required />
                 </div>
+                
                 <div>
-                    <input type="file" id="admin-image-upload" accept="image/png, image/jpeg" onChange={handleImageChange} className="hidden"/>
-                    <label htmlFor="admin-image-upload" className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 text-sm cursor-pointer flex items-center justify-center">
-                        <Upload size={16} className="mr-2"/> Upload Image
-                    </label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Kategori</label>
+                    <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black outline-none bg-white" required>
+                        <option value="" disabled>Pilih Kategori</option>
+                        <option value="Pupuk">Pupuk</option>
+                        <option value="Alat">Alat</option>
+                        <option value="Bibit">Bibit</option>
+                    </select>
                 </div>
-              </div>
+
+                <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Gambar Produk</label>
+                    <div className="flex items-center gap-4">
+                        <div className="w-24 h-24 flex-shrink-0 flex items-center justify-center border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 overflow-hidden">
+                        {imagePreview ? (<img src={imagePreview} alt="Pratinjau" className="w-full h-full object-cover"/>) : (<span className="text-gray-400 text-xs text-center px-1">No Image</span>)}
+                        </div>
+                        <div className="flex-1">
+                            <input type="file" id="admin-image-upload" accept="image/png, image/jpeg" onChange={handleImageChange} className="hidden"/>
+                            <label htmlFor="admin-image-upload" className="w-full sm:w-auto bg-blue-600 text-white px-4 py-2.5 rounded-md hover:bg-blue-700 text-sm font-medium cursor-pointer flex items-center justify-center transition-colors">
+                                <Upload size={18} className="mr-2"/> Pilih Gambar
+                            </label>
+                            <p className="text-xs text-gray-500 mt-2">Format: JPG, PNG. Max: 2MB</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="md:col-span-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Deskripsi Singkat</label>
+                    <textarea placeholder="Ringkasan singkat produk..." value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black outline-none" rows="2"/>
+                </div>
+
+                <div className="md:col-span-2">
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Detail Lengkap</label>
+                    <textarea placeholder="Spesifikasi lengkap produk..." value={form.detail} onChange={(e) => setForm({ ...form, detail: e.target.value })} className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black outline-none" rows="4" required/>
+                </div>
+
+                <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Harga (Rp)</label>
+                    <input type="number" placeholder="0" value={form.price} onChange={(e) => setForm({ ...form, price: Math.max(0, Number(e.target.value)) })} className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black outline-none" required/>
+                </div>
+
+                <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Stok</label>
+                    <input type="number" placeholder="0" value={form.stock} onChange={(e) => setForm({ ...form, stock: Math.max(0, Number(e.target.value)) })} className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black outline-none" required/>
+                </div>
             </div>
-            <textarea placeholder="Deskripsi Produk" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="w-full p-2 border rounded" rows="3"/>
-            <textarea placeholder="Detail Produk (Wajib)" value={form.detail} onChange={(e) => setForm({ ...form, detail: e.target.value })} className="w-full p-2 border rounded" rows="5" required/>
-            <input type="number" placeholder="Harga" value={form.price} onChange={(e) => setForm({ ...form, price: Math.max(0, Number(e.target.value)) })} className="w-full p-2 border rounded" required/>
-            <input type="number" placeholder="Stok" value={form.stock} onChange={(e) => setForm({ ...form, stock: Math.max(0, Number(e.target.value)) })} className="w-full p-2 border rounded" required/>
-            <div className="flex space-x-2">
-              <button type="submit" disabled={isFormInvalid} className={`bg-green-600 text-white px-4 py-2 rounded flex items-center ${isFormInvalid ? "opacity-50 cursor-not-allowed" : "hover:bg-green-700"}`}>
-                <Plus className="mr-2 h-4 w-4" /> {editingId ? "Perbarui Produk" : "Tambah Produk"}
+
+            <div className="flex flex-col sm:flex-row gap-3 pt-4">
+              <button type="submit" disabled={isFormInvalid} className={`flex-1 justify-center bg-black text-white px-6 py-3 rounded-md font-bold flex items-center transition-all ${isFormInvalid ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-800"}`}>
+                <Plus className="mr-2 h-5 w-5" /> {editingId ? "Perbarui Produk" : "Tambah Produk"}
               </button>
-              {editingId && (<button type="button" onClick={handleCancel} className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500 flex items-center">
-                  <X className="w-4 h-4 mr-2" /> Batal
-                </button>)}
+              {editingId && (
+                <button type="button" onClick={handleCancel} className="flex-1 justify-center bg-white text-gray-700 border border-gray-300 px-6 py-3 rounded-md font-bold hover:bg-gray-50 flex items-center transition-all">
+                  <X className="w-5 h-5 mr-2" /> Batal
+                </button>
+              )}
             </div>
           </form>
         </div>
 
-        <div className="bg-white shadow rounded-lg p-6">
-          <div className="flex flex-col sm:flex-row justify-between items-center mb-4 pb-4 border-b gap-4">
-            <h2 className="text-xl font-semibold">Daftar Produk</h2>
-            <div className="flex gap-2 flex-wrap">
+        {/* List Product Section */}
+        <div className="bg-white shadow-md rounded-lg p-6 border border-gray-100">
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 pb-4 border-b border-gray-100 gap-4">
+            <h2 className="text-xl font-bold text-gray-800">Daftar Produk</h2>
+            <div className="flex flex-wrap gap-2 w-full lg:w-auto">
               <button
                 onClick={() => navigate("/laporan-stok-admin")}
-                className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition shadow-md font-bold"
+                className="flex-1 lg:flex-none flex items-center justify-center gap-2 bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition shadow-sm font-medium text-sm"
               >
-                <FileText size={20} />
+                <FileText size={16} />
                 <span>Laporan Stok</span>
               </button>
               <button
                 onClick={() => navigate("/laporan-movement-admin")}
-                className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition shadow-md font-bold"
+                className="flex-1 lg:flex-none flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition shadow-sm font-medium text-sm"
               >
-                <FileText size={20} />
+                <FileText size={16} />
                 <span>Laporan Masuk/Keluar</span>
               </button>
             </div>
           </div>
-          {produk.length === 0 ? (<p className="text-gray-500">Memuat produk...</p>) : (
-            <div className="overflow-x-auto max-h-96 overflow-y-auto">
-              <table className="w-full border-collapse">
-                <thead className="sticky top-0 bg-gray-100 z-10">
+
+          {produk.length === 0 ? (<p className="text-gray-500 text-center py-8">Belum ada data produk.</p>) : (
+            <div className="overflow-x-auto rounded-lg border border-gray-200">
+              <table className="w-full border-collapse min-w-[700px]">
+                <thead className="bg-gray-50">
                   <tr>
-                    <th className="p-2 border">Gambar</th>
-                    <th className="p-2 border">Nama</th>
-                    <th className="p-2 border">Kategori</th>
-                    <th className="p-2 border">Harga</th>
-                    <th className="p-2 border">Stok</th>
-                    <th className="p-2 border">Aksi</th>
+                    <th className="p-3 text-left font-semibold text-gray-600 border-b w-20">Gambar</th>
+                    <th className="p-3 text-left font-semibold text-gray-600 border-b">Nama Produk</th>
+                    <th className="p-3 text-left font-semibold text-gray-600 border-b w-32">Kategori</th>
+                    <th className="p-3 text-right font-semibold text-gray-600 border-b w-32">Harga</th>
+                    <th className="p-3 text-center font-semibold text-gray-600 border-b w-24">Stok</th>
+                    <th className="p-3 text-center font-semibold text-gray-600 border-b w-32">Aksi</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-gray-100">
                   {produk.map((p) => (
-                    <tr key={p._id} className="border-t">
-                      <td className="p-2 border w-24">
-                        {/* --- PERUBAHAN DI SINI --- */}
+                    <tr key={p._id} className="hover:bg-gray-50 transition-colors">
+                      <td className="p-3">
                         {p.image ? (
-                            <img src={p.image} alt={p.name} className="w-16 h-16 object-cover rounded mx-auto"/>
+                            <img src={p.image} alt={p.name} className="w-12 h-12 object-cover rounded border border-gray-200"/>
                         ) : (
-                            <div className="w-16 h-16 bg-gray-200 rounded mx-auto flex items-center justify-center text-xs text-gray-500">No Image</div>
+                            <div className="w-12 h-12 bg-gray-100 rounded flex items-center justify-center text-[10px] text-gray-400 border border-gray-200">No IMG</div>
                         )}
                       </td>
-                      <td className="p-2 border">{p.name}</td>
-                      <td className="p-2 border">{p.category}</td>
-                      <td className="p-2 border">Rp {p.price.toLocaleString("id-ID")}</td>
-                      <td className="p-2 border">{p.stock}</td>
-                      <td className="p-2 border">
-                        <div className="flex flex-col items-center space-y-2 md:flex-row md:space-y-0 md:space-x-2 md:justify-center">
-                            <button onClick={() => handleEdit(p)} className="text-blue-600 hover:underline text-sm flex items-center"><Edit size={14} className="mr-1"/> Edit</button>
-                            <button onClick={() => handleDelete(p._id, p.name)} className="text-red-600 hover:underline text-sm flex items-center"><Trash2 size={14} className="mr-1"/> Hapus</button>
+                      <td className="p-3 font-medium text-gray-900">{p.name}</td>
+                      <td className="p-3 text-gray-600 text-sm">{p.category}</td>
+                      <td className="p-3 text-right font-mono text-sm">Rp {p.price.toLocaleString("id-ID")}</td>
+                      <td className="p-3 text-center">
+                        <span className={`px-2 py-1 rounded-full text-xs font-bold ${p.stock <= 10 ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+                            {p.stock}
+                        </span>
+                      </td>
+                      <td className="p-3">
+                        <div className="flex items-center justify-center gap-2">
+                            <button 
+                                onClick={() => handleEdit(p)} 
+                                className="p-2 text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+                                title="Edit"
+                            >
+                                <Edit size={18} />
+                            </button>
+                            <button 
+                                onClick={() => handleDelete(p._id, p.name)} 
+                                className="p-2 text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                                title="Hapus"
+                            >
+                                <Trash2 size={18} />
+                            </button>
                         </div>
                       </td>
                     </tr>

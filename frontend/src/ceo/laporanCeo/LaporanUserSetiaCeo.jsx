@@ -190,27 +190,28 @@ const LaporanUserSetiaCeo = () => {
   };
 
   return (
-    <div className="bg-white min-h-screen pt-24 text-black font-sans pb-12">
+    <div className="bg-white min-h-screen pt-20 sm:pt-24 text-black font-sans pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        {/* Header - Responsive */}
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center border-b-4 border-black pb-4 gap-4">
           <div>
-            <h1 className="text-4xl font-black uppercase tracking-tight">
+            <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tight">
               Top Loyal Customers
             </h1>
-            <p className="text-gray-600 font-medium mt-1">
+            <p className="text-gray-600 font-medium mt-1 text-sm sm:text-base">
               Pelanggan dengan total belanja & frekuensi tertinggi.
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex flex-wrap gap-3 w-full md:w-auto">
             <button
               onClick={handleExportPDF}
-              className="flex items-center bg-green-600 text-white border-2 border-black px-5 py-2.5 rounded-lg font-bold hover:bg-green-600 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]"
+              className="flex-1 md:flex-none flex items-center justify-center bg-green-600 text-white border-2 border-black px-5 py-2.5 rounded-lg font-bold hover:bg-green-600 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]"
             >
               <FileText className="mr-2 h-5 w-5" /> EXPORT PDF
             </button>
             <Link
               to="/ceo"
-              className="flex items-center bg-black text-white px-5 py-2.5 rounded-lg font-bold hover:bg-gray-800 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]"
+              className="flex-1 md:flex-none flex items-center justify-center bg-black text-white px-5 py-2.5 rounded-lg font-bold hover:bg-gray-800 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]"
             >
               <ArrowLeft className="mr-2 h-5 w-5" /> KEMBALI
             </Link>
@@ -229,12 +230,13 @@ const LaporanUserSetiaCeo = () => {
                 className="border-2 border-black rounded-lg overflow-hidden shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all hover:-translate-y-1"
               >
                 <div
-                  className="p-6 bg-white flex flex-col md:flex-row items-center justify-between gap-6 cursor-pointer hover:bg-gray-50"
+                  className="p-4 sm:p-6 bg-white flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 sm:gap-6 cursor-pointer hover:bg-gray-50"
                   onClick={() => toggleExpand(user._id)}
                 >
-                  <div className="flex items-center gap-4 w-full md:w-auto">
+                  {/* User Profile */}
+                  <div className="flex items-center gap-4 w-full lg:w-auto">
                     <div
-                      className={`flex-shrink-0 h-16 w-16 rounded-full border-2 border-black flex items-center justify-center text-xl font-black ${
+                      className={`flex-shrink-0 h-12 w-12 sm:h-16 sm:w-16 rounded-full border-2 border-black flex items-center justify-center text-lg sm:text-xl font-black ${
                         index < 3 ? "bg-yellow-400" : "bg-gray-200"
                       }`}
                     >
@@ -244,45 +246,50 @@ const LaporanUserSetiaCeo = () => {
                       <img
                         src={user.avatar}
                         alt={user.name}
-                        className="h-16 w-16 rounded-full border-2 border-black object-cover"
+                        className="h-12 w-12 sm:h-16 sm:w-16 rounded-full border-2 border-black object-cover"
                       />
                     ) : (
-                      <div className="h-16 w-16 rounded-full border-2 border-black bg-black text-white flex items-center justify-center">
-                        <User size={32} />
+                      <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-full border-2 border-black bg-black text-white flex items-center justify-center">
+                        <User size={24} />
                       </div>
                     )}
-                    <div>
-                      <h3 className="text-xl font-black uppercase">
+                    <div className="overflow-hidden">
+                      <h3 className="text-lg sm:text-xl font-black uppercase truncate">
                         {user.name}
                       </h3>
-                      <p className="text-gray-500 font-medium text-sm">
-                        @{user.username} | {user.email}
+                      <p className="text-gray-500 font-medium text-xs sm:text-sm truncate">
+                        @{user.username}
+                      </p>
+                      <p className="text-gray-500 font-medium text-xs sm:text-sm truncate hidden sm:block">
+                        {user.email}
                       </p>
                     </div>
                   </div>
-                  <div className="flex flex-wrap gap-4 md:gap-8 w-full md:w-auto justify-start md:justify-end">
-                    <div className="text-center min-w-[100px]">
+
+                  {/* Stats */}
+                  <div className="flex flex-wrap gap-4 w-full lg:w-auto justify-between lg:justify-end border-t lg:border-t-0 pt-4 lg:pt-0">
+                    <div className="text-left lg:text-center min-w-[100px]">
                       <p className="text-xs font-bold text-gray-500 uppercase mb-1">
                         Total Belanja
                       </p>
-                      <p className="text-xl font-black flex items-center justify-center gap-1">
+                      <p className="text-lg sm:text-xl font-black flex items-center lg:justify-center gap-1">
                         <DollarSign size={18} className="text-green-600" /> Rp{" "}
                         {user.totalSpent.toLocaleString("id-ID")}
                       </p>
                     </div>
-                    <div className="text-center min-w-[80px]">
+                    <div className="text-left lg:text-center min-w-[80px]">
                       <p className="text-xs font-bold text-gray-500 uppercase mb-1">
                         Frekuensi
                       </p>
-                      <p className="text-xl font-black flex items-center justify-center gap-1">
+                      <p className="text-lg sm:text-xl font-black flex items-center lg:justify-center gap-1">
                         <ShoppingBag size={18} /> {user.orderCount}x
                       </p>
                     </div>
-                    <div className="text-center min-w-[120px] hidden sm:block">
+                    <div className="text-left lg:text-center min-w-[120px] hidden sm:block">
                       <p className="text-xs font-bold text-gray-500 uppercase mb-1">
                         Terakhir Order
                       </p>
-                      <p className="text-lg font-bold flex items-center justify-center gap-1">
+                      <p className="text-base sm:text-lg font-bold flex items-center lg:justify-center gap-1">
                         <Calendar size={16} />{" "}
                         {new Date(user.lastOrderDate).toLocaleDateString(
                           "id-ID",
@@ -292,13 +299,15 @@ const LaporanUserSetiaCeo = () => {
                     </div>
                   </div>
                 </div>
+
+                {/* Expanded Details */}
                 {expandedUser === user._id && (
-                  <div className="bg-gray-100 border-t-2 border-black p-6 animate-fade-in">
+                  <div className="bg-gray-100 border-t-2 border-black p-4 sm:p-6 animate-fade-in">
                     <h4 className="font-bold text-lg mb-4 flex items-center gap-2">
                       <ShoppingBag className="text-black" size={20} /> Riwayat
                       Barang yang Dibeli
                     </h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                       {groupItems(user.allItems).map((item, i) => (
                         <div
                           key={i}
@@ -308,14 +317,14 @@ const LaporanUserSetiaCeo = () => {
                             <img
                               src={item.image}
                               alt={item.name}
-                              className="w-12 h-12 object-cover border border-gray-300 rounded"
+                              className="w-12 h-12 object-cover border border-gray-300 rounded shrink-0"
                             />
                           ) : (
-                            <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center text-xs font-bold">
+                            <div className="w-12 h-12 bg-gray-200 rounded flex items-center justify-center text-xs font-bold shrink-0">
                               No IMG
                             </div>
                           )}
-                          <div className="overflow-hidden">
+                          <div className="overflow-hidden w-full">
                             <p
                               className="font-bold text-sm truncate"
                               title={item.name}
@@ -326,7 +335,7 @@ const LaporanUserSetiaCeo = () => {
                               <span className="bg-black text-white px-1.5 rounded font-bold">
                                 {item.quantity}x
                               </span>
-                              <span>
+                              <span className="font-mono">
                                 Rp {item.totalPrice.toLocaleString("id-ID")}
                               </span>
                             </div>

@@ -29,7 +29,6 @@ ChartJS.register(
 const OrderDetailModal = ({ order, onClose }) => {
   if (!order) return null;
 
-  // Helper function to map payment type to readable format
   const getPaymentMethodDisplay = (paymentType, metodePembayaran) => {
     const paymentMap = {
       'credit_card': 'Kartu Kredit',
@@ -41,11 +40,9 @@ const OrderDetailModal = ({ order, onClose }) => {
       'bnpl': 'Cicilan',
       'transfer_bank': 'Transfer Bank'
     };
-    // If paymentType exists and is not null/empty, use it (it's from actual Midtrans payment)
     if (paymentType && paymentType !== 'null' && paymentType.trim()) {
       return paymentMap[paymentType] || paymentType;
     }
-    // Fall back to metodePembayaran only if it's not 'Online Payment'
     if (metodePembayaran && metodePembayaran !== 'Online Payment') {
       return metodePembayaran;
     }
@@ -54,27 +51,28 @@ const OrderDetailModal = ({ order, onClose }) => {
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-50 p-4"
+      className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-[60] p-4"
       onClick={onClose}
     >
+      {/* Modal Responsive Width & Height */}
       <div
-        className="bg-white text-black p-8 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border-2 border-black relative animate-fade-in"
+        className="bg-white text-black p-6 sm:p-8 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border-2 border-black relative animate-fade-in"
         onClick={(e) => e.stopPropagation()}
       >
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-black"
+          className="absolute top-4 right-4 text-gray-500 hover:text-black bg-gray-100 rounded-full p-1 transition-colors"
         >
-          <X size={24} />
+          <X size={20} />
         </button>
-        <div className="border-b-2 border-black pb-4 mb-6">
-          <h2 className="text-3xl font-bold">Detail Pesanan</h2>
-          <p className="text-gray-600">ORDER #{order.id}</p>
+        <div className="border-b-2 border-black pb-4 mb-6 pr-8">
+          <h2 className="text-2xl sm:text-3xl font-bold">Detail Pesanan</h2>
+          <p className="text-gray-600 text-sm sm:text-base break-all">ORDER #{order.id}</p>
         </div>
         <div className="space-y-6">
           <div>
             <h3 className="text-lg font-bold mb-2">Informasi Pengiriman</h3>
-            <div className="text-sm space-y-1">
+            <div className="text-sm space-y-1 bg-gray-50 p-3 rounded border border-gray-200">
               <p>
                 <span className="font-semibold">Nama:</span> {order.nama}
               </p>
@@ -82,7 +80,7 @@ const OrderDetailModal = ({ order, onClose }) => {
                 <span className="font-semibold">Telepon:</span>
                 {order.noTelpPenerima}
               </p>
-              <p>
+              <p className="break-words">
                 <span className="font-semibold">Alamat:</span> {order.alamat}
               </p>
             </div>
@@ -93,7 +91,7 @@ const OrderDetailModal = ({ order, onClose }) => {
               {order.items.map((item) => (
                 <div
                   key={item._id || item.product}
-                  className="flex justify-between items-center py-3 text-sm"
+                  className="flex justify-between items-start py-3 text-sm gap-4"
                 >
                   <div>
                     <p className="font-bold">{item.name}</p>
@@ -101,7 +99,7 @@ const OrderDetailModal = ({ order, onClose }) => {
                       {item.quantity} x Rp {item.price.toLocaleString("id-ID")}
                     </p>
                   </div>
-                  <p className="font-semibold">
+                  <p className="font-semibold whitespace-nowrap">
                     Rp {(item.quantity * item.price).toLocaleString("id-ID")}
                   </p>
                 </div>
@@ -110,7 +108,7 @@ const OrderDetailModal = ({ order, onClose }) => {
           </div>
           <div>
             <h3 className="text-lg font-bold mb-2">Ringkasan Pembayaran</h3>
-            <div className="space-y-2 text-sm">
+            <div className="space-y-2 text-sm bg-gray-50 p-3 rounded border border-gray-200">
               <div className="flex justify-between">
                 <span className="text-gray-600">Subtotal:</span>
                 <span>
@@ -143,9 +141,9 @@ const OrderDetailModal = ({ order, onClose }) => {
                 <span>Total Harga:</span>
                 <span>Rp {order.totalHarga.toLocaleString("id-ID")}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Metode Pembayaran:</span>
-                <span className="font-semibold">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-600">Metode:</span>
+                <span className="font-semibold bg-black text-white px-2 py-0.5 rounded text-xs">
                   {getPaymentMethodDisplay(order.paymentType, order.metodePembayaran)}
                 </span>
               </div>
@@ -158,34 +156,32 @@ const OrderDetailModal = ({ order, onClose }) => {
 };
 
 const LaporanSection = ({ title, orders, onOrderClick }) => (
-  <div className="bg-white p-6 rounded-lg border border-black">
-    <h2 className="text-xl font-bold mb-4 border-b border-black pb-2">
-      {title}
+  <div className="bg-white p-4 sm:p-6 rounded-lg border border-black shadow-sm">
+    <h2 className="text-lg sm:text-xl font-bold mb-4 border-b border-black pb-2 flex justify-between items-center">
+      <span>{title}</span>
+      <span className="bg-gray-200 text-xs px-2 py-1 rounded-full text-gray-700">{orders.length}</span>
     </h2>
     {orders.length > 0 ? (
-      <div className="divide-y divide-gray-300 max-h-96 overflow-y-auto pr-2">
+      <div className="divide-y divide-gray-300 max-h-80 overflow-y-auto pr-1 custom-scrollbar">
         {orders.map((order) => (
           <button
             key={order.id}
             onClick={() => onOrderClick(order)}
-            className="w-full text-left py-3 hover:bg-gray-50 transition-colors"
+            className="w-full text-left py-3 px-2 hover:bg-gray-50 transition-colors rounded-sm"
           >
-            <div className="flex justify-between items-center">
+            <div className="flex justify-between items-start">
               <div>
-                <p className="font-bold text-black">ORDER #{order.id}</p>
-                <p className="text-sm text-gray-600">{order.nama}</p>
+                <p className="font-bold text-black text-sm">#{order.id.substring(0, 8)}</p>
+                <p className="text-xs text-gray-600 line-clamp-1">{order.nama}</p>
               </div>
               <div className="text-right">
-                <p className="font-semibold text-black">
+                <p className="font-semibold text-black text-sm">
                   Rp {order.totalHarga.toLocaleString("id-ID")}
                 </p>
-                <p className="text-xs text-gray-500">
+                <p className="text-[10px] text-gray-500">
                   {new Date(order.tanggal).toLocaleDateString("id-ID", {
                     day: "2-digit",
                     month: "short",
-                    year: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
                   })}
                 </p>
               </div>
@@ -194,8 +190,8 @@ const LaporanSection = ({ title, orders, onOrderClick }) => (
         ))}
       </div>
     ) : (
-      <p className="text-gray-500 italic">
-        Tidak ada pesanan pada kategori ini.
+      <p className="text-gray-500 italic text-sm text-center py-4">
+        Tidak ada pesanan.
       </p>
     )}
   </div>
@@ -292,18 +288,8 @@ const LaporanPesananCeo = () => {
     else filteredDatasets = datasets;
     return {
       labels: [
-        "Jan",
-        "Feb",
-        "Mar",
-        "Apr",
-        "Mei",
-        "Jun",
-        "Jul",
-        "Agu",
-        "Sep",
-        "Okt",
-        "Nov",
-        "Des",
+        "Jan", "Feb", "Mar", "Apr", "Mei", "Jun", 
+        "Jul", "Agu", "Sep", "Okt", "Nov", "Des",
       ],
       datasets: filteredDatasets,
     };
@@ -312,7 +298,6 @@ const LaporanPesananCeo = () => {
   const handleExportPDF = () => {
     const doc = new jsPDF();
     
-    // Helper function to map payment type to readable format
     const getPaymentMethodDisplay = (paymentType, metodePembayaran) => {
       const paymentMap = {
         'credit_card': 'Kartu Kredit',
@@ -324,11 +309,9 @@ const LaporanPesananCeo = () => {
         'bnpl': 'Cicilan',
         'transfer_bank': 'Transfer Bank'
       };
-      // If paymentType exists and is not null/empty, use it (it's from actual Midtrans payment)
       if (paymentType && paymentType !== 'null' && paymentType.trim && paymentType.trim()) {
         return paymentMap[paymentType] || paymentType;
       }
-      // Fall back to metodePembayaran only if it's not 'Online Payment'
       if (metodePembayaran && metodePembayaran !== 'Online Payment') {
         return metodePembayaran;
       }
@@ -406,7 +389,6 @@ const LaporanPesananCeo = () => {
         const margin = data.settings.margin.left;
         const pageWidth = doc.internal.pageSize.getWidth();
 
-        // --- HEADER ---
         try {
           doc.addImage(
             janAgroLogoBase64,
@@ -446,7 +428,6 @@ const LaporanPesananCeo = () => {
         doc.setDrawColor(0, 0, 0);
         doc.line(margin, 35, pageWidth - data.settings.margin.right, 35);
 
-        // --- FOOTER ---
         if (data.pageNumber === doc.internal.getNumberOfPages()) {
           const pageHeight = doc.internal.pageSize.getHeight();
           let finalY = data.cursor.y;
@@ -509,23 +490,27 @@ const LaporanPesananCeo = () => {
 
   return (
     <>
-      <div className="bg-white min-h-screen pt-24 text-black">
+      <div className="bg-white min-h-screen pt-20 sm:pt-24 text-black">
         <div className="max-w-7xl mx-auto space-y-8 px-4 sm:px-6 lg:px-8 pb-12">
-          <header className="flex justify-between items-center border-b-2 border-black pb-4">
+          {/* Header */}
+          <header className="flex flex-col md:flex-row justify-between items-start md:items-center border-b-4 border-black pb-4 gap-4">
             <div>
-              <h1 className="text-4xl font-bold">Laporan Pesanan</h1>
-              <p className="text-gray-600 mt-1">
+              <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tight">
+                Laporan Pesanan
+              </h1>
+              <p className="text-gray-600 font-medium mt-1 text-sm sm:text-base">
                 Analisis dan rekapitulasi data pesanan.
               </p>
             </div>
             <Link
               to="/ceo"
-              className="bg-black text-white px-4 py-2 rounded-lg flex items-center hover:bg-gray-800 transition-colors duration-200"
+              className="flex w-full md:w-auto items-center justify-center bg-black text-white px-5 py-2.5 rounded-lg font-bold hover:bg-gray-800 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]"
             >
               <ArrowLeft className="mr-2 h-5 w-5" />
-              Kembali ke Ceo
+              Kembali
             </Link>
           </header>
+
           {loading ? (
             <div className="text-center py-20">
               <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-black border-t-transparent"></div>
@@ -533,9 +518,10 @@ const LaporanPesananCeo = () => {
             </div>
           ) : (
             <>
-              <div className="bg-white p-6 rounded-lg border border-black space-y-6">
+              {/* Chart Section */}
+              <div className="bg-white p-4 sm:p-6 rounded-lg border-2 border-black space-y-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
                 <div>
-                  <h2 className="text-xl font-bold mb-4">
+                  <h2 className="text-lg sm:text-xl font-bold mb-4">
                     Filter Diagram Pembelian
                   </h2>
                   <div className="flex flex-col sm:flex-row gap-4">
@@ -561,26 +547,29 @@ const LaporanPesananCeo = () => {
                     </select>
                   </div>
                 </div>
-                <div className="h-96 relative">
+                <div className="h-64 sm:h-96 relative w-full">
                   <Bar data={chartData} options={chartOptions} />
                 </div>
               </div>
-              <div className="bg-white border border-black p-6 rounded-lg">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
-                  <h2 className="text-xl font-bold mb-4 sm:mb-0">
+
+              {/* Filter List & PDF */}
+              <div className="bg-white border-2 border-black p-4 sm:p-6 rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+                  <h2 className="text-lg sm:text-xl font-bold">
                     Filter Daftar Pesanan
                   </h2>
                   <button
                     onClick={handleExportPDF}
-                    className="bg-green-600 text-white px-4 py-2 rounded-lg flex items-center hover:bg-green-700 transition-colors duration-200"
+                    className="w-full sm:w-auto bg-green-600 text-white px-4 py-2 rounded-lg flex items-center justify-center hover:bg-green-700 transition-colors duration-200"
                   >
                     <FileText className="mr-2 h-5 w-5" /> Export PDF
                   </button>
                 </div>
-                <div className="flex space-x-4 mb-4 border-b border-gray-200 pb-2">
+
+                <div className="flex flex-wrap gap-2 mb-4 border-b border-gray-200 pb-2">
                   <button
                     onClick={() => setFilterType("monthly")}
-                    className={`flex items-center gap-2 pb-2 px-2 transition-colors ${
+                    className={`flex items-center gap-2 pb-2 px-2 transition-colors text-sm sm:text-base ${
                       filterType === "monthly"
                         ? "border-b-2 border-black font-bold text-black"
                         : "text-gray-500 hover:text-black"
@@ -591,19 +580,20 @@ const LaporanPesananCeo = () => {
                   </button>
                   <button
                     onClick={() => setFilterType("daily")}
-                    className={`flex items-center gap-2 pb-2 px-2 transition-colors ${
+                    className={`flex items-center gap-2 pb-2 px-2 transition-colors text-sm sm:text-base ${
                       filterType === "daily"
                         ? "border-b-2 border-black font-bold text-black"
                         : "text-gray-500 hover:text-black"
                     }`}
                   >
                     <Calendar size={18} />
-                    Per Tanggal Spesifik
+                    Per Tanggal
                   </button>
                 </div>
-                <div className="flex flex-col sm:flex-row gap-4 items-center animate-fade-in">
+
+                <div className="flex flex-col sm:flex-row gap-4 items-end sm:items-center animate-fade-in">
                   {filterType === "monthly" ? (
-                    <>
+                    <div className="flex flex-col sm:flex-row gap-3 w-full">
                       <select
                         value={listYear}
                         onChange={(e) => setListYear(parseInt(e.target.value))}
@@ -615,71 +605,62 @@ const LaporanPesananCeo = () => {
                           </option>
                         ))}
                       </select>
-                      <select
-                        value={listMonthStart}
-                        onChange={(e) =>
-                          setListMonthStart(parseInt(e.target.value))
-                        }
-                        className="w-full sm:w-auto bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
-                      >
-                        {Array.from({ length: 12 }, (_, i) => (
-                          <option key={i + 1} value={i + 1}>
-                            {new Date(0, i).toLocaleString("id-ID", {
-                              month: "long",
-                            })}
-                          </option>
-                        ))}
-                      </select>
-                      <span className="text-gray-600">sampai</span>
-                      <select
-                        value={listMonthEnd}
-                        onChange={(e) =>
-                          setListMonthEnd(parseInt(e.target.value))
-                        }
-                        className="w-full sm:w-auto bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
-                      >
-                        {Array.from({ length: 12 }, (_, i) => (
-                          <option key={i + 1} value={i + 1}>
-                            {new Date(0, i).toLocaleString("id-ID", {
-                              month: "long",
-                            })}
-                          </option>
-                        ))}
-                      </select>
-                    </>
+                      <div className="flex gap-2 items-center w-full sm:w-auto">
+                        <select
+                          value={listMonthStart}
+                          onChange={(e) =>
+                            setListMonthStart(parseInt(e.target.value))
+                          }
+                          className="w-full sm:w-auto bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
+                        >
+                          {Array.from({ length: 12 }, (_, i) => (
+                            <option key={i + 1} value={i + 1}>
+                              {new Date(0, i).toLocaleString("id-ID", {
+                                month: "short",
+                              })}
+                            </option>
+                          ))}
+                        </select>
+                        <span className="text-gray-600">-</span>
+                        <select
+                          value={listMonthEnd}
+                          onChange={(e) =>
+                            setListMonthEnd(parseInt(e.target.value))
+                          }
+                          className="w-full sm:w-auto bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
+                        >
+                          {Array.from({ length: 12 }, (_, i) => (
+                            <option key={i + 1} value={i + 1}>
+                              {new Date(0, i).toLocaleString("id-ID", {
+                                month: "short",
+                              })}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
                   ) : (
-                    <div className="flex items-center gap-2 w-full sm:w-auto">
-                      <label className="font-semibold text-gray-700">
-                        Pilih Tanggal:
-                      </label>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 w-full sm:w-auto">
                       <input
                         type="date"
                         value={specificDate}
                         onChange={(e) => setSpecificDate(e.target.value)}
-                        className="bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
+                        className="w-full sm:w-auto bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
                       />
-                      <span className="text-sm text-gray-500 ml-2">
-                        (Menampilkan data:{" "}
-                        {new Date(specificDate).toLocaleDateString("id-ID", {
-                          weekday: "long",
-                          day: "numeric",
-                          month: "long",
-                          year: "numeric",
-                        })}
-                        )
-                      </span>
                     </div>
                   )}
                 </div>
               </div>
+
+              {/* Order Lists Grid */}
               <div className="border-t-2 border-black pt-8">
-                <h2 className="text-3xl font-bold mb-6 flex items-center gap-2">
+                <h2 className="text-2xl sm:text-3xl font-bold mb-6 flex flex-wrap items-center gap-2">
                   Detail Pesanan
                   <span className="text-sm font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded">
                     Total: {filteredCheckoutsForList.length} Pesanan
                   </span>
                 </h2>
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   <LaporanSection
                     title="Pesanan Diproses"
                     orders={filteredCheckoutsForList.filter(

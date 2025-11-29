@@ -59,18 +59,8 @@ const LaporanUserBaruCeo = () => {
     let counts = [];
     if (filterType === "yearly") {
       labels = [
-        "Jan",
-        "Feb",
-        "Mar",
-        "Apr",
-        "Mei",
-        "Jun",
-        "Jul",
-        "Agu",
-        "Sep",
-        "Okt",
-        "Nov",
-        "Des",
+        "Jan", "Feb", "Mar", "Apr", "Mei", "Jun", 
+        "Jul", "Agu", "Sep", "Okt", "Nov", "Des",
       ];
       counts = Array(12).fill(0);
       data.forEach((user) => {
@@ -159,7 +149,6 @@ const LaporanUserBaruCeo = () => {
         const margin = data.settings.margin.left;
         const pageWidth = doc.internal.pageSize.getWidth();
 
-        // --- HEADER ---
         try {
           doc.addImage(
             janAgroLogoBase64,
@@ -200,7 +189,6 @@ const LaporanUserBaruCeo = () => {
         doc.setLineWidth(1);
         doc.line(margin, 35, pageWidth - data.settings.margin.right, 35);
 
-        // --- FOOTER ---
         if (data.pageNumber === doc.internal.getNumberOfPages()) {
           const pageHeight = doc.internal.pageSize.getHeight();
           let finalY = data.cursor.y + 20;
@@ -261,37 +249,38 @@ const LaporanUserBaruCeo = () => {
   };
 
   return (
-    <div className="bg-white min-h-screen pt-24 text-black font-sans">
+    <div className="bg-white min-h-screen pt-20 sm:pt-24 text-black font-sans">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 space-y-8">
+        {/* Header - Responsive */}
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center border-b-4 border-black pb-4 gap-4">
           <div>
-            <h1 className="text-4xl font-black uppercase tracking-tight">
+            <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tight">
               Laporan User Baru
             </h1>
-            <p className="text-gray-600 font-medium mt-1">
+            <p className="text-gray-600 font-medium mt-1 text-sm sm:text-base">
               Analisis pertumbuhan pengguna platform.
             </p>
           </div>
           <Link
             to="/ceo"
-            className="group flex items-center bg-black text-white px-5 py-2.5 rounded-lg font-bold hover:bg-gray-800 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)] hover:translate-x-[2px] hover:translate-y-[2px]"
+            className="flex w-full md:w-auto items-center justify-center bg-black text-white px-5 py-2.5 rounded-lg font-bold hover:bg-gray-800 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)] hover:translate-x-[2px] hover:translate-y-[2px]"
           >
-            <ArrowLeft className="mr-2 h-5 w-5 group-hover:-translate-x-1 transition-transform" />{" "}
-            KEMBALI KE CEO
+            <ArrowLeft className="mr-2 h-5 w-5" /> KEMBALI
           </Link>
         </header>
 
-        <div className="bg-white border-2 border-black p-6 rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-          <div className="flex flex-col md:flex-row justify-between items-end md:items-center mb-6 border-b-2 border-gray-200 pb-4">
+        {/* Filter Section - Responsive */}
+        <div className="bg-white border-2 border-black p-4 sm:p-6 rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+          <div className="flex flex-col md:flex-row justify-between items-end md:items-center mb-6 border-b-2 border-gray-200 pb-4 gap-4">
             <h2 className="text-xl font-bold flex items-center gap-2">
               <Calendar className="h-6 w-6" /> Filter Laporan
             </h2>
-            <div className="flex bg-gray-100 p-1 rounded-md border border-black mt-4 md:mt-0">
+            <div className="flex bg-gray-100 p-1 rounded-md border border-black w-full md:w-auto gap-1">
               {["daily", "monthly", "yearly"].map((type) => (
                 <button
                   key={type}
                   onClick={() => setFilterType(type)}
-                  className={`px-4 py-1.5 rounded text-sm font-bold transition-all ${
+                  className={`flex-1 md:flex-none px-2 py-1.5 rounded text-sm font-bold transition-all ${
                     filterType === type
                       ? "bg-black text-white shadow-md"
                       : "text-gray-600 hover:text-black"
@@ -306,9 +295,9 @@ const LaporanUserBaruCeo = () => {
               ))}
             </div>
           </div>
-          <div className="flex flex-wrap gap-4 items-center">
+          <div className="flex flex-col sm:flex-row flex-wrap gap-4 items-end sm:items-center">
             {filterType === "daily" && (
-              <div className="flex flex-col">
+              <div className="flex flex-col w-full sm:w-auto">
                 <label className="text-xs font-bold uppercase mb-1">
                   Pilih Tanggal
                 </label>
@@ -316,19 +305,19 @@ const LaporanUserBaruCeo = () => {
                   type="date"
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
-                  className="border-2 border-black rounded px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-black"
+                  className="border-2 border-black rounded px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-black w-full"
                 />
               </div>
             )}
             {(filterType === "monthly" || filterType === "yearly") && (
-              <div className="flex flex-col">
+              <div className="flex flex-col w-full sm:w-auto">
                 <label className="text-xs font-bold uppercase mb-1">
                   Tahun
                 </label>
                 <select
                   value={selectedYear}
                   onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                  className="border-2 border-black rounded px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-black min-w-[100px]"
+                  className="border-2 border-black rounded px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-black w-full sm:min-w-[100px]"
                 >
                   {Array.from(
                     { length: 5 },
@@ -342,14 +331,14 @@ const LaporanUserBaruCeo = () => {
               </div>
             )}
             {filterType === "monthly" && (
-              <div className="flex flex-col">
+              <div className="flex flex-col w-full sm:w-auto">
                 <label className="text-xs font-bold uppercase mb-1">
                   Bulan
                 </label>
                 <select
                   value={selectedMonth}
                   onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-                  className="border-2 border-black rounded px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-black min-w-[150px]"
+                  className="border-2 border-black rounded px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-black w-full sm:min-w-[150px]"
                 >
                   {Array.from({ length: 12 }, (_, i) => (
                     <option key={i + 1} value={i + 1}>
@@ -363,7 +352,7 @@ const LaporanUserBaruCeo = () => {
             )}
             <button
               onClick={handleExportPDF}
-              className="ml-auto bg-green-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-green-700 transition-all border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] flex items-center gap-2"
+              className="ml-auto w-full sm:w-auto bg-green-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-green-700 transition-all border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] flex items-center justify-center gap-2 mt-4 sm:mt-0"
             >
               <FileText size={20} /> Export PDF
             </button>
@@ -376,14 +365,14 @@ const LaporanUserBaruCeo = () => {
           </div>
         ) : (
           <>
-            <div className="bg-white border-2 border-black p-6 rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-              <div className="h-80 w-full">
+            <div className="bg-white border-2 border-black p-4 sm:p-6 rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+              <div className="h-64 sm:h-80 w-full">
                 <Bar data={chartData} options={chartOptions} />
               </div>
             </div>
             <div className="bg-white border-2 border-black rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
               <div className="p-4 border-b-2 border-black bg-gray-50 flex justify-between items-center">
-                <h3 className="text-lg font-black uppercase flex items-center gap-2">
+                <h3 className="text-base sm:text-lg font-black uppercase flex items-center gap-2">
                   <Users size={20} /> Detail Pengguna Baru
                 </h3>
                 <span className="bg-black text-white px-3 py-1 rounded-full text-xs font-bold">
@@ -391,7 +380,7 @@ const LaporanUserBaruCeo = () => {
                 </span>
               </div>
               <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
-                <table className="w-full text-left border-collapse relative">
+                <table className="w-full text-left border-collapse relative min-w-[700px]">
                   <thead className="bg-black text-white sticky top-0 z-10 shadow-md">
                     <tr>
                       <th className="p-4 font-bold border-r border-gray-700 w-16 text-center">
@@ -428,7 +417,7 @@ const LaporanUserBaruCeo = () => {
                             </div>
                           </td>
                           <td className="p-4 border-r-2 border-gray-200 text-sm">
-                            <div>{user.email}</div>
+                            <div className="break-all">{user.email}</div>
                             <div className="text-gray-500">
                               {user.phone || "-"}
                             </div>
@@ -444,7 +433,7 @@ const LaporanUserBaruCeo = () => {
                               {user.role.toUpperCase()}
                             </span>
                           </td>
-                          <td className="p-4 text-center font-mono text-sm">
+                          <td className="p-4 text-center font-mono text-sm whitespace-nowrap">
                             {new Date(user.createdAt).toLocaleDateString(
                               "id-ID",
                               {

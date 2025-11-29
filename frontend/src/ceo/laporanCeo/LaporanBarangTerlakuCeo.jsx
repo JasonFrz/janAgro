@@ -180,7 +180,6 @@ const LaporanBarangTerlakuCeo = () => {
         const margin = data.settings.margin.left;
         const pageWidth = doc.internal.pageSize.getWidth();
 
-        // --- HEADER ---
         try {
           doc.addImage(
             janAgroLogoBase64,
@@ -221,7 +220,6 @@ const LaporanBarangTerlakuCeo = () => {
         doc.setLineWidth(1);
         doc.line(margin, 35, pageWidth - data.settings.margin.right, 35);
 
-        // --- FOOTER ---
         if (data.pageNumber === doc.internal.getNumberOfPages()) {
           const pageHeight = doc.internal.pageSize.getHeight();
           let finalY = data.cursor.y + 15;
@@ -266,31 +264,35 @@ const LaporanBarangTerlakuCeo = () => {
   };
 
   return (
-    <div className="bg-white min-h-screen pt-24 text-black font-sans pb-12">
+    <div className="bg-white min-h-screen pt-20 sm:pt-24 text-black font-sans pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        {/* Header */}
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center border-b-4 border-black pb-4 gap-4">
           <div>
-            <h1 className="text-4xl font-black uppercase tracking-tight">
+            <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tight">
               Best Selling Products
             </h1>
-            <p className="text-gray-600 font-medium mt-1">
+            <p className="text-gray-600 font-medium mt-1 text-sm sm:text-base">
               Analisis performa penjualan produk tertinggi.
             </p>
           </div>
           <Link
             to="/ceo"
-            className="flex items-center bg-black text-white px-5 py-2.5 rounded-lg font-bold hover:bg-gray-800 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]"
+            className="flex w-full md:w-auto justify-center items-center bg-black text-white px-5 py-2.5 rounded-lg font-bold hover:bg-gray-800 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]"
           >
             <ArrowLeft className="mr-2 h-5 w-5" /> KEMBALI
           </Link>
         </header>
 
-        <div className="bg-white border-2 border-black p-6 rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-          <div className="flex flex-col md:flex-row justify-between items-end md:items-center mb-6 border-b-2 border-gray-200 pb-4">
+        {/* Filter Section */}
+        <div className="bg-white border-2 border-black p-4 sm:p-6 rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 border-b-2 border-gray-200 pb-4 gap-4">
             <h2 className="text-xl font-bold flex items-center gap-2">
               <Calendar className="h-6 w-6" /> Filter Laporan
             </h2>
-            <div className="flex bg-gray-100 p-1 rounded-md border border-black mt-4 md:mt-0 overflow-x-auto">
+            
+            {/* Scrollable Buttons on Mobile */}
+            <div className="flex bg-gray-100 p-1 rounded-md border border-black w-full lg:w-auto overflow-x-auto no-scrollbar">
               {[
                 { id: "daily", label: "Harian", icon: <Clock size={16} /> },
                 {
@@ -323,9 +325,10 @@ const LaporanBarangTerlakuCeo = () => {
               ))}
             </div>
           </div>
-          <div className="flex flex-wrap gap-4 items-end">
+
+          <div className="flex flex-col sm:flex-row flex-wrap gap-4 items-end">
             {(filterType === "daily" || filterType === "weekly") && (
-              <div className="flex flex-col">
+              <div className="flex flex-col w-full sm:w-auto">
                 <label className="text-xs font-bold uppercase mb-1">
                   Pilih Tanggal
                 </label>
@@ -333,25 +336,26 @@ const LaporanBarangTerlakuCeo = () => {
                   type="date"
                   value={selectedDate}
                   onChange={(e) => setSelectedDate(e.target.value)}
-                  className="border-2 border-black rounded px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-black"
+                  className="border-2 border-black rounded px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-black w-full"
                 />
                 {filterType === "weekly" && (
                   <span className="text-xs text-gray-500 mt-1">
-                    *Memilih satu minggu (Senin-Minggu) dari tanggal ini.
+                    *1 Minggu (Senin-Minggu)
                   </span>
                 )}
               </div>
             )}
+            
             {filterType === "monthly" && (
-              <>
-                <div className="flex flex-col">
+              <div className="flex gap-4 w-full sm:w-auto">
+                <div className="flex flex-col w-full sm:w-auto">
                   <label className="text-xs font-bold uppercase mb-1">
                     Bulan
                   </label>
                   <select
                     value={selectedMonth}
                     onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-                    className="border-2 border-black rounded px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-black min-w-[150px]"
+                    className="border-2 border-black rounded px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-black w-full sm:min-w-[150px]"
                   >
                     {Array.from({ length: 12 }, (_, i) => (
                       <option key={i + 1} value={i + 1}>
@@ -362,14 +366,14 @@ const LaporanBarangTerlakuCeo = () => {
                     ))}
                   </select>
                 </div>
-                <div className="flex flex-col">
+                <div className="flex flex-col w-full sm:w-auto">
                   <label className="text-xs font-bold uppercase mb-1">
                     Tahun
                   </label>
                   <select
                     value={selectedYear}
                     onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                    className="border-2 border-black rounded px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-black min-w-[100px]"
+                    className="border-2 border-black rounded px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-black w-full sm:min-w-[100px]"
                   >
                     {Array.from(
                       { length: 5 },
@@ -381,17 +385,18 @@ const LaporanBarangTerlakuCeo = () => {
                     ))}
                   </select>
                 </div>
-              </>
+              </div>
             )}
+
             {filterType === "yearly" && (
-              <div className="flex flex-col">
+              <div className="flex flex-col w-full sm:w-auto">
                 <label className="text-xs font-bold uppercase mb-1">
                   Tahun
                 </label>
                 <select
                   value={selectedYear}
                   onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                  className="border-2 border-black rounded px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-black min-w-[100px]"
+                  className="border-2 border-black rounded px-3 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-black w-full sm:min-w-[100px]"
                 >
                   {Array.from(
                     { length: 5 },
@@ -404,9 +409,10 @@ const LaporanBarangTerlakuCeo = () => {
                 </select>
               </div>
             )}
+
             <button
               onClick={handleExportPDF}
-              className="ml-auto bg-green-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-green-700 transition-all border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] flex items-center gap-2"
+              className="w-full sm:w-auto ml-auto bg-green-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-green-700 transition-all border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] flex items-center justify-center gap-2 mt-4 sm:mt-0"
             >
               <FileText size={20} /> Export PDF
             </button>
@@ -419,18 +425,21 @@ const LaporanBarangTerlakuCeo = () => {
           </div>
         ) : (
           <>
-            <div className="bg-white border-2 border-black p-6 rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-              <div className="h-80 w-full">
+            {/* Chart Section */}
+            <div className="bg-white border-2 border-black p-4 sm:p-6 rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+              <div className="h-64 sm:h-80 md:h-96 w-full">
                 <Bar data={chartData} options={chartOptions} />
               </div>
             </div>
+
+            {/* Table Section */}
             <div className="space-y-4">
-              <h2 className="text-2xl font-black uppercase flex items-center gap-2">
+              <h2 className="text-xl sm:text-2xl font-black uppercase flex items-center gap-2">
                 <Package className="text-black" /> Detail Penjualan
               </h2>
               <div className="bg-white border-2 border-black rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
                 <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
-                  <table className="w-full text-left border-collapse">
+                  <table className="w-full text-left border-collapse min-w-[800px]">
                     <thead className="bg-black text-white sticky top-0 z-10">
                       <tr>
                         <th className="p-4 font-bold border-r border-gray-700 w-16 text-center">
@@ -476,22 +485,22 @@ const LaporanBarangTerlakuCeo = () => {
                                 </div>
                               )}
                             </td>
-                            <td className="p-4 border-r-2 border-gray-200 font-bold text-lg">
+                            <td className="p-4 border-r-2 border-gray-200 font-bold text-base sm:text-lg">
                               {item.productName}
                             </td>
-                            <td className="p-4 border-r-2 border-gray-200 text-right font-mono">
+                            <td className="p-4 border-r-2 border-gray-200 text-right font-mono whitespace-nowrap">
                               Rp {item.productPrice.toLocaleString("id-ID")}
                             </td>
                             <td className="p-4 border-r-2 border-gray-200 text-center">
                               <span
-                                className={`px-3 py-1 rounded-full font-bold text-white ${
+                                className={`px-3 py-1 rounded-full font-bold text-white whitespace-nowrap ${
                                   idx < 3 ? "bg-black" : "bg-gray-500"
                                 }`}
                               >
                                 {item.totalSold} pcs
                               </span>
                             </td>
-                            <td className="p-4 text-right font-mono font-bold text-green-700">
+                            <td className="p-4 text-right font-mono font-bold text-green-700 whitespace-nowrap">
                               Rp {item.totalRevenue.toLocaleString("id-ID")}
                             </td>
                           </tr>
@@ -517,4 +526,5 @@ const LaporanBarangTerlakuCeo = () => {
     </div>
   );
 };
+
 export default LaporanBarangTerlakuCeo;

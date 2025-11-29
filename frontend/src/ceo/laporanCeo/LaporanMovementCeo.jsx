@@ -1,6 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, FileText, TrendingUp, TrendingDown, Calendar } from "lucide-react";
+import {
+  ArrowLeft,
+  FileText,
+  TrendingUp,
+  TrendingDown,
+  Calendar,
+} from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useDispatch, useSelector } from "react-redux";
@@ -9,7 +15,9 @@ import { janAgroLogoBase64 } from "./logoBase64";
 
 const LaporanMovementCeo = () => {
   const dispatch = useDispatch();
-  const { stockMovementData = [], loading } = useSelector((state) => state.admin);
+  const { stockMovementData = [], loading } = useSelector(
+    (state) => state.admin
+  );
   const [filterType, setFilterType] = useState("all");
   const [filterMonth, setFilterMonth] = useState(new Date().getMonth() + 1);
   const [filterYear, setFilterYear] = useState(new Date().getFullYear());
@@ -35,11 +43,18 @@ const LaporanMovementCeo = () => {
   }, [stockMovementData, filterType, filterMonth, filterYear]);
 
   const stats = useMemo(() => {
-    const inMovements = filteredMovements.filter((m) => m.movementType === "in");
-    const outMovements = filteredMovements.filter((m) => m.movementType === "out");
+    const inMovements = filteredMovements.filter(
+      (m) => m.movementType === "in"
+    );
+    const outMovements = filteredMovements.filter(
+      (m) => m.movementType === "out"
+    );
 
     const totalInQuantity = inMovements.reduce((sum, m) => sum + m.quantity, 0);
-    const totalOutQuantity = outMovements.reduce((sum, m) => sum + m.quantity, 0);
+    const totalOutQuantity = outMovements.reduce(
+      (sum, m) => sum + m.quantity,
+      0
+    );
 
     return {
       inCount: inMovements.length,
@@ -87,8 +102,12 @@ const LaporanMovementCeo = () => {
     });
 
     const date = new Date();
-    const fullDate = `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}`;
-    const monthName = new Date(2024, filterMonth - 1).toLocaleString("id-ID", { month: "long" });
+    const fullDate = `${date.getDate()}-${
+      date.getMonth() + 1
+    }-${date.getFullYear()}`;
+    const monthName = new Date(2024, filterMonth - 1).toLocaleString("id-ID", {
+      month: "long",
+    });
 
     autoTable(doc, {
       head: [tableColumn],
@@ -193,7 +212,12 @@ const LaporanMovementCeo = () => {
           });
           const nameWidth = doc.getTextWidth("J.Alamsjah, S.H");
           doc.setLineWidth(0.5);
-          doc.line(signatureX - nameWidth, finalY + 21, signatureX, finalY + 21);
+          doc.line(
+            signatureX - nameWidth,
+            finalY + 21,
+            signatureX,
+            finalY + 21
+          );
           doc.setFont("helvetica", "normal");
           doc.setFontSize(9);
           doc.text("Ceo & Founder", signatureX, finalY + 25, {
@@ -214,34 +238,35 @@ const LaporanMovementCeo = () => {
   }, [stockMovementData]);
 
   return (
-    <div className="bg-white min-h-screen pt-24 text-black font-sans pb-12">
+    <div className="bg-white min-h-screen pt-20 sm:pt-24 text-black font-sans pb-12">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        {/* Header - Responsive */}
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center border-b-4 border-black pb-4 gap-4">
           <div>
-            <h1 className="text-4xl font-black uppercase tracking-tight">
+            <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tight">
               Laporan Pergerakan Stok
             </h1>
-            <p className="text-gray-600 font-medium mt-1">
+            <p className="text-gray-600 font-medium mt-1 text-sm sm:text-base">
               Tracking stok masuk dan keluar untuk setiap produk.
             </p>
           </div>
           <Link
             to="/ceo"
-            className="flex items-center bg-black text-white px-5 py-2.5 rounded-lg font-bold hover:bg-gray-800 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]"
+            className="flex w-full md:w-auto items-center justify-center bg-black text-white px-5 py-2.5 rounded-lg font-bold hover:bg-gray-800 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]"
           >
             <ArrowLeft className="mr-2 h-5 w-5" /> KEMBALI
           </Link>
         </header>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {/* Stats Cards - Responsive Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="bg-white border-2 border-black p-6 rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-gray-600 text-sm font-bold">STOK MASUK</p>
                 <p className="text-3xl font-black">{stats.inCount}</p>
               </div>
-              <TrendingUp className="h-12 w-12 text-green-600" />
+              <TrendingUp className="h-10 w-10 sm:h-12 sm:w-12 text-green-600" />
             </div>
           </div>
           <div className="bg-white border-2 border-black p-6 rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
@@ -250,7 +275,7 @@ const LaporanMovementCeo = () => {
                 <p className="text-gray-600 text-sm font-bold">STOK KELUAR</p>
                 <p className="text-3xl font-black">{stats.outCount}</p>
               </div>
-              <TrendingDown className="h-12 w-12 text-red-600" />
+              <TrendingDown className="h-10 w-10 sm:h-12 sm:w-12 text-red-600" />
             </div>
           </div>
           <div className="bg-white border-2 border-black p-6 rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
@@ -259,7 +284,7 @@ const LaporanMovementCeo = () => {
                 <p className="text-gray-600 text-sm font-bold">QTY MASUK</p>
                 <p className="text-3xl font-black">{stats.totalInQuantity}</p>
               </div>
-              <TrendingUp className="h-12 w-12 text-blue-600" />
+              <TrendingUp className="h-10 w-10 sm:h-12 sm:w-12 text-blue-600" />
             </div>
           </div>
           <div className="bg-white border-2 border-black p-6 rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
@@ -268,15 +293,17 @@ const LaporanMovementCeo = () => {
                 <p className="text-gray-600 text-sm font-bold">QTY KELUAR</p>
                 <p className="text-3xl font-black">{stats.totalOutQuantity}</p>
               </div>
-              <TrendingDown className="h-12 w-12 text-orange-600" />
+              <TrendingDown className="h-10 w-10 sm:h-12 sm:w-12 text-orange-600" />
             </div>
           </div>
         </div>
 
-        {/* Filter & Export */}
-        <div className="bg-white border-2 border-black p-6 rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-          <div className="flex flex-col md:flex-row justify-between items-end md:items-center gap-4">
-            <div className="flex gap-2 flex-wrap">
+        {/* Filter & Export - Responsive */}
+        <div className="bg-white border-2 border-black p-4 sm:p-6 rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+          <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
+            
+            {/* Filter Buttons - Scrollable on Mobile */}
+            <div className="flex gap-2 w-full xl:w-auto overflow-x-auto pb-2 xl:pb-0">
               {[
                 { id: "all", label: "Semua" },
                 { id: "in", label: "Masuk", icon: TrendingUp },
@@ -285,7 +312,7 @@ const LaporanMovementCeo = () => {
                 <button
                   key={type.id}
                   onClick={() => setFilterType(type.id)}
-                  className={`px-4 py-2 rounded font-bold text-sm transition-all flex items-center gap-2 ${
+                  className={`px-4 py-2 rounded font-bold text-sm transition-all flex items-center gap-2 whitespace-nowrap ${
                     filterType === type.id
                       ? "bg-black text-white shadow-md"
                       : "bg-gray-100 text-gray-600 hover:text-black"
@@ -296,32 +323,36 @@ const LaporanMovementCeo = () => {
                 </button>
               ))}
             </div>
-            <div className="flex gap-3">
-              <select
-                value={filterMonth}
-                onChange={(e) => setFilterMonth(parseInt(e.target.value))}
-                className="border-2 border-black rounded px-3 py-2 font-bold focus:outline-none focus:ring-2 focus:ring-black"
-              >
-                {Array.from({ length: 12 }, (_, i) => (
-                  <option key={i + 1} value={i + 1}>
-                    {new Date(0, i).toLocaleString("id-ID", { month: "long" })}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={filterYear}
-                onChange={(e) => setFilterYear(parseInt(e.target.value))}
-                className="border-2 border-black rounded px-3 py-2 font-bold focus:outline-none focus:ring-2 focus:ring-black"
-              >
-                {years.map((y) => (
-                  <option key={y} value={y}>
-                    {y}
-                  </option>
-                ))}
-              </select>
+
+            {/* Selects & Export */}
+            <div className="flex flex-col sm:flex-row gap-3 w-full xl:w-auto">
+              <div className="flex gap-3 w-full sm:w-auto">
+                <select
+                  value={filterMonth}
+                  onChange={(e) => setFilterMonth(parseInt(e.target.value))}
+                  className="border-2 border-black rounded px-3 py-2 font-bold focus:outline-none focus:ring-2 focus:ring-black w-full sm:w-auto"
+                >
+                  {Array.from({ length: 12 }, (_, i) => (
+                    <option key={i + 1} value={i + 1}>
+                      {new Date(0, i).toLocaleString("id-ID", { month: "long" })}
+                    </option>
+                  ))}
+                </select>
+                <select
+                  value={filterYear}
+                  onChange={(e) => setFilterYear(parseInt(e.target.value))}
+                  className="border-2 border-black rounded px-3 py-2 font-bold focus:outline-none focus:ring-2 focus:ring-black w-full sm:w-auto"
+                >
+                  {years.map((y) => (
+                    <option key={y} value={y}>
+                      {y}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <button
                 onClick={handleExportPDF}
-                className="bg-green-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-green-700 transition-all border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] flex items-center gap-2"
+                className="w-full sm:w-auto bg-green-600 text-white px-6 py-2.5 rounded-lg font-bold hover:bg-green-700 transition-all border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[4px] hover:translate-y-[4px] flex items-center justify-center gap-2"
               >
                 <FileText size={20} /> Export PDF
               </button>
@@ -329,7 +360,7 @@ const LaporanMovementCeo = () => {
           </div>
         </div>
 
-        {/* Table */}
+        {/* Table - Scrollable */}
         {loading ? (
           <div className="flex justify-center items-center h-64 border-2 border-black rounded-lg bg-gray-50">
             <div className="animate-spin rounded-full h-12 w-12 border-4 border-black border-t-transparent"></div>
@@ -341,16 +372,30 @@ const LaporanMovementCeo = () => {
             </h2>
             <div className="bg-white border-2 border-black rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
               <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
-                <table className="w-full text-left border-collapse">
+                <table className="w-full text-left border-collapse min-w-[900px]">
                   <thead className="bg-black text-white sticky top-0 z-10">
                     <tr>
-                      <th className="p-4 font-bold border-r border-gray-700 w-16 text-center">#</th>
-                      <th className="p-4 font-bold border-r border-gray-700">Tanggal</th>
-                      <th className="p-4 font-bold border-r border-gray-700">Produk</th>
-                      <th className="p-4 font-bold border-r border-gray-700 text-center">Tipe</th>
-                      <th className="p-4 font-bold border-r border-gray-700 text-center">Qty</th>
-                      <th className="p-4 font-bold border-r border-gray-700">Alasan</th>
-                      <th className="p-4 font-bold border-r border-gray-700 text-center">Stok Sbl</th>
+                      <th className="p-4 font-bold border-r border-gray-700 w-16 text-center">
+                        #
+                      </th>
+                      <th className="p-4 font-bold border-r border-gray-700">
+                        Tanggal
+                      </th>
+                      <th className="p-4 font-bold border-r border-gray-700">
+                        Produk
+                      </th>
+                      <th className="p-4 font-bold border-r border-gray-700 text-center">
+                        Tipe
+                      </th>
+                      <th className="p-4 font-bold border-r border-gray-700 text-center">
+                        Qty
+                      </th>
+                      <th className="p-4 font-bold border-r border-gray-700">
+                        Alasan
+                      </th>
+                      <th className="p-4 font-bold border-r border-gray-700 text-center">
+                        Stok Sbl
+                      </th>
                       <th className="p-4 font-bold text-center">Stok Ssd</th>
                     </tr>
                   </thead>
@@ -364,8 +409,10 @@ const LaporanMovementCeo = () => {
                           <td className="p-4 font-black text-center border-r-2 border-gray-200 text-lg">
                             {idx + 1}
                           </td>
-                          <td className="p-4 border-r-2 border-gray-200 font-bold">
-                            {new Date(movement.createdAt).toLocaleDateString("id-ID")}
+                          <td className="p-4 border-r-2 border-gray-200 font-bold whitespace-nowrap">
+                            {new Date(movement.createdAt).toLocaleDateString(
+                              "id-ID"
+                            )}
                           </td>
                           <td className="p-4 border-r-2 border-gray-200 font-bold">
                             {movement.productName}
@@ -378,14 +425,17 @@ const LaporanMovementCeo = () => {
                                   : "bg-red-600"
                               }`}
                             >
-                              {movement.movementType === "in" ? "MASUK" : "KELUAR"}
+                              {movement.movementType === "in"
+                                ? "MASUK"
+                                : "KELUAR"}
                             </span>
                           </td>
                           <td className="p-4 border-r-2 border-gray-200 text-center font-bold">
                             {movement.quantity}
                           </td>
-                          <td className="p-4 border-r-2 border-gray-200">
-                            {reasonTranslation[movement.reason] || movement.reason}
+                          <td className="p-4 border-r-2 border-gray-200 capitalize">
+                            {reasonTranslation[movement.reason] ||
+                              movement.reason}
                           </td>
                           <td className="p-4 border-r-2 border-gray-200 text-center font-mono">
                             {movement.previousStock}
