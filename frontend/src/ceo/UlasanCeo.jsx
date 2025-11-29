@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchAllReviews } from "../features/admin/adminSlice";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { janAgroLogoBase64 } from "././laporanCeo/logoBase64";
+import { janAgroLogoBase64 } from "./laporanCeo/logoBase64";
 import {
   Star,
   MessageSquare,
@@ -11,10 +11,11 @@ import {
   PlayCircle,
   FileText,
   Calendar,
+  Filter,
 } from "lucide-react";
 
 const StarRating = ({ rating }) => (
-  <div className="flex items-center">
+  <div className="flex items-center shrink-0">
     {[...Array(5)].map((_, index) => (
       <Star
         key={index}
@@ -160,7 +161,7 @@ const UlasanCeo = () => {
         const logoHeight = 22;
         const margin = data.settings.margin.left;
         const pageWidth = doc.internal.pageSize.getWidth();
-        const textX = margin + logoWidth + 5; 
+        const textX = margin + logoWidth + 5;
 
         try {
           doc.addImage(
@@ -240,223 +241,216 @@ const UlasanCeo = () => {
   };
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b-2 border-black">
+    <div className="space-y-6 w-full max-w-full overflow-x-hidden p-1">
+      {/* HEADER */}
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 pb-4 border-b-2 border-black">
         <div>
-          <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tight">
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black uppercase tracking-tight text-gray-900">
             Customer Reviews
           </h1>
-          <p className="text-gray-600 font-medium mt-1">
-            Monitor feedback dan kepuasan pelanggan.
+          <p className="text-sm sm:text-base text-gray-600 font-medium mt-1">
+            Monitor feedback dan kepuasan pelanggan secara real-time.
           </p>
         </div>
-        <div className="flex flex-wrap gap-3 w-full md:w-auto">
+        <div className="flex flex-wrap gap-3 w-full lg:w-auto">
           <button
             onClick={handleExportPDF}
-            className="flex-1 md:flex-none bg-green-600 text-white border-2 border-black px-4 py-2 rounded-lg font-bold flex items-center justify-center gap-2 hover:bg-green-600 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]"
+            className="flex-1 lg:flex-none bg-green-600 text-white border-2 border-black px-4 py-2 rounded-lg font-bold flex items-center justify-center gap-2 hover:bg-green-700 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px]"
           >
-            <FileText size={20} /> <span>Export PDF</span>
+            <FileText size={18} /> <span className="whitespace-nowrap">Export PDF</span>
           </button>
-          <div className="flex-1 md:flex-none bg-black text-white px-4 py-2 rounded-lg font-bold flex items-center justify-center gap-2 shadow-lg">
-            <MessageSquare size={20} />{" "}
-            <span>Total: {filteredReviews.length}</span>
+          <div className="flex-1 lg:flex-none bg-black text-white px-4 py-2 rounded-lg font-bold flex items-center justify-center gap-2 shadow-lg">
+            <MessageSquare size={18} />
+            <span className="whitespace-nowrap">Total: {filteredReviews.length}</span>
           </div>
         </div>
       </div>
-      <div className="bg-white border-2 border-black p-4 sm:p-6 rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="col-span-1 md:col-span-2 lg:col-span-1">
-            <label className="text-xs font-bold uppercase mb-2 block">
+
+      {/* FILTER SECTION */}
+      <div className="bg-white border-2 border-black p-4 sm:p-5 rounded-lg shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          
+          {/* SEARCH */}
+          <div className="col-span-1 sm:col-span-2 xl:col-span-1">
+            <label className="text-xs font-bold uppercase mb-1.5 block text-gray-700">
               Cari Review
             </label>
             <div className="relative">
               <Search
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-                size={20}
+                size={18}
               />
               <input
                 type="text"
-                placeholder="Nama user, produk, atau isi..."
+                placeholder="User, produk, atau komentar..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 border-2 border-black rounded-md font-medium focus:outline-none focus:ring-2 focus:ring-black"
+                className="w-full pl-9 pr-3 py-2 border-2 border-black rounded-md font-medium text-sm focus:outline-none focus:ring-2 focus:ring-black transition-shadow"
               />
             </div>
           </div>
-          <div className="col-span-1 md:col-span-2 lg:col-span-1">
-            <label className="text-xs font-bold uppercase mb-2 block flex items-center gap-1">
+
+          {/* DATE RANGE */}
+          <div className="col-span-1 sm:col-span-2 xl:col-span-1">
+            <label className="text-xs font-bold uppercase mb-1.5 block flex items-center gap-1 text-gray-700">
               <Calendar size={14} /> Rentang Tanggal
             </label>
-            <div className="flex gap-2">
+            <div className="grid grid-cols-2 gap-2">
               <input
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full px-2 py-2.5 border-2 border-black rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-black"
+                className="w-full px-2 py-2 border-2 border-black rounded-md text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-black"
               />
-              <span className="self-center">-</span>
               <input
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full px-2 py-2.5 border-2 border-black rounded-md text-sm font-medium focus:outline-none focus:ring-2 focus:ring-black"
+                className="w-full px-2 py-2 border-2 border-black rounded-md text-xs sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-black"
               />
             </div>
           </div>
+
+          {/* RATING */}
           <div className="col-span-1">
-            <label className="text-xs font-bold uppercase mb-2 block">
+            <label className="text-xs font-bold uppercase mb-1.5 block text-gray-700">
               Filter Rating
             </label>
-            <div className="flex gap-1 flex-wrap">
+            <div className="flex flex-wrap gap-1.5">
               {[0, 5, 4, 3, 2, 1].map((star) => (
                 <button
                   key={star}
                   onClick={() => setRatingFilter(star)}
-                  className={`px-3 py-2 rounded-md text-sm font-bold border-2 transition-all ${
+                  className={`px-3 py-1.5 rounded-md text-xs font-bold border-2 transition-all ${
                     ratingFilter === star
                       ? "bg-black text-white border-black"
                       : "bg-white text-gray-600 border-gray-300 hover:border-black"
                   }`}
                 >
-                  {star === 0 ? (
-                    "All"
-                  ) : (
-                    <span className="flex items-center gap-1">
-                      {star}{" "}
-                      <Star
-                        size={12}
-                        fill="currentColor"
-                        className="text-yellow-400"
-                      />
-                    </span>
-                  )}
+                  {star === 0 ? "All" : <span className="flex items-center gap-1">{star} <Star size={10} fill="currentColor" /></span>}
                 </button>
               ))}
             </div>
           </div>
+
+          {/* MEDIA TYPE */}
           <div className="col-span-1">
-            <label className="text-xs font-bold uppercase mb-2 block">
+            <label className="text-xs font-bold uppercase mb-1.5 block text-gray-700">
               Tipe Konten
             </label>
-            <select
-              value={mediaFilter}
-              onChange={(e) => setMediaFilter(e.target.value)}
-              className="w-full px-4 py-2.5 border-2 border-black rounded-md font-bold focus:outline-none"
-            >
-              <option value="all">Semua</option>
-              <option value="with-media">Dengan Foto/Video</option>
-              <option value="text-only">Hanya Teks</option>
-            </select>
+            <div className="relative">
+                <Filter size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none"/>
+                <select
+                value={mediaFilter}
+                onChange={(e) => setMediaFilter(e.target.value)}
+                className="w-full pl-9 pr-8 py-2 border-2 border-black rounded-md text-sm font-bold focus:outline-none cursor-pointer appearance-none bg-white"
+                >
+                <option value="all">Semua Tipe</option>
+                <option value="with-media">Dengan Foto/Video</option>
+                <option value="text-only">Hanya Teks</option>
+                </select>
+                {/* Custom Arrow */}
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none">
+                    <svg className="w-4 h-4 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                </div>
+            </div>
           </div>
         </div>
       </div>
+
+      {/* REVIEWS LIST */}
       {loading ? (
-        <div className="text-center py-20 font-bold italic text-gray-500">
+        <div className="text-center py-20 font-bold italic text-gray-500 animate-pulse">
           Memuat ulasan...
         </div>
       ) : (
-        <div className="bg-gray-50 border-2 border-black rounded-lg p-2 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-          <div className="overflow-y-auto max-h-[550px] pr-2 space-y-4 custom-scrollbar">
+        <div className="bg-gray-100 border-2 border-black rounded-lg p-2 sm:p-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+          <div className="overflow-y-auto max-h-[600px] pr-1 sm:pr-2 space-y-3 custom-scrollbar">
             {filteredReviews.length > 0 ? (
               filteredReviews.map((review) => (
                 <div
                   key={review._id}
-                  className="bg-white border-2 border-black rounded-lg p-4 sm:p-6 shadow-sm hover:border-gray-500 transition-all duration-200"
+                  className="bg-white border-2 border-black rounded-lg p-4 shadow-sm hover:border-gray-500 transition-all duration-200"
                 >
-                  <div className="flex flex-col md:flex-row gap-6">
-                    <div className="md:w-1/4 border-b-2 md:border-b-0 md:border-r-2 border-gray-100 pb-4 md:pb-0 md:pr-6">
-                      <div className="flex items-start gap-3">
-                        <div className="w-16 h-16 border-2 border-black rounded overflow-hidden bg-gray-100 flex-shrink-0">
-                          {review.product?.image ? (
-                            <img
-                              src={review.product.image}
-                              alt={review.product.name}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="flex items-center justify-center h-full text-xs font-bold text-gray-400">
-                              No IMG
-                            </div>
-                          )}
-                        </div>
-                        <div className="flex flex-col">
-                          <span className="inline-block bg-gray-200 text-gray-700 text-[10px] font-bold px-2 py-0.5 rounded border border-gray-300 uppercase w-fit mb-1">
-                            {review.product?.category || "UMUM"}
-                          </span>
-                          <h3 className="font-bold text-sm leading-tight line-clamp-2 mb-1">
-                            {review.product?.name || "Produk Dihapus"}
-                          </h3>
-                          <p className="text-xs font-mono font-bold text-gray-800">
-                            {review.product?.price
-                              ? `Rp ${review.product.price.toLocaleString(
-                                  "id-ID"
-                                )}`
-                              : "Harga -"}
-                          </p>
-                        </div>
+                  <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
+                    
+                    {/* LEFT: PRODUCT INFO */}
+                    <div className="w-full lg:w-1/3 xl:w-1/4 flex flex-row lg:flex-col items-start gap-3 lg:gap-4 border-b-2 lg:border-b-0 lg:border-r-2 border-gray-100 pb-3 lg:pb-0 lg:pr-4">
+                      <div className="w-16 h-16 sm:w-20 sm:h-20 lg:w-full lg:h-40 border-2 border-black rounded overflow-hidden bg-gray-50 flex-shrink-0">
+                        {review.product?.image ? (
+                          <img
+                            src={review.product.image}
+                            alt={review.product.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex items-center justify-center h-full text-xs font-bold text-gray-400">No IMG</div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span className="inline-block bg-gray-200 text-gray-700 text-[10px] font-bold px-2 py-0.5 rounded border border-gray-300 uppercase mb-1">
+                          {review.product?.category || "UMUM"}
+                        </span>
+                        <h3 className="font-bold text-sm sm:text-base leading-tight line-clamp-2 mb-1" title={review.product?.name}>
+                          {review.product?.name || "Produk Dihapus"}
+                        </h3>
+                        <p className="text-xs sm:text-sm font-mono font-bold text-gray-800">
+                          {review.product?.price
+                            ? `Rp ${review.product.price.toLocaleString("id-ID")}`
+                            : "Harga -"}
+                        </p>
                       </div>
                     </div>
-                    <div className="flex-1">
-                      <div className="flex justify-between items-start mb-3">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center font-bold text-sm overflow-hidden border-2 border-black">
+
+                    {/* RIGHT: REVIEW CONTENT */}
+                    <div className="flex-1 min-w-0">
+                      {/* User Header */}
+                      <div className="flex flex-wrap justify-between items-start gap-2 mb-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center font-bold text-sm overflow-hidden border-2 border-black flex-shrink-0">
                             {review.user?.avatar ? (
-                              <img
-                                src={review.user.avatar}
-                                alt="user"
-                                className="w-full h-full object-cover"
-                              />
+                              <img src={review.user.avatar} alt="user" className="w-full h-full object-cover" />
                             ) : (
                               review.user?.name?.charAt(0) || "U"
                             )}
                           </div>
-                          <div>
-                            <p className="font-bold text-sm">
-                              {review.user?.name || "Anonymous"}
-                            </p>
-                            <p className="text-xs text-gray-500">
-                              {new Date(review.createdAt).toLocaleString(
-                                "id-ID",
-                                { dateStyle: "long", timeStyle: "short" }
-                              )}
+                          <div className="min-w-0">
+                            <p className="font-bold text-sm truncate max-w-[150px] sm:max-w-xs">{review.user?.name || "Anonymous"}</p>
+                            <p className="text-[10px] sm:text-xs text-gray-500">
+                              {new Date(review.createdAt).toLocaleString("id-ID", { dateStyle: "long", timeStyle: "short" })}
                             </p>
                           </div>
                         </div>
-                        <div className="bg-gray-100 px-3 py-1 rounded border border-black">
+                        <div className="bg-white px-2 py-1 rounded border border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,0.1)]">
                           <StarRating rating={review.rating} />
                         </div>
                       </div>
-                      <p className="text-gray-800 font-medium leading-relaxed mb-4 min-h-[40px]">
-                        "{review.comment}"
-                      </p>
+
+                      {/* Comment */}
+                      <div className="bg-gray-50 p-3 rounded-md border border-gray-200 mb-3">
+                        <p className="text-gray-800 text-sm sm:text-base font-medium leading-relaxed break-words">
+                          "{review.comment}"
+                        </p>
+                      </div>
+
+                      {/* Media Gallery */}
                       {review.media && review.media.length > 0 && (
-                        <div className="flex gap-3 overflow-x-auto pb-2">
+                        <div className="flex gap-2 sm:gap-3 overflow-x-auto pb-2 custom-scrollbar">
                           {review.media.map((m, idx) => (
                             <div
                               key={idx}
-                              className="relative w-24 h-24 flex-shrink-0 border-2 border-black rounded-md overflow-hidden bg-black group cursor-pointer"
+                              className="relative w-20 h-20 sm:w-24 sm:h-24 flex-shrink-0 border-2 border-black rounded-md overflow-hidden bg-black group"
                             >
                               {m.type === "video" ? (
                                 <>
-                                  <video
-                                    src={m.url}
-                                    className="w-full h-full object-cover opacity-80"
-                                  />
+                                  <video src={m.url} className="w-full h-full object-cover opacity-80" />
                                   <div className="absolute inset-0 flex items-center justify-center text-white">
                                     <PlayCircle size={24} fill="black" />
                                   </div>
                                 </>
                               ) : (
-                                <a
-                                  href={m.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                >
-                                  <img
-                                    src={m.url}
-                                    alt="review"
-                                    className="w-full h-full object-cover hover:opacity-80 transition-opacity"
-                                  />
+                                <a href={m.url} target="_blank" rel="noopener noreferrer">
+                                  <img src={m.url} alt="review" className="w-full h-full object-cover hover:opacity-80 transition-opacity" />
                                 </a>
                               )}
                             </div>
@@ -468,10 +462,9 @@ const UlasanCeo = () => {
                 </div>
               ))
             ) : (
-              <div className="text-center py-12 border-2 border-dashed border-black rounded-lg bg-white">
-                <p className="font-bold text-gray-500">
-                  Tidak ada ulasan yang sesuai filter.
-                </p>
+              <div className="flex flex-col items-center justify-center py-16 border-2 border-dashed border-gray-300 rounded-lg bg-white text-gray-400">
+                <Search size={48} className="mb-2 opacity-20" />
+                <p className="font-bold text-sm">Tidak ada ulasan yang sesuai filter.</p>
               </div>
             )}
           </div>
@@ -480,4 +473,5 @@ const UlasanCeo = () => {
     </div>
   );
 };
+
 export default UlasanCeo;

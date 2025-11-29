@@ -95,6 +95,13 @@ const ChatCeo = () => {
           const updatedChat = { ...newChats[idx] };
           updatedChat.messages = [...updatedChat.messages, data.message];
           updatedChat.lastMessageAt = new Date();
+          
+          // Jika chat sedang dibuka, tandai pesan baru langsung read di local state
+          if (isCurrentChat) {
+             const lastMsg = updatedChat.messages[updatedChat.messages.length - 1];
+             lastMsg.status = 'read';
+          }
+
           newChats.splice(idx, 1);
           newChats.unshift(updatedChat);
         } else {
@@ -257,11 +264,31 @@ const ChatCeo = () => {
     }
   };
 
+  // --- LOGIC TOGGLE CHAT (DIPERBAIKI) ---
   const handleChatClick = (chat) => {
+    // 1. Jika menutup chat (klik ulang chat yg aktif)
     if (selectedChat && selectedChat._id === chat._id) {
         setSelectedChat(null);
     } else {
+        // 2. Jika membuka chat baru
         setSelectedChat(chat);
+        
+        // --- UPDATE LOKAL: Tandai semua pesan user sebagai READ ---
+        // Ini yang membuat notifikasi badge langsung hilang seketika
+        setChats(prevChats => prevChats.map(c => {
+            if (c._id === chat._id) {
+                // Clone dan update messages
+                const updatedMessages = c.messages.map(m => {
+                    // Ubah status pesan user jadi 'read'
+                    if (m.sender !== 'admin' && m.status !== 'read') {
+                        return { ...m, status: 'read' };
+                    }
+                    return m;
+                });
+                return { ...c, messages: updatedMessages };
+            }
+            return c;
+        }));
     }
   };
 
@@ -278,70 +305,87 @@ const ChatCeo = () => {
           </span>
         </div>
         <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-2">
-          {chats.map((chat) => (
-            <div
-              key={chat._id}
-              onClick={() => handleChatClick(chat)}
-              className={`p-3 rounded-xl cursor-pointer flex items-center gap-3 border ${
-                selectedChat?._id === chat._id
-                  ? "bg-black text-white"
-                  : "bg-white hover:bg-gray-50"
-              }`}
-            >
-              {/* --- AVATAR PADA SIDEBAR --- */}
-              <div className="w-10 h-10 flex-shrink-0">
-                {chat.userId?.avatar ? (
-                  <img 
-                    src={chat.userId.avatar} 
-                    alt={chat.userId.name} 
-                    className="w-full h-full rounded-full object-cover bg-white border border-gray-200"
-                  />
-                ) : (
-                  <div className="w-full h-full rounded-full bg-gray-200 flex items-center justify-center font-bold text-gray-700 uppercase">
-                    {chat.userId?.name?.charAt(0) || "?"}
-                  </div>
-                )}
-              </div>
+          {chats.map((chat) => {
+            // HITUNG UNREAD PER USER (Realtime berdasarkan state 'chats')
+            const unreadCount = chat.messages.filter(
+                m => m.sender !== 'admin' && m.status !== 'read'
+            ).length;
 
-              <div className="flex-1 min-w-0">
-                <div className="flex justify-between">
-                  <h4 className="font-semibold text-sm truncate">
-                    {chat.userId?.name || "Unknown"}
-                  </h4>
-                  <span
-                    className={`text-[10px] ${
-                      selectedChat?._id === chat._id
-                        ? "text-gray-300"
-                        : "text-gray-400"
-                    }`}
-                  >
-                    {new Date(chat.lastMessageAt).toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1">
-                  {chat.messages.length > 0 &&
-                    chat.messages[chat.messages.length - 1]?.sender ===
-                      "admin" && (
-                      <StatusIcon
-                        status={chat.messages[chat.messages.length - 1]?.status}
-                      />
+            return (
+                <div
+                key={chat._id}
+                onClick={() => handleChatClick(chat)}
+                className={`p-3 rounded-xl cursor-pointer flex items-center gap-3 border relative ${
+                    selectedChat?._id === chat._id
+                    ? "bg-black text-white"
+                    : "bg-white hover:bg-gray-50"
+                }`}
+                >
+                <div className="w-10 h-10 flex-shrink-0">
+                    {chat.userId?.avatar ? (
+                    <img 
+                        src={chat.userId.avatar} 
+                        alt={chat.userId.name} 
+                        className="w-full h-full rounded-full object-cover bg-white border border-gray-200"
+                    />
+                    ) : (
+                    <div className="w-full h-full rounded-full bg-gray-200 flex items-center justify-center font-bold text-gray-700 uppercase">
+                        {chat.userId?.name?.charAt(0) || "?"}
+                    </div>
                     )}
-                  <p
-                    className={`text-xs truncate ${
-                      selectedChat?._id === chat._id
-                        ? "text-gray-300"
-                        : "text-gray-500"
-                    }`}
-                  >
-                    {chat.messages[chat.messages.length - 1]?.text}
-                  </p>
                 </div>
-              </div>
-            </div>
-          ))}
+
+                <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-center">
+                        <h4 className="font-semibold text-sm truncate pr-2">
+                            {chat.userId?.name || "Unknown"}
+                        </h4>
+                        
+                        <div className="flex flex-col items-end gap-1">
+                            <span
+                                className={`text-[10px] ${
+                                selectedChat?._id === chat._id
+                                    ? "text-gray-300"
+                                    : "text-gray-400"
+                                }`}
+                            >
+                                {new Date(chat.lastMessageAt).toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                })}
+                            </span>
+                            
+                            {/* BADGE MERAH: HILANG OTOMATIS SAAT DIKLIK */}
+                            {unreadCount > 0 && (
+                                <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 rounded-full min-w-[18px] text-center shadow-sm animate-pulse">
+                                    {unreadCount}
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                    
+                    <div className="flex items-center gap-1 mt-0.5">
+                    {chat.messages.length > 0 &&
+                        chat.messages[chat.messages.length - 1]?.sender ===
+                        "admin" && (
+                        <StatusIcon
+                            status={chat.messages[chat.messages.length - 1]?.status}
+                        />
+                        )}
+                    <p
+                        className={`text-xs truncate ${
+                        selectedChat?._id === chat._id
+                            ? "text-gray-300"
+                            : "text-gray-500"
+                        }`}
+                    >
+                        {chat.messages[chat.messages.length - 1]?.text}
+                    </p>
+                    </div>
+                </div>
+                </div>
+            );
+          })}
         </div>
       </div>
 
@@ -349,9 +393,7 @@ const ChatCeo = () => {
       <div className="w-2/3 flex flex-col bg-gray-50 relative">
         {selectedChat ? (
           <>
-            {/* HEADER CHAT AKTIF */}
             <div className="px-6 py-4 bg-white border-b border-gray-100 shadow-sm z-10 flex items-center gap-3">
-              {/* --- AVATAR PADA HEADER --- */}
               <div className="w-10 h-10 flex-shrink-0">
                 {selectedChat.userId?.avatar ? (
                   <img 
@@ -365,7 +407,6 @@ const ChatCeo = () => {
                   </div>
                 )}
               </div>
-
               <div>
                 <h2 className="font-bold text-gray-900">
                   {selectedChat.userId?.name}

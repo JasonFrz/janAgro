@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import axios from "axios";
+import io from "socket.io-client";
 import {
   LayoutDashboard,
   Users,
@@ -15,7 +17,15 @@ import PesananCeo from "../ceo/PesananCeo";
 import VoucherCeo from "../ceo/VoucherCeo";
 import UserCeo from "../ceo/UserCeo";
 import UlasanCeo from "../ceo/UlasanCeo";
-import ChatCeo from '../ceo/ChatCeo';
+import ChatCeo from "../ceo/ChatCeo";
+
+// --- CONFIG URL & SOCKET ---
+const rawUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
+const cleanBaseUrl = rawUrl.endsWith("/") ? rawUrl.slice(0, -1) : rawUrl;
+const SOCKET_URL = cleanBaseUrl.replace(/\/api$/, "");
+const API_BASE = cleanBaseUrl.endsWith("/api")
+  ? cleanBaseUrl
+  : `${cleanBaseUrl}/api`;
 
 function Ceo({
   users,
@@ -39,19 +49,75 @@ function Ceo({
   const [activeTab, setActiveTab] = useState("dashboard");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  const NavButton = ({ tabName, icon, children }) => (
+  // STATE UNTUK TOTAL NOTIFIKASI
+  const [totalUnread, setTotalUnread] = useState(0);
+  const socketRef = useRef(null);
+  const token = localStorage.getItem("token");
+
+  // --- LOGIKA HITUNG NOTIFIKASI GLOBAL ---
+  useEffect(() => {
+    if (!token) return;
+
+    fetchUnreadCount();
+
+    socketRef.current = io(SOCKET_URL);
+    socketRef.current.emit("join_admin");
+
+    socketRef.current.on("receive_message", (data) => {
+      if (data.message.sender !== "admin") {
+        setTotalUnread((prev) => prev + 1);
+      }
+    });
+
+    socketRef.current.on("message_status_update", (data) => {
+      fetchUnreadCount();
+    });
+
+    return () => {
+      if (socketRef.current) socketRef.current.disconnect();
+    };
+  }, [token]);
+
+  const fetchUnreadCount = async () => {
+    try {
+      const res = await axios.get(`${API_BASE}/chat/admin/all`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (res.data.success) {
+        let count = 0;
+        res.data.data.forEach((chat) => {
+          const unreadInChat = chat.messages.filter(
+            (m) => m.sender !== "admin" && m.status !== "read"
+          ).length;
+          count += unreadInChat;
+        });
+        setTotalUnread(count);
+      }
+    } catch (error) {
+      console.error("Gagal hitung notif:", error);
+    }
+  };
+
+  // --- KOMPONEN BUTTON (UPDATED STYLE) ---
+  const NavButton = ({ tabName, icon, children, badgeCount }) => (
     <button
       onClick={() => {
         setActiveTab(tabName);
         setIsSidebarOpen(false);
       }}
-      className={`flex items-center w-full px-4 py-3 rounded-lg font-bold transition-all duration-200 border-2 mb-2 ${
+      className={`relative flex items-center w-full px-4 py-3 rounded-lg font-bold transition-all duration-200 border-2 mb-2 ${
         activeTab === tabName
-          ? "bg-black text-white border-black"
-          : "bg-white text-black border-transparent hover:border-black hover:bg-gray-100"
+          ? "bg-white text-black border-black shadow-md" // AKTIF: Background Putih, Border Hitam, Shadow
+          : "bg-white text-gray-500 border-transparent hover:text-black hover:bg-gray-50" // NON-AKTIF
       }`}
     >
       {icon} {children}
+      {/* BADGE NOTIFIKASI */}
+      {badgeCount > 0 && (
+        <span className="absolute top-3 right-3 bg-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full border border-white shadow-sm">
+          {badgeCount > 99 ? "99+" : badgeCount}
+        </span>
+      )}
     </button>
   );
 
@@ -117,7 +183,6 @@ function Ceo({
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen bg-gray-100 text-black pt-20">
-      
       {isSidebarOpen && (
         <div
           className="fixed inset-0 bg-black/50 z-40 md:hidden"
@@ -149,31 +214,96 @@ function Ceo({
           </div>
 
           <nav className="flex-1 space-y-1">
-            <NavButton tabName="dashboard" icon={<LayoutDashboard className="mr-3 h-6 w-6" />}>
+            <NavButton
+              tabName="dashboard"
+              icon={
+                <img
+                  src="/icon/dashboard.png"
+                  alt="Dashboard Icon"
+                  className="mr-3 h-6 w-6 object-contain"
+                />
+              }
+            >
               Dashboard
             </NavButton>
-            <NavButton tabName="users" icon={<Users className="mr-3 h-6 w-6" />}>
+            <NavButton
+              tabName="users"
+              icon={
+                <img
+                  src="/icon/user.png"
+                  alt="User Icon"
+                  className="mr-3 h-6 w-6 object-contain"
+                />
+              }
+            >
               Users
             </NavButton>
-            <NavButton tabName="produk" icon={<Package className="mr-3 h-6 w-6" />}>
+            <NavButton
+              tabName="produk"
+              icon={
+                <img
+                  src="/icon/produk.png"
+                  alt="product Icon"
+                  className="mr-3 h-6 w-6 object-contain"
+                />
+              }
+            >
               Products
             </NavButton>
-            <NavButton tabName="vouchers" icon={<Ticket className="mr-3 h-6 w-6" />}>
+            <NavButton
+              tabName="vouchers"
+              icon={
+                <img
+                  src="/icon/voucher1.png"
+                  alt="Voucher Icon"
+                  className="mr-3 h-6 w-6 object-contain"
+                />
+              }
+            >
               Vouchers
             </NavButton>
-            <NavButton tabName="pesanan" icon={<ShoppingCart className="mr-3 h-6 w-6" />}>
+            <NavButton
+              tabName="pesanan"
+              icon={
+                <img
+                  src="/icon/order.png"
+                  alt="Order Icon"
+                  className="mr-3 h-6 w-6 object-contain"
+                />
+              }
+            >
               Orders
             </NavButton>
-            <NavButton tabName="ulasan" icon={<MessageSquare className="mr-3 h-6 w-6" />}>
+            <NavButton
+              tabName="ulasan"
+              icon={
+                <img
+                  src="/icon/review.png"
+                  alt="review Icon"
+                  className="mr-3 h-6 w-6 object-contain"
+                />
+              }
+            >
               Reviews
             </NavButton>
-            <NavButton tabName="chats" icon={<MessageSquare className="mr-3 h-6 w-6" />}>
-           Live Chat
-         </NavButton>
+
+            <NavButton
+              tabName="chats"
+              icon={
+                <img
+                  src="/icon/chat.png"
+                  alt="Chat Icon"
+                  className="mr-3 h-6 w-6 object-contain"
+                />
+              }
+              badgeCount={totalUnread}
+            >
+              Chat
+            </NavButton>
           </nav>
 
           <div className="pt-6 mt-auto">
-             <p className="text-xs text-gray-400 font-bold">Panel CEO v1.0</p>
+            <p className="text-xs text-gray-400 font-bold">Panel CEO v1.0</p>
           </div>
         </div>
       </aside>
@@ -190,9 +320,7 @@ function Ceo({
           </button>
         </div>
 
-        <div className="animate-fade-in-up">
-          {renderContent()}
-        </div>
+        <div className="animate-fade-in-up">{renderContent()}</div>
       </main>
     </div>
   );
