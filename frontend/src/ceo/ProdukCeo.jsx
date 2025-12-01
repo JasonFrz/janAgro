@@ -179,9 +179,9 @@ function ProdukCeo({ produk = [], onAdd, onUpdate, onDelete }) {
                 <option value="" disabled>
                   Select Category
                 </option>
-                <option value="Pupuk">Pupuk</option>
-                <option value="Alat">Alat</option>
-                <option value="Bibit">Bibit</option>
+                <option value="Fertilizer">Fertilizer</option>
+                <option value="Tools">Tools</option>
+                <option value="Seeds">Seeds</option>
               </select>
             </div>
             <div>

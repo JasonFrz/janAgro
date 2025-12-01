@@ -175,7 +175,7 @@ const Location = () => {
       <div className="w-full max-w-3xl h-64 sm:h-80 md:h-96 rounded-lg overflow-hidden shadow-lg bg-white mb-10">
         <iframe
           title="Map"
-          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3957.707892340273!2d112.7405217746105!3d-7.253716794774775!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2dd7fb17a00a0fb1%3A0x5e8f91b8b6eec6b5!2sPondok%20Chandra%20Indah%2C%20Surabaya%2C%20Indonesia!5e0!3m2!1sen!2sid!4v1705785000000!5m2!1sen!2sid"
+          src="https://maps.google.com/maps?q=-6.2,106.8&z=13&output=embed"
           width="100%"
           height="100%"
           style={{ border: 0 }}

@@ -115,10 +115,10 @@ function ProdukAdmin({ produk = [], onAdd, onUpdate, onDelete }) {
                 <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-1">Kategori</label>
                     <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black outline-none bg-white" required>
-                        <option value="" disabled>Pilih Kategori</option>
-                        <option value="Pupuk">Pupuk</option>
-                        <option value="Alat">Alat</option>
-                        <option value="Bibit">Bibit</option>
+                      <option value="" disabled>Select Category</option>
+                      <option value="Fertilizer">Fertilizer</option>
+                      <option value="Tools">Tools</option>
+                      <option value="Seeds">Seeds</option>
                     </select>
                 </div>
 
