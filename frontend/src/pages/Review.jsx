@@ -1,12 +1,11 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom"; // Tambah useLocation
 import {
   Star,
   ArrowLeft,
   Camera,
   Image as ImageIcon,
   X,
-  Plus,
   Video
 } from "lucide-react";
 import axios from "axios";
@@ -17,7 +16,11 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 const Review = () => {
   const { productId } = useParams();
   const navigate = useNavigate();
-  
+  const location = useLocation(); // Hook untuk ambil state
+
+  // 1. AMBIL ORDER ID DARI STATE
+  const orderId = location.state?.orderId;
+
   const galleryInputRef = useRef(null); 
   const cameraInputRef = useRef(null);  
 
@@ -35,6 +38,14 @@ const Review = () => {
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+
+  // 2. CEK VALIDASI AKSES
+  useEffect(() => {
+    if (!orderId) {
+      alert("Invalid access. Please write a review from the Order History page.");
+      navigate("/pesanan");
+    }
+  }, [orderId, navigate]);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -97,6 +108,12 @@ const Review = () => {
 
   const handleSubmit = async () => {
     setError("");
+    
+    // Validasi dasar
+    if (!orderId) {
+      setError("Missing Order ID.");
+      return;
+    }
     if (rating === 0) {
       setError("Please give a star rating.");
       return;
@@ -107,6 +124,8 @@ const Review = () => {
     try {
       const formData = new FormData();
       formData.append("productId", productId);
+      // 3. KIRIM ORDER ID KE BACKEND
+      formData.append("orderId", orderId); 
       formData.append("rating", rating);
       formData.append("comment", comment);
 
@@ -133,6 +152,9 @@ const Review = () => {
 
   if (loadingProduct) return <div className="pt-24 text-center">Loading...</div>;
 
+  // Jika orderId tidak ada, jangan render form (cegah user submit)
+  if (!orderId) return null;
+
   return (
     <div className="min-h-screen bg-gray-50 pt-24 pb-12">
       <div className="max-w-2xl mx-auto px-4">
@@ -152,6 +174,7 @@ const Review = () => {
               <div className="text-center sm:text-left">
                 <p className="font-bold text-gray-900">{product.name}</p>
                 <p className="text-sm text-gray-500">{product.category}</p>
+                <p className="text-xs text-gray-400 mt-1">Order ID: #{orderId.substring(0, 8)}</p>
               </div>
             </div>
           )}

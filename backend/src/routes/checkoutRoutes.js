@@ -380,5 +380,23 @@ router.get("/best-selling-report", authenticateToken, async (req, res) => {
   }
 });
 
+router.get("/detail/:id", authenticateToken, async (req, res) => {
+  try {
+    const order = await Checkout.findById(req.params.id);
+    if (!order) {
+      return res.status(404).json({ success: false, message: "Order not found" });
+    }
+    
+    // Pastikan user yang request adalah pemilik order
+    if (order.userId.toString() !== req.user.id) {
+      return res.status(403).json({ success: false, message: "Unauthorized" });
+    }
+
+    res.status(200).json({ success: true, data: order });
+  } catch (error) {
+    console.error("Error fetching order detail:", error);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+});
 
 module.exports = router;

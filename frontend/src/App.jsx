@@ -15,6 +15,7 @@ import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
 import Pesanan from "./pages/Pesanan";
 import Review from "./pages/Review";
+import Invoice from "./pages/Invoice";
 import LaporanPesananAdmin from "./admin/laporanAdmin/LaporanPesananAdmin";
 import LaporanStokAdmin from "./admin/laporanAdmin/LaporanStokAdmin";
 import LaporanMovementAdmin from "./admin/laporanAdmin/LaporanMovementAdmin";
@@ -818,6 +819,7 @@ function App() {
               isPemilik ? <LaporanMetodePembayaranCeo /> : <Home API_URL={API_URL} />
             }
           />
+          <Route path="/invoice/:orderId" element={<Invoice />} />
           <Route path="*" element={<Home API_URL={API_URL} />} />
         </Routes>
       </main>
