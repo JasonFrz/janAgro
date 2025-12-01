@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useParams, Link, useLocation } from "react-router-dom";
-import { ArrowLeft, Download, Printer } from "lucide-react";
+import { ArrowLeft, Download } from "lucide-react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { janAgroLogoBase64 as logo } from "../assets/logoBase64";
@@ -17,8 +17,7 @@ const Invoice = () => {
     if (!order) {
       const fetchOrder = async () => {
         try {
-          const token = localStorage.getItem("token"); // Sesuaikan cara ambil token
-          // Ganti URL sesuai konfigurasi API Anda
+          const token = localStorage.getItem("token"); 
           const response = await fetch(
             `http://localhost:3000/api/checkout/detail/${orderId}`,
             {
@@ -43,9 +42,12 @@ const Invoice = () => {
 
   const handleDownloadPDF = async () => {
     const element = invoiceRef.current;
+    
+    // Perbaikan opsi html2canvas agar hasil cetak lebih rapi
     const canvas = await html2canvas(element, {
-      scale: 2, // Meningkatkan kualitas teks
-      useCORS: true, // Mengizinkan gambar external jika ada
+      scale: 2, 
+      useCORS: true, 
+      backgroundColor: "#ffffff", // Pastikan background putih saat dicetak
     });
     const imgData = canvas.toDataURL("image/png");
 
@@ -59,19 +61,22 @@ const Invoice = () => {
 
   if (loading)
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center pt-24">
         Loading Invoice...
       </div>
     );
   if (!order)
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center pt-24">
         Order not found.
       </div>
     );
 
   return (
-    <div className="min-h-screen bg-gray-100 py-12 px-4 sm:px-6 lg:px-8">
+    // --- PERUBAHAN DI SINI ---
+    // Ubah 'py-12' menjadi 'pt-32 pb-12' agar ada jarak cukup dari navbar
+    <div className="min-h-screen bg-gray-100 pt-32 pb-12 px-4 sm:px-6 lg:px-8">
+      
       {/* Tombol Navigasi & Aksi */}
       <div className="max-w-4xl mx-auto mb-6 flex justify-between items-center no-print">
         <Link
@@ -82,7 +87,7 @@ const Invoice = () => {
         </Link>
         <button
           onClick={handleDownloadPDF}
-          className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-md hover:bg-gray-800 transition"
+          className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-md hover:bg-gray-800 transition shadow-sm"
         >
           <Download size={18} /> Download PDF
         </button>
@@ -90,13 +95,13 @@ const Invoice = () => {
 
       {/* Area Nota / Invoice */}
       <div
-        className="max-w-4xl mx-auto bg-white p-8 shadow-lg rounded-sm"
+        className="max-w-4xl mx-auto bg-white p-8 shadow-lg rounded-sm animate-fade-in"
         ref={invoiceRef}
       >
         {/* Header Nota */}
         <div className="flex justify-between items-start border-b pb-8 mb-8">
           <div>
-            <img src={logo} alt="Company Logo" className="h-12 w-auto mb-4" />
+            <img src={logo} alt="Company Logo" className="h-16 w-auto mb-4 object-contain" />
             <p className="font-bold text-xl text-black">INVOICE</p>
             <p className="text-gray-500 text-sm">
               INV-{order._id.substring(0, 8).toUpperCase()}
@@ -104,13 +109,12 @@ const Invoice = () => {
           </div>
           <div className="text-right text-sm text-gray-600">
             <h4 className="font-bold text-black mb-1">Jan Agro Nusantara</h4>
-            <p>123 Business Street</p>
-            <p>Surabaya, Indonesia 12345</p>
-            <p>support@company.com</p>
+            <p>Pondok Chandra Indah No. 69</p>
+            <p>Surabaya, Indonesia 10130</p>
+            <p>janagronusantara@gmail.com</p>
           </div>
         </div>
 
-        {/* Info Customer & Order */}
         <div className="grid grid-cols-2 gap-8 mb-8">
           <div>
             <h5 className="font-bold text-gray-500 text-sm mb-2 uppercase">
@@ -147,7 +151,6 @@ const Invoice = () => {
           </div>
         </div>
 
-        {/* Tabel Barang */}
         <div className="mb-8">
           <table className="w-full text-left border-collapse">
             <thead>
@@ -185,7 +188,6 @@ const Invoice = () => {
           </table>
         </div>
 
-        {/* Ringkasan Pembayaran */}
         <div className="flex justify-end">
           <div className="w-full sm:w-1/2 space-y-3">
             <div className="flex justify-between text-sm text-gray-600">
@@ -213,7 +215,6 @@ const Invoice = () => {
           </div>
         </div>
 
-        {/* Footer */}
         <div className="mt-12 pt-8 border-t text-center text-gray-500 text-sm">
           <p>Thank you for your purchase!</p>
           <p>
