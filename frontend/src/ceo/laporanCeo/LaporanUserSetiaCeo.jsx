@@ -92,7 +92,9 @@ const LaporanUserSetiaCeo = () => {
             undefined,
             "FAST"
           );
-        } catch (e) {}
+        } catch (e) {
+          console.error("Failed to add logo to PDF:", e);
+        }
 
         doc.setFontSize(14);
         doc.setFont("helvetica", "bold");

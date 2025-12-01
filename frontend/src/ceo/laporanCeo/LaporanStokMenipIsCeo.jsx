@@ -21,7 +21,7 @@ const LaporanStokMenipIsCeo = () => {
     const lowStock = lowStockReportData.filter((item) => item.stock > 0 && item.stock <= 10).length;
     const totalAffected = lowStockReportData.length;
 
-    return { outOfStock, lowStock, totalAffeacted };
+    return { outOfStock, lowStock, totalAffected};
   }, [lowStockReportData]);
 
   const handleExportPDF = () => {
@@ -87,7 +87,7 @@ const LaporanStokMenipIsCeo = () => {
             "FAST"
           );
         } catch (error) {
-          // Logo load error silently handled
+          console.error("error logo:", error);
         }
 
         doc.setFontSize(14);
