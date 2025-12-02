@@ -44,6 +44,7 @@ const CheckoutSchema = new mongoose.Schema(
       type: String,
       enum: [
         "pending",
+        "pembatalan diajukan",
         "diproses",
         "dikirim",
         "sampai",

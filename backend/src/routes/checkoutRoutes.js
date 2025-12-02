@@ -215,6 +215,49 @@ router.put("/cancel/decision/:id", async (req, res) => {
   }
 });
 
+// Endpoint for users to request a cancellation. Creates a Cancellation document
+// and updates the checkout status to 'pembatalan diajukan'.
+router.put("/cancel/:orderId", authenticateToken, async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const { reason } = req.body || {};
+
+    console.log(`[INFO] Cancellation request for orderId=${orderId} by user=${req.user?.id}`);
+    console.log(`[INFO] Payload reason=${reason}`);
+
+    const order = await Checkout.findById(orderId);
+    if (!order) return res.status(404).json({ success: false, message: "Order not found" });
+
+    // If a cancellation record exists, update it; otherwise create one
+    let cancellation = await Cancellation.findOne({ orderId });
+    if (cancellation) {
+      cancellation.reason = reason || cancellation.reason;
+      cancellation.status = "pembatalan diajukan";
+      cancellation.processedAt = null;
+      await cancellation.save();
+    } else {
+      // create explicitly with fields to avoid casting surprises
+      cancellation = await Cancellation.create({
+        orderId: order._id,
+        reason: reason || "User requested cancellation",
+        status: "pembatalan diajukan",
+        processedAt: null,
+      });
+    }
+
+    // update order status
+    order.status = "pembatalan diajukan";
+    await order.save();
+
+    return res.status(200).json({ success: true, data: cancellation });
+  } catch (err) {
+    console.error("Error requesting cancellation:", err);
+    // send more specific message for frontend to surface
+    const message = err?.message || "Server error while requesting cancellation";
+    res.status(500).json({ success: false, message });
+  }
+});
+
 // 7. MIDTRANS NOTIFICATION & VERIFY
 router.post("/verify-payment/:orderId", authenticateToken, async (req, res) => {
     try {

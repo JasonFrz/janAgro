@@ -8,15 +8,15 @@ export const requestOrderCancellation = createAsyncThunk(
   "checkout/requestOrderCancellation",
   async ({ orderId, reason }, { rejectWithValue }) => {
     try {
-      const response = await axios.put(
-        `${API_URL}/cancel/${orderId}`,
-        { reason },
-        { withCredentials: true }
-      );
+      const token = localStorage.getItem("token") || localStorage.getItem("accessToken");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const response = await axios.put(`${API_URL}/cancel/${orderId}`, { reason }, { headers });
       return response.data;
     } catch (err) {
       console.error("Cancellation error:", err.response || err);
-      return rejectWithValue(err.response?.data || { message: err.message });
+      // Prefer sending the server message string if present, otherwise the full data or a message object
+      const payload = err.response?.data?.message || err.response?.data || { message: err.message };
+      return rejectWithValue(payload);
     }
   }
 );
@@ -54,7 +54,8 @@ const checkoutSlice = createSlice({
       .addCase(requestOrderCancellation.rejected, (state, action) => {
         state.loading = false;
         state.cancellationStatus = "failed";
-        state.error = action.payload?.message || "Failed to request cancellation";
+        // action.payload may be a string message or an object { message }
+        state.error = typeof action.payload === 'string' ? action.payload : action.payload?.message || "Failed to request cancellation";
       });
   },
 });

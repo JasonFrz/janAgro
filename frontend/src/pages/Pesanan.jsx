@@ -166,6 +166,7 @@ const Pesanan = ({
 }) => {
   const [confirmingOrder, setConfirmingOrder] = useState(null);
   const [cancellingOrder, setCancellingOrder] = useState(null);
+  const [statusOverrides, setStatusOverrides] = useState({});
   
   // STATE BARU: Untuk menyimpan review asli dari API
   const [realReviews, setRealReviews] = useState([]);
@@ -235,8 +236,28 @@ const Pesanan = ({
   };
 
   const handleConfirm = (orderId) => {
-    onConfirmFinished(orderId);
-    setConfirmingOrder(null);
+    // Prefer parent handler if provided, otherwise call API and update local override
+    if (typeof onConfirmFinished === "function") {
+      onConfirmFinished(orderId);
+      setConfirmingOrder(null);
+      return;
+    }
+
+    // Fallback: call backend to set status to 'selesai'
+    (async () => {
+      try {
+        const token = (window.localStorage.getItem("token") || window.localStorage.getItem("accessToken")) || null;
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        await axios.put(`${API_URL}/checkouts/${orderId}/status`, { status: "selesai" }, { headers });
+        setStatusOverrides((s) => ({ ...s, [orderId]: "selesai" }));
+        alert("Order marked as completed.");
+      } catch (err) {
+        console.error(err);
+        alert("Failed to complete order.");
+      } finally {
+        setConfirmingOrder(null);
+      }
+    })();
   };
 
   const handleSubmitCancellation = async (orderId, reason) => {
@@ -244,11 +265,25 @@ const Pesanan = ({
       requestOrderCancellation({ orderId, reason })
     );
 
+    console.log("Cancellation resultAction:", resultAction);
+
     if (requestOrderCancellation.fulfilled.match(resultAction)) {
+      // Update local status to 'dicancel' to reflect immediate cancellation in UI
+      setStatusOverrides((s) => ({ ...s, [orderId]: "dicancel" }));
       alert("Cancellation submitted!");
-      window.location.reload();
     } else {
-      alert(resultAction.payload || "Failed to request cancellation");
+      // resultAction.payload may be an object; extract a message or stringify
+      const payload = resultAction.payload;
+      let errMsg = "Failed to request cancellation";
+      if (payload) {
+        if (typeof payload === "string") errMsg = payload;
+        else if (payload.message) errMsg = payload.message;
+        else if (payload.error) errMsg = payload.error;
+        else errMsg = JSON.stringify(payload);
+      } else if (resultAction.error) {
+        errMsg = resultAction.error.message || JSON.stringify(resultAction.error);
+      }
+      alert(errMsg);
     }
 
     setCancellingOrder(null);
@@ -282,9 +317,10 @@ const Pesanan = ({
           {userCheckouts.length > 0 ? (
             <div className="space-y-8">
               {userCheckouts.map((order) => {
-                const isReturnSuccess = order.status === "pengembalian berhasil";
-                const isCancelled = order.status === "dibatalkan";
-                const currentStatusLevel = statusLevels[order.status] || 0;
+                const displayStatus = statusOverrides[order._id] || order.status;
+                const isReturnSuccess = displayStatus === "pengembalian berhasil";
+                const isCancelled = displayStatus === "dibatalkan" || displayStatus === "dicancel";
+                const currentStatusLevel = statusLevels[displayStatus] || 0;
 
                 // --- LOGIC 1: Cek Semua Item menggunakan realReviews ---
                 const allItemsReviewed =
@@ -321,7 +357,7 @@ const Pesanan = ({
                       <div className="flex items-center gap-2 mt-2 md:mt-0">
                         <span className="text-sm text-gray-500">Status:</span>
                         <span className="font-semibold capitalize text-black">
-                          {order.status}
+                          {displayStatus}
                         </span>
                       </div>
                     </div>
@@ -373,7 +409,7 @@ const Pesanan = ({
                     
                     {/* ... (Status Banners Sama Seperti Sebelumnya) ... */}
                      {/* Copy Paste bagian banner status (Pending, Diproses, Sampai, dll) di sini */}
-                     {order.status === "selesai" && (
+                     {displayStatus === "selesai" && (
                        <div className="text-center border-t border-b py-6 my-6 bg-gray-50">
                          <h3 className="font-semibold text-black mb-4">
                            Order Completed.
@@ -428,7 +464,7 @@ const Pesanan = ({
                                   </div>
                                 </div>
 
-                                {order.status === "selesai" && (
+                                {displayStatus === "selesai" && (
                                   <div className="mt-2 sm:mt-0">
                                     {hasReviewed ? (
                                       <span className="flex items-center gap-1 text-green-600 font-medium text-sm border border-green-200 bg-green-50 px-3 py-1 rounded-full">
@@ -451,7 +487,7 @@ const Pesanan = ({
                         </div>
 
                         {/* --- TOMBOL INVOICE --- */}
-                        {order.status === "selesai" && allItemsReviewed && (
+                        {displayStatus === "selesai" && allItemsReviewed && (
                           <div className="mt-6 pt-6 border-t border-dashed border-gray-300 animate-fade-in flex flex-col items-start sm:items-center text-center bg-gray-50 p-4 rounded-md">
                             <p className="text-sm text-gray-600 mb-3">
                               Terima kasih! Seluruh pesanan telah selesai dan
@@ -496,6 +532,27 @@ const Pesanan = ({
                                 IDR {order.totalHarga.toLocaleString("id-ID")}
                               </span>
                             </div>
+                          </div>
+                          {/* Action Buttons: Cancel (visible when pending/diproses) and Complete Order (always visible, enabled when delivered) */}
+                          <div className="mt-4 flex flex-col sm:flex-row gap-3">
+                            {/* Cancel button - only when order originally pending or diproses */}
+                            { (displayStatus === 'pending' || displayStatus === 'diproses') && (
+                              <button
+                                onClick={() => setCancellingOrder(order)}
+                                className="w-full sm:w-auto bg-red-600 text-white px-4 py-2 rounded font-bold hover:bg-red-700 transition"
+                              >
+                                Cancel Order
+                              </button>
+                            ) }
+
+                            {/* Complete Order - visible always but disabled until delivered ('sampai') */}
+                            <button
+                              onClick={() => setConfirmingOrder(order)}
+                              disabled={displayStatus !== 'sampai'}
+                              className={`w-full sm:w-auto px-4 py-2 rounded font-bold transition ${displayStatus === 'sampai' ? 'bg-black text-white hover:bg-gray-800' : 'bg-gray-200 text-gray-500 cursor-not-allowed'}`}
+                            >
+                              Complete Order
+                            </button>
                           </div>
                         </div>
                         <div>

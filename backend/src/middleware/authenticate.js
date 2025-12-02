@@ -5,7 +5,7 @@ dotenv.config();
 const authenticateToken = async (req, res, next) => {
   const authHeader = req.header("Authorization");
   if (!authHeader) {
-    return res.status(401).json({ error: "Unauthorized" });
+    return res.status(401).json({ message: "Unauthorized" });
   }
   const token = authHeader.startsWith("Bearer ")
     ? authHeader.slice(7)
@@ -16,14 +16,14 @@ const authenticateToken = async (req, res, next) => {
     req.user = verified;
     next();
   } catch (error) {
-    return res.status(400).json({ error: "Invalid Token" });
+    return res.status(400).json({ message: "Invalid Token" });
   }
 };
 
 const authenticateRefreshToken = async (req, res, next) => {
   const authHeader = req.header("Authorization");
   if (!authHeader) {
-    return res.status(401).json({ error: "Unauthorized" });
+    return res.status(401).json({ message: "Unauthorized" });
   }
   const token = authHeader.startsWith("Bearer ")
     ? authHeader.slice(7)
@@ -33,7 +33,7 @@ const authenticateRefreshToken = async (req, res, next) => {
     req.user = verified;
     next();
   } catch (error) {
-    return res.status(400).json({ error: "Invalid Token" });
+    return res.status(400).json({ message: "Invalid Token" });
   }
 };
 const isAdmin = async (req, res, next) => {
