@@ -254,7 +254,7 @@ const LaporanMovementCeo = () => {
             to="/ceo"
             className="flex w-full md:w-auto items-center justify-center bg-black text-white px-5 py-2.5 rounded-lg font-bold hover:bg-gray-800 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]"
           >
-            <ArrowLeft className="mr-2 h-5 w-5" /> KEMBALI
+            <ArrowLeft className="mr-2 h-5 w-5" /> BACK
           </Link>
         </header>
 

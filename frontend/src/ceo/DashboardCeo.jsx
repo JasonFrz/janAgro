@@ -243,62 +243,62 @@ function DashboardCeo({ vouchers = [], produk = [], checkouts = [] }) {
       </div>
 
       <div className="space-y-4">
-        <h2 className="text-2xl font-bold">Akses Laporan</h2>
+        <h2 className="text-2xl font-bold">Reports</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[
             {
               to: "/laporan-order-ceo",
               bg: "bg-blue-500",
-              title: "Laporan Pesanan",
-              desc: "Analisis pesanan bulanan",
+              title: "Order Report",
+              desc: "Monthly order analysis",
             },
             {
               to: "/laporan-user-ceo",
               bg: "bg-green-500",
-              title: "Laporan User Baru",
-              desc: "Pengguna baru terdaftar",
+              title: "New Users Report",
+              desc: "Recently registered users",
             },
             {
               to: "/laporan-barang-terlaku-ceo",
               bg: "bg-orange-500",
-              title: "Laporan Barang Terlaku",
-              desc: "Produk paling laris",
+              title: "Best Selling Products",
+              desc: "Top selling products",
             },
             {
               to: "/laporan-stok-ceo",
               bg: "bg-red-500",
-              title: "Laporan Stok",
-              desc: "Produk dengan stok kritis",
+              title: "Stock Report",
+              desc: "Products with critical stock",
             },
             {
               to: "/laporan-movement-ceo",
               bg: "bg-blue-700",
-              title: "Laporan Gerakan Stok",
-              desc: "Tracking stok masuk/keluar",
+              title: "Stock Movement Report",
+              desc: "Track stock in/out",
             },
             {
               to: "/laporan-user-setia-ceo",
               bg: "bg-purple-500",
-              title: "Laporan User Setia",
-              desc: "Pelanggan loyal",
+              title: "Loyal Users Report",
+              desc: "Frequent customers",
             },
             {
               to: "/laporan-voucher-ceo",
               bg: "bg-indigo-500",
-              title: "Laporan Voucher",
-              desc: "Penggunaan voucher",
+              title: "Voucher Report",
+              desc: "Voucher usage",
             },
             {
               to: "/laporan-revenue-ceo",
               bg: "bg-pink-500",
-              title: "Laporan Revenue",
-              desc: "Analisis omzet",
+              title: "Revenue Report",
+              desc: "Revenue analysis",
             },
             {
               to: "/laporan-metode-pembayaran-ceo",
               bg: "bg-cyan-500",
-              title: "Metode Pembayaran",
-              desc: "Distribusi pembayaran",
+              title: "Payment Methods",
+              desc: "Payment distribution",
             },
           ].map((item, index) => (
             <Link

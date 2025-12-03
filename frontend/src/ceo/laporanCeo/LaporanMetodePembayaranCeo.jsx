@@ -38,6 +38,16 @@ const LaporanMetodePembayaranCeo = () => {
   const [filterYear, setFilterYear] = useState(new Date().getFullYear());
   const [filterMonth, setFilterMonth] = useState(new Date().getMonth() + 1);
 
+  const mapPaymentMethodLabel = (method) => {
+    const map = {
+      "Transfer Bank": "Bank Transfer",
+      "Kartu Kredit": "Credit Card",
+      COD: "Cash on Delivery",
+      "Online Payment": "Online Payment",
+    };
+    return map[method] || method;
+  };
+
   useEffect(() => {
     dispatch(fetchCeoReport({}));
   }, [dispatch]);
@@ -76,7 +86,7 @@ const LaporanMetodePembayaranCeo = () => {
     const counts = methods.map((m) => paymentStats[m].count);
 
     return {
-      labels: methods,
+      labels: methods.map((m) => mapPaymentMethodLabel(m)),
       datasets: [
         {
           label: "Jumlah Transaksi",
@@ -106,10 +116,7 @@ const LaporanMetodePembayaranCeo = () => {
       legend: { display: true },
       title: {
         display: true,
-        text: `Distribusi Metode Pembayaran - ${new Date(
-          2024,
-          filterMonth - 1
-        ).toLocaleString("id-ID", { month: "long" })} ${filterYear}`,
+        text: `Payment Methods Distribution - ${new Date(2024, filterMonth - 1).toLocaleString("en-US", { month: "long" })} ${filterYear}`,
         font: { size: 16, weight: "bold" },
         color: "#000",
       },
@@ -133,13 +140,7 @@ const LaporanMetodePembayaranCeo = () => {
 
   const handleExportPDF = () => {
     const doc = new jsPDF();
-    const tableColumn = [
-      "No",
-      "Metode Pembayaran",
-      "Jumlah Transaksi",
-      "Total Revenue",
-      "Persentase",
-    ];
+    const tableColumn = ["No", "Payment Method", "Transactions", "Total Revenue", "Percentage"];
     const tableRows = [];
 
     let rowNum = 1;
@@ -159,9 +160,7 @@ const LaporanMetodePembayaranCeo = () => {
     const fullDate = `${date.getDate()}-${
       date.getMonth() + 1
     }-${date.getFullYear()}`;
-    const monthName = new Date(2024, filterMonth - 1).toLocaleString("id-ID", {
-      month: "long",
-    });
+      const monthName = new Date(2024, filterMonth - 1).toLocaleString("en-US", { month: "long" });
 
     autoTable(doc, {
       head: [tableColumn],
@@ -206,11 +205,7 @@ const LaporanMetodePembayaranCeo = () => {
         doc.setFont("helvetica", "bold");
         doc.text("PT. Jan Agro Nusantara", margin + logoWidth + 5, 16);
         doc.setFontSize(10);
-        doc.text(
-          `Laporan Metode Pembayaran - ${monthName} ${filterYear}`,
-          margin + logoWidth + 5,
-          21
-        );
+        doc.text(`Payment Methods Report - ${monthName} ${filterYear}`, margin + logoWidth + 5, 21);
 
         doc.setFontSize(8);
         doc.setFont("helvetica", "normal");
@@ -279,9 +274,7 @@ const LaporanMetodePembayaranCeo = () => {
         }
       },
     });
-    doc.save(
-      `laporan_metode_pembayaran_${filterYear}-${filterMonth}_${fullDate}.pdf`
-    );
+    doc.save(`payment_methods_report_${filterYear}-${filterMonth}_${fullDate}.pdf`);
   };
 
   const years = useMemo(() => {
@@ -298,18 +291,14 @@ const LaporanMetodePembayaranCeo = () => {
         {/* Header */}
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center border-b-4 border-black pb-4 gap-4">
           <div>
-            <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tight">
-              Laporan Metode Pembayaran
-            </h1>
-            <p className="text-gray-600 font-medium mt-1 text-sm sm:text-base">
-              Analisis distribusi dan performa setiap metode pembayaran.
-            </p>
+            <h1 className="text-3xl sm:text-4xl font-black uppercase tracking-tight">Payment Methods Report</h1>
+            <p className="text-gray-600 font-medium mt-1 text-sm sm:text-base">Distribution and performance analysis for each payment method.</p>
           </div>
           <Link
             to="/ceo"
             className="flex w-full md:w-auto items-center justify-center bg-black text-white px-5 py-2.5 rounded-lg font-bold hover:bg-gray-800 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]"
           >
-            <ArrowLeft className="mr-2 h-5 w-5" /> KEMBALI
+            <ArrowLeft className="mr-2 h-5 w-5" /> BACK
           </Link>
         </header>
 
@@ -327,13 +316,9 @@ const LaporanMetodePembayaranCeo = () => {
               >
                 <div className="flex items-center justify-between">
                   <div className="overflow-hidden">
-                    <p className="text-gray-600 text-xs font-bold uppercase truncate">
-                      {method}
-                    </p>
+                    <p className="text-gray-600 text-xs font-bold uppercase truncate">{mapPaymentMethodLabel(method)}</p>
                     <p className="text-2xl font-black">{data.count}</p>
-                    <p className="text-sm text-gray-500 mt-1 truncate">
-                      {percentage}% dari revenue
-                    </p>
+                    <p className="text-sm text-gray-500 mt-1 truncate">{percentage}% of revenue</p>
                   </div>
                   <CreditCard className="h-10 w-10 sm:h-12 sm:w-12 text-blue-600 shrink-0" />
                 </div>
@@ -407,7 +392,7 @@ const LaporanMetodePembayaranCeo = () => {
         ) : (
           <div className="space-y-4">
             <h2 className="text-2xl font-black uppercase flex items-center gap-2">
-              <CreditCard className="text-black" /> Detail Metode Pembayaran
+              <CreditCard className="text-black" /> Payment Method Details
             </h2>
             <div className="bg-white border-2 border-black rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
               <div className="overflow-x-auto">
@@ -417,16 +402,12 @@ const LaporanMetodePembayaranCeo = () => {
                       <th className="p-4 font-bold border-r border-gray-700 w-16 text-center">
                         #
                       </th>
-                      <th className="p-4 font-bold border-r border-gray-700">
-                        Metode Pembayaran
-                      </th>
-                      <th className="p-4 font-bold border-r border-gray-700 text-center">
-                        Jumlah Transaksi
-                      </th>
+                      <th className="p-4 font-bold border-r border-gray-700">Payment Method</th>
+                      <th className="p-4 font-bold border-r border-gray-700 text-center">Transactions</th>
                       <th className="p-4 font-bold border-r border-gray-700 text-right">
                         Total Revenue
                       </th>
-                      <th className="p-4 font-bold text-center">Persentase</th>
+                      <th className="p-4 font-bold text-center">Percentage</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -443,9 +424,7 @@ const LaporanMetodePembayaranCeo = () => {
                           <td className="p-4 font-black text-center border-r-2 border-gray-200 text-lg">
                             {idx + 1}
                           </td>
-                          <td className="p-4 border-r-2 border-gray-200 font-bold">
-                            {method}
-                          </td>
+                          <td className="p-4 border-r-2 border-gray-200 font-bold">{mapPaymentMethodLabel(method)}</td>
                           <td className="p-4 border-r-2 border-gray-200 text-center font-bold">
                             {data.count}
                           </td>

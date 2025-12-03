@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { getStatusLabel } from "../i18n/labels";
 import { Link } from "react-router-dom";
 import {
   ArrowLeft,
@@ -357,7 +358,7 @@ const Pesanan = ({
                       <div className="flex items-center gap-2 mt-2 md:mt-0">
                         <span className="text-sm text-gray-500">Status:</span>
                         <span className="font-semibold capitalize text-black">
-                          {displayStatus}
+                          {getStatusLabel(displayStatus)}
                         </span>
                       </div>
                     </div>

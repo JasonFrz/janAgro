@@ -32,6 +32,8 @@ const formatPhoneNumber = (phone) => {
   return formatted;
 };
 
+import { getStatusLabel } from "../i18n/labels";
+
 const StatusBadge = ({ status }) => {
   const statusStyles = {
     selesai: "bg-green-100 text-green-800",
@@ -50,7 +52,7 @@ const StatusBadge = ({ status }) => {
         statusStyles[status] || "bg-gray-100 text-gray-800"
       }`}
     >
-      {status}
+      {getStatusLabel(status)}
     </span>
   );
 };
@@ -227,9 +229,7 @@ const SettingAdmin = () => {
       <div className="flex flex-col sm:flex-row justify-between sm:items-center border-b pb-4 gap-4">
         <div>
           <h2 className="text-2xl font-bold mb-2">Order Management</h2>
-          <p className="text-gray-500">
-            Manage and Update customer order status
-          </p>
+          <p className="text-gray-500">Manage and update customer orders</p>
         </div>
         <div className="flex items-center gap-4">
           <button
@@ -237,14 +237,14 @@ const SettingAdmin = () => {
             className="flex items-center gap-2 bg-black text-white px-4 py-2 rounded-md hover:bg-gray-800 transition text-sm"
           >
             <FileText size={18} />
-            Laporan Order
+            Order Report
           </button>
           <button
             onClick={() => navigate("/laporan-stok-admin")}
             className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition text-sm"
           >
             <FileText size={18} />
-            Laporan Stok
+            Stock Report
           </button>
 
           <select
@@ -275,8 +275,8 @@ const SettingAdmin = () => {
 
         {!loading && filteredCheckouts.length === 0 && (
           <div className="text-center py-16 border-2 border-dashed rounded-lg">
-            <h3 className="text-xl font-semibold text-black">Empty..</h3>
-            <p className="text-gray-500 mt-2">No matching orders found..</p>
+            <h3 className="text-xl font-semibold text-black">No Orders</h3>
+            <p className="text-gray-500 mt-2">No matching orders found.</p>
           </div>
         )}
 
@@ -362,7 +362,7 @@ const SettingAdmin = () => {
                                 }
                                 className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-red-600 text-white rounded-md text-sm font-semibold hover:bg-red-700"
                               >
-                                <X size={16} /> Tolak
+                                <X size={16} /> Reject
                               </button>
                               <button
                                 onClick={() =>
@@ -370,7 +370,7 @@ const SettingAdmin = () => {
                                 }
                                 className="w-full flex items-center justify-center gap-2 py-2 px-4 bg-green-600 text-white rounded-md text-sm font-semibold hover:bg-green-700"
                               >
-                                <Check size={16} /> Setujui
+                                <Check size={16} /> Approve
                               </button>
                             </div>
                           </div>
@@ -440,19 +440,16 @@ const SettingAdmin = () => {
                           </div>
                           {order.diskon > 0 && (
                             <div className="flex justify-between text-green-600">
-                              <span>Diskon ({order.kodeVoucher || "-"}):</span>
+                              <span>Discount ({order.kodeVoucher || "-"}):</span>
                               <span className="font-medium">
                                 - Rp {order.diskon.toLocaleString("id-ID")}
                               </span>
                             </div>
                           )}
                           <div className="flex justify-between">
-                            <span className="text-gray-600">Kurir:</span>
+                            <span className="text-gray-600">Courier:</span>
                             <span className="font-medium">
-                              Rp{" "}
-                              {(order.kurir?.biaya || 0).toLocaleString(
-                                "id-ID"
-                              )}
+                              Rp { (order.kurir?.biaya || 0).toLocaleString("id-ID") }
                             </span>
                           </div>
                           <div className="flex justify-between font-bold text-base border-t pt-2 mt-2">
@@ -512,10 +509,7 @@ const SettingAdmin = () => {
                         {order.alamat}
                       </p>
                       <p className="text-sm text-gray-600 mt-2">
-                        Metode Pembayaran:{" "}
-                        <span className="font-medium text-black">
-                          {order.metodePembayaran}
-                        </span>
+                        Payment Method: <span className="font-medium text-black">{order.metodePembayaran}</span>
                       </p>
                     </div>
                   </div>

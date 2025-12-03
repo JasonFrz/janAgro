@@ -18,6 +18,7 @@ import {
 } from "chart.js";
 
 import { janAgroLogoBase64 } from "./logoBase64"; // Pastikan path benar
+import { getStatusLabel } from "../../i18n/labels";
 
 ChartJS.register(
   CategoryScale,
@@ -70,27 +71,27 @@ const OrderDetailModal = ({ order, onClose }) => {
           <X size={24} />
         </button>
         <div className="border-b-2 border-black pb-4 mb-6">
-          <h2 className="text-3xl font-bold">Detail Pesanan</h2>
+          <h2 className="text-3xl font-bold">Order Details</h2>
           <p className="text-gray-600">ORDER #{order.id}</p>
         </div>
         <div className="space-y-6">
           <div>
-            <h3 className="text-lg font-bold mb-2">Informasi Pengiriman</h3>
+            <h3 className="text-lg font-bold mb-2">Shipping Information</h3>
             <div className="text-sm space-y-1">
               <p>
-                <span className="font-semibold">Nama:</span> {order.nama}
+                <span className="font-semibold">Name:</span> {order.nama}
               </p>
               <p>
-                <span className="font-semibold">Telepon:</span>
+                <span className="font-semibold">Phone:</span>
                 {order.noTelpPenerima}
               </p>
               <p>
-                <span className="font-semibold">Alamat:</span> {order.alamat}
+                <span className="font-semibold">Address:</span> {order.alamat}
               </p>
             </div>
           </div>
           <div>
-            <h3 className="text-lg font-bold mb-2">Item yang Dipesan</h3>
+            <h3 className="text-lg font-bold mb-2">Items Ordered</h3>
             <div className="divide-y divide-gray-200 border-y border-gray-200">
               {order.items.map((item) => (
                 <div
@@ -111,7 +112,7 @@ const OrderDetailModal = ({ order, onClose }) => {
             </div>
           </div>
           <div>
-            <h3 className="text-lg font-bold mb-2">Ringkasan Pembayaran</h3>
+            <h3 className="text-lg font-bold mb-2">Payment Summary</h3>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
                 <span className="text-gray-600">Subtotal:</span>
@@ -124,16 +125,12 @@ const OrderDetailModal = ({ order, onClose }) => {
               </div>
               {order.diskon > 0 && (
                 <div className="flex justify-between">
-                  <span className="text-gray-600">
-                    Diskon ({order.kodeVoucher}):
-                  </span>
-                  <span className="text-green-600">
-                    - Rp {order.diskon.toLocaleString("id-ID")}
-                  </span>
+                  <span className="text-gray-600">Discount ({order.kodeVoucher}):</span>
+                  <span className="text-green-600">- Rp {order.diskon.toLocaleString("id-ID")}</span>
                 </div>
               )}
               <div className="flex justify-between">
-                <span className="text-gray-600">Biaya Kurir:</span>
+                <span className="text-gray-600">Courier Fee:</span>
                 <span>
                   Rp{" "}
                   {order.kurir?.biaya
@@ -142,14 +139,12 @@ const OrderDetailModal = ({ order, onClose }) => {
                 </span>
               </div>
               <div className="flex justify-between text-base font-bold border-t border-black pt-2 mt-2">
-                <span>Total Harga:</span>
+                <span>Total Price:</span>
                 <span>Rp {order.totalHarga.toLocaleString("id-ID")}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-gray-600">Metode Pembayaran:</span>
-                <span className="font-semibold">
-                  {getPaymentMethodDisplay(order.paymentType, order.metodePembayaran)}
-                </span>
+                <span className="text-gray-600">Payment Method:</span>
+                <span className="font-semibold">{getPaymentMethodDisplay(order.paymentType, order.metodePembayaran)}</span>
               </div>
             </div>
           </div>
@@ -161,9 +156,7 @@ const OrderDetailModal = ({ order, onClose }) => {
 
 const LaporanSection = ({ title, orders, onOrderClick }) => (
   <div className="bg-white p-6 rounded-lg border border-black">
-    <h2 className="text-xl font-bold mb-4 border-b border-black pb-2">
-      {title}
-    </h2>
+    <h2 className="text-xl font-bold mb-4 border-b border-black pb-2">{title}</h2>
     {orders.length > 0 ? (
       <div className="divide-y divide-gray-300 max-h-96 overflow-y-auto pr-2">
         {orders.map((order) => (
@@ -198,9 +191,7 @@ const LaporanSection = ({ title, orders, onOrderClick }) => (
         ))}
       </div>
     ) : (
-      <p className="text-gray-500 italic">
-        Tidak ada pesanan pada kategori ini.
-      </p>
+      <p className="text-gray-500 italic">No orders in this category.</p>
     )}
   </div>
 );
@@ -291,11 +282,11 @@ const LaporanPesananAdmin = () => {
     };
 
     const tableColumn = [
-      "ID Pesanan",
-      "Nama Pelanggan",
-      "Tanggal",
-      "Metode Pembayaran",
-      "Total Harga",
+      "Order ID",
+      "Customer Name",
+      "Date",
+      "Payment Method",
+      "Total Price",
       "Status",
     ];
     const tableRows = [];
@@ -312,17 +303,15 @@ const LaporanPesananAdmin = () => {
         }),
         getPaymentMethodDisplay(order.paymentType, order.metodePembayaran),
         `Rp ${order.totalHarga.toLocaleString("id-ID")}`,
-        order.status.charAt(0).toUpperCase() + order.status.slice(1),
+        getStatusLabel(order.status),
       ];
       tableRows.push(orderData);
     });
 
     const filterTitle =
       filterType === "daily"
-        ? `Harian (${new Date(specificDate).toLocaleDateString("id-ID", {
-            dateStyle: "long",
-          })})`
-        : `Bulanan`;
+        ? `Daily (${new Date(specificDate).toLocaleDateString("en-US", { dateStyle: "long" })})`
+        : `Monthly`;
 
     const date = new Date();
     const fullDate = `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}`;
@@ -363,11 +352,7 @@ const LaporanPesananAdmin = () => {
         doc.setFont("helvetica", "bold");
         doc.text("PT. Jan Agro Nusantara", margin + logoWidth + 5, 16);
         doc.setFontSize(10);
-        doc.text(
-          `Laporan Pesanan (Admin) - ${filterTitle}`,
-          margin + logoWidth + 5,
-          22
-        );
+        doc.text(`Order Report (Admin) - ${filterTitle}`, margin + logoWidth + 5, 22);
 
         doc.setFontSize(8);
         doc.setFont("helvetica", "normal");
@@ -419,7 +404,7 @@ const LaporanPesananAdmin = () => {
         }
       },
     });
-    doc.save(`laporan_admin_${filterType}_${fullDate}.pdf`);
+    doc.save(`order_report_admin_${filterType}_${fullDate}.pdf`);
   };
 
   const chartData = useMemo(() => {
@@ -445,12 +430,12 @@ const LaporanPesananAdmin = () => {
     });
     const datasets = [
       {
-        label: "Pembelian Berhasil",
+        label: "Successful Purchases",
         data: successfulPurchases,
         backgroundColor: "rgba(34, 197, 94, 0.8)",
       },
       {
-        label: "Pembelian Gagal/Batal",
+        label: "Failed/Cancelled Purchases",
         data: failedPurchases,
         backgroundColor: "rgba(239, 68, 68, 0.8)",
       },
@@ -460,20 +445,7 @@ const LaporanPesananAdmin = () => {
     else if (purchaseFilter === "failed") filteredDatasets = [datasets[1]];
     else filteredDatasets = datasets;
     return {
-      labels: [
-        "Jan",
-        "Feb",
-        "Mar",
-        "Apr",
-        "Mei",
-        "Jun",
-        "Jul",
-        "Agu",
-        "Sep",
-        "Okt",
-        "Nov",
-        "Des",
-      ],
+      labels: ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],
       datasets: filteredDatasets,
     };
   }, [checkouts, chartYear, purchaseFilter]);
@@ -501,10 +473,8 @@ const LaporanPesananAdmin = () => {
         <div className="max-w-7xl mx-auto space-y-8 px-4 sm:px-6 lg:px-8 pb-12">
           <header className="flex justify-between items-center border-b-2 border-black pb-4">
             <div>
-              <h1 className="text-4xl font-bold">Laporan Pesanan (Admin)</h1>
-              <p className="text-gray-600 mt-1">
-                Analisis dan rekapitulasi data pesanan.
-              </p>
+              <h1 className="text-4xl font-bold">Order Report (Admin)</h1>
+                  <p className="text-gray-600 mt-1">Order analysis and summary.</p>
             </div>
             <Link
               to="/admin"
@@ -523,9 +493,7 @@ const LaporanPesananAdmin = () => {
             <>
               <div className="bg-white p-6 rounded-lg border border-black space-y-6">
                 <div>
-                  <h2 className="text-xl font-bold mb-4">
-                    Filter Diagram Pembelian
-                  </h2>
+                  <h2 className="text-xl font-bold mb-4">Purchase Chart Filter</h2>
                   <div className="flex flex-col sm:flex-row gap-4">
                     <select
                       value={chartYear}
@@ -543,9 +511,9 @@ const LaporanPesananAdmin = () => {
                       onChange={(e) => setPurchaseFilter(e.target.value)}
                       className="w-full sm:w-auto bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
                     >
-                      <option value="all">Semua Pembelian</option>
-                      <option value="success">Pembelian Berhasil</option>
-                      <option value="failed">Pembelian Gagal</option>
+                      <option value="all">All Purchases</option>
+                      <option value="success">Successful Purchases</option>
+                      <option value="failed">Failed Purchases</option>
                     </select>
                   </div>
                 </div>
@@ -577,7 +545,7 @@ const LaporanPesananAdmin = () => {
                     }`}
                   >
                     <CalendarDays size={18} />
-                    Per Bulan
+                    Monthly
                   </button>
                   <button
                     onClick={() => setFilterType("daily")}
@@ -588,7 +556,7 @@ const LaporanPesananAdmin = () => {
                     }`}
                   >
                     <Calendar size={18} />
-                    Per Tanggal Spesifik
+                    Specific Date
                   </button>
                 </div>
 
@@ -621,7 +589,7 @@ const LaporanPesananAdmin = () => {
                           </option>
                         ))}
                       </select>
-                      <span className="text-gray-600">sampai</span>
+                      <span className="text-gray-600">to</span>
                       <select
                         value={listMonthEnd}
                         onChange={(e) =>
@@ -639,26 +607,15 @@ const LaporanPesananAdmin = () => {
                       </select>
                     </>
                   ) : (
-                    <div className="flex items-center gap-2 w-full sm:w-auto">
-                      <label className="font-semibold text-gray-700">
-                        Pilih Tanggal:
-                      </label>
+                      <div className="flex items-center gap-2 w-full sm:w-auto">
+                      <label className="font-semibold text-gray-700">Choose Date:</label>
                       <input
                         type="date"
                         value={specificDate}
                         onChange={(e) => setSpecificDate(e.target.value)}
                         className="bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
                       />
-                      <span className="text-sm text-gray-500 ml-2">
-                        (Menampilkan data:{" "}
-                        {new Date(specificDate).toLocaleDateString("id-ID", {
-                          weekday: "long",
-                          day: "numeric",
-                          month: "long",
-                          year: "numeric",
-                        })}
-                        )
-                      </span>
+                      <span className="text-sm text-gray-500 ml-2">(Showing data: {new Date(specificDate).toLocaleDateString("en-US", { weekday: "long", day: "numeric", month: "long", year: "numeric" })})</span>
                     </div>
                   )}
                 </div>
@@ -666,31 +623,23 @@ const LaporanPesananAdmin = () => {
 
               <div className="border-t-2 border-black pt-8">
                 <h2 className="text-3xl font-bold mb-6 flex items-center gap-2">
-                  Detail Pesanan
-                  <span className="text-sm font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                    Total: {filteredCheckoutsForList.length} Pesanan
-                  </span>
+                  Order Details
+                  <span className="text-sm font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded">Total: {filteredCheckoutsForList.length} Orders</span>
                 </h2>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                   <LaporanSection
-                    title="Pesanan Diproses"
-                    orders={filteredCheckoutsForList.filter(
-                      (o) => o.status === "diproses"
-                    )}
+                    title="Processed Orders"
+                    orders={filteredCheckoutsForList.filter((o) => o.status === "diproses")}
                     onOrderClick={setSelectedOrder}
                   />
                   <LaporanSection
-                    title="Pesanan Dikirim"
-                    orders={filteredCheckoutsForList.filter(
-                      (o) => o.status === "dikirim"
-                    )}
+                    title="Sent Orders"
+                    orders={filteredCheckoutsForList.filter((o) => o.status === "dikirim")}
                     onOrderClick={setSelectedOrder}
                   />
                   <LaporanSection
-                    title="Pesanan Selesai"
-                    orders={filteredCheckoutsForList.filter((o) =>
-                      ["selesai", "sampai"].includes(o.status)
-                    )}
+                    title="Completed Orders"
+                    orders={filteredCheckoutsForList.filter((o) => ["selesai", "sampai"].includes(o.status))}
                     onOrderClick={setSelectedOrder}
                   />
                 </div>

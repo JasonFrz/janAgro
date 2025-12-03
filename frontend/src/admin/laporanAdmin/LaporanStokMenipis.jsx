@@ -26,17 +26,11 @@ const LaporanStokMenipis = () => {
 
   const handleExportPDF = () => {
     const doc = new jsPDF();
-    const tableColumn = [
-      "Rank",
-      "Nama Produk",
-      "Harga",
-      "Stok Saat Ini",
-      "Status",
-    ];
+    const tableColumn = ["Rank", "Product Name", "Price", "Current Stock", "Status"];
     const tableRows = [];
 
     lowStockReportData.forEach((item, index) => {
-      const status = item.stock === 0 ? "HABIS" : "MENIPIS";
+      const status = item.stock === 0 ? "OUT OF STOCK" : "LOW STOCK";
       const rowData = [
         index + 1,
         item.name,
@@ -49,7 +43,7 @@ const LaporanStokMenipis = () => {
 
     const date = new Date();
     const fullDate = `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}`;
-    const filterTitle = filterType === "all" ? "Semua Produk" : filterType === "outOfStock" ? "Stok Habis" : "Stok Menipis";
+    const filterTitle = filterType === "all" ? "All Products" : filterType === "outOfStock" ? "Out of Stock" : "Low Stock";
 
     autoTable(doc, {
       head: [tableColumn],
@@ -140,7 +134,7 @@ const LaporanStokMenipis = () => {
         }
       },
     });
-    doc.save(`laporan_stok_menipis_${filterType}_${fullDate}.pdf`);
+    doc.save(`low_stock_report_${filterType}_${fullDate}.pdf`);
   };
 
   return (
@@ -148,19 +142,15 @@ const LaporanStokMenipis = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center border-b-4 border-black pb-4 gap-4">
           <div>
-            <h1 className="text-4xl font-black uppercase tracking-tight">
-              Stock Report
-            </h1>
-            <p className="text-gray-600 font-medium mt-1">
-              Pantau produk dengan stok menipis atau habis.
-            </p>
+            <h1 className="text-4xl font-black uppercase tracking-tight">Stock Report</h1>
+            <p className="text-gray-600 font-medium mt-1">Monitor products that are low or out of stock.</p>
           </div>
-          <Link
-            to="/admin"
-            className="flex items-center bg-black text-white px-5 py-2.5 rounded-lg font-bold hover:bg-gray-800 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]"
-          >
-            <ArrowLeft className="mr-2 h-5 w-5" /> KEMBALI
-          </Link>
+            <Link
+              to="/admin"
+              className="flex items-center bg-black text-white px-5 py-2.5 rounded-lg font-bold hover:bg-gray-800 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]"
+            >
+              <ArrowLeft className="mr-2 h-5 w-5" /> BACK
+            </Link>
         </header>
 
         {/* Stats Cards */}
@@ -168,7 +158,7 @@ const LaporanStokMenipis = () => {
           <div className="bg-white border-2 border-black p-6 rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm font-bold">STOK HABIS</p>
+                <p className="text-gray-600 text-sm font-bold">OUT OF STOCK</p>
                 <p className="text-3xl font-black">{stockStats.outOfStock}</p>
               </div>
               <AlertTriangle className="h-12 w-12 text-red-600" />
@@ -177,7 +167,7 @@ const LaporanStokMenipis = () => {
           <div className="bg-white border-2 border-black p-6 rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm font-bold">STOK MENIPIS</p>
+                <p className="text-gray-600 text-sm font-bold">LOW STOCK</p>
                 <p className="text-3xl font-black">{stockStats.lowStock}</p>
               </div>
               <AlertCircle className="h-12 w-12 text-yellow-600" />
@@ -186,7 +176,7 @@ const LaporanStokMenipis = () => {
           <div className="bg-white border-2 border-black p-6 rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm font-bold">TOTAL TERPENGARUH</p>
+                <p className="text-gray-600 text-sm font-bold">TOTAL AFFECTED</p>
                 <p className="text-3xl font-black">{stockStats.totalAffected}</p>
               </div>
               <Package className="h-12 w-12 text-blue-600" />
@@ -198,11 +188,7 @@ const LaporanStokMenipis = () => {
         <div className="bg-white border-2 border-black p-6 rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
           <div className="flex flex-col md:flex-row justify-between items-end md:items-center gap-4">
             <div className="flex gap-2 flex-wrap">
-              {[
-                { id: "all", label: "Semua" },
-                { id: "outOfStock", label: "Stok Habis" },
-                { id: "lowStock", label: "Stok Menipis" },
-              ].map((type) => (
+              {[{ id: "all", label: "All" }, { id: "outOfStock", label: "Out of Stock" }, { id: "lowStock", label: "Low Stock" }].map((type) => (
                 <button
                   key={type.id}
                   onClick={() => setFilterType(type.id)}

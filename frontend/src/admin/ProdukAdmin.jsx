@@ -103,17 +103,17 @@ function ProdukAdmin({ produk = [], onAdd, onUpdate, onDelete }) {
         {/* Form Section */}
         <div className="bg-white shadow-md rounded-lg p-6 border border-gray-100">
           <h2 className="text-xl font-bold mb-6 text-gray-800">
-            {editingId ? "Edit Produk" : "Tambah Produk Baru"}
+            {editingId ? "Edit Product" : "Add New Product"}
           </h2>
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="md:col-span-2">
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Nama Produk</label>
-                    <input type="text" placeholder="Contoh: Pupuk Urea" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:border-transparent outline-none" required />
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Product Name</label>
+                    <input type="text" placeholder="Example: Urea Fertilizer" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black focus:border-transparent outline-none" required />
                 </div>
                 
                 <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Kategori</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Category</label>
                     <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black outline-none bg-white" required>
                       <option value="" disabled>Select Category</option>
                       <option value="Fertilizer">Fertilizer</option>
@@ -123,7 +123,7 @@ function ProdukAdmin({ produk = [], onAdd, onUpdate, onDelete }) {
                 </div>
 
                 <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Gambar Produk</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Product Image</label>
                     <div className="flex items-center gap-4">
                         <div className="w-24 h-24 flex-shrink-0 flex items-center justify-center border-2 border-dashed border-gray-300 rounded-lg bg-gray-50 overflow-hidden">
                         {imagePreview ? (<img src={imagePreview} alt="Pratinjau" className="w-full h-full object-cover"/>) : (<span className="text-gray-400 text-xs text-center px-1">No Image</span>)}
@@ -131,7 +131,7 @@ function ProdukAdmin({ produk = [], onAdd, onUpdate, onDelete }) {
                         <div className="flex-1">
                             <input type="file" id="admin-image-upload" accept="image/png, image/jpeg" onChange={handleImageChange} className="hidden"/>
                             <label htmlFor="admin-image-upload" className="w-full sm:w-auto bg-blue-600 text-white px-4 py-2.5 rounded-md hover:bg-blue-700 text-sm font-medium cursor-pointer flex items-center justify-center transition-colors">
-                                <Upload size={18} className="mr-2"/> Pilih Gambar
+                              <Upload size={18} className="mr-2"/> Choose Image
                             </label>
                             <p className="text-xs text-gray-500 mt-2">Format: JPG, PNG. Max: 2MB</p>
                         </div>
@@ -139,33 +139,33 @@ function ProdukAdmin({ produk = [], onAdd, onUpdate, onDelete }) {
                 </div>
 
                 <div className="md:col-span-2">
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Deskripsi Singkat</label>
-                    <textarea placeholder="Ringkasan singkat produk..." value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black outline-none" rows="2"/>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Short Description</label>
+                    <textarea placeholder="Short summary of the product..." value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black outline-none" rows="2"/>
                 </div>
 
                 <div className="md:col-span-2">
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Detail Lengkap</label>
-                    <textarea placeholder="Spesifikasi lengkap produk..." value={form.detail} onChange={(e) => setForm({ ...form, detail: e.target.value })} className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black outline-none" rows="4" required/>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Detailed Description</label>
+                    <textarea placeholder="Full product specifications..." value={form.detail} onChange={(e) => setForm({ ...form, detail: e.target.value })} className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black outline-none" rows="4" required/>
                 </div>
 
                 <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Harga (Rp)</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Price (Rp)</label>
                     <input type="number" placeholder="0" value={form.price} onChange={(e) => setForm({ ...form, price: Math.max(0, Number(e.target.value)) })} className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black outline-none" required/>
                 </div>
 
                 <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">Stok</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Stock</label>
                     <input type="number" placeholder="0" value={form.stock} onChange={(e) => setForm({ ...form, stock: Math.max(0, Number(e.target.value)) })} className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-black outline-none" required/>
                 </div>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3 pt-4">
-              <button type="submit" disabled={isFormInvalid} className={`flex-1 justify-center bg-black text-white px-6 py-3 rounded-md font-bold flex items-center transition-all ${isFormInvalid ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-800"}`}>
-                <Plus className="mr-2 h-5 w-5" /> {editingId ? "Perbarui Produk" : "Tambah Produk"}
+                <button type="submit" disabled={isFormInvalid} className={`flex-1 justify-center bg-black text-white px-6 py-3 rounded-md font-bold flex items-center transition-all ${isFormInvalid ? "opacity-50 cursor-not-allowed" : "hover:bg-gray-800"}`}>
+                <Plus className="mr-2 h-5 w-5" /> {editingId ? "Update Product" : "Add Product"}
               </button>
               {editingId && (
                 <button type="button" onClick={handleCancel} className="flex-1 justify-center bg-white text-gray-700 border border-gray-300 px-6 py-3 rounded-md font-bold hover:bg-gray-50 flex items-center transition-all">
-                  <X className="w-5 h-5 mr-2" /> Batal
+                  <X className="w-5 h-5 mr-2" /> Cancel
                 </button>
               )}
             </div>
@@ -175,26 +175,26 @@ function ProdukAdmin({ produk = [], onAdd, onUpdate, onDelete }) {
         {/* List Product Section */}
         <div className="bg-white shadow-md rounded-lg p-6 border border-gray-100">
           <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 pb-4 border-b border-gray-100 gap-4">
-            <h2 className="text-xl font-bold text-gray-800">Daftar Produk</h2>
+            <h2 className="text-xl font-bold text-gray-800">Product List</h2>
             <div className="flex flex-wrap gap-2 w-full lg:w-auto">
               <button
                 onClick={() => navigate("/laporan-stok-admin")}
                 className="flex-1 lg:flex-none flex items-center justify-center gap-2 bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition shadow-sm font-medium text-sm"
               >
                 <FileText size={16} />
-                <span>Laporan Stok</span>
+                <span>Stock Report</span>
               </button>
               <button
                 onClick={() => navigate("/laporan-movement-admin")}
                 className="flex-1 lg:flex-none flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition shadow-sm font-medium text-sm"
               >
                 <FileText size={16} />
-                <span>Laporan Masuk/Keluar</span>
+                <span>Stock Movement Report</span>
               </button>
             </div>
           </div>
 
-          {produk.length === 0 ? (<p className="text-gray-500 text-center py-8">Belum ada data produk.</p>) : (
+          {produk.length === 0 ? (<p className="text-gray-500 text-center py-8">No products available.</p>) : (
             // PERUBAHAN DISINI:
             // 1. max-h-[450px]: Memberi batas tinggi kira-kira untuk 5 baris produk.
             // 2. overflow-y-auto: Memunculkan scrollbar jika lebih dari tinggi tsb.
@@ -209,12 +209,12 @@ function ProdukAdmin({ produk = [], onAdd, onUpdate, onDelete }) {
                 */}
                 <thead className="bg-gray-50 sticky top-0 z-10 shadow-sm">
                   <tr>
-                    <th className="p-3 text-left font-semibold text-gray-600 border-b w-20">Gambar</th>
-                    <th className="p-3 text-left font-semibold text-gray-600 border-b">Nama Produk</th>
-                    <th className="p-3 text-left font-semibold text-gray-600 border-b w-32">Kategori</th>
-                    <th className="p-3 text-right font-semibold text-gray-600 border-b w-32">Harga</th>
-                    <th className="p-3 text-center font-semibold text-gray-600 border-b w-24">Stok</th>
-                    <th className="p-3 text-center font-semibold text-gray-600 border-b w-32">Aksi</th>
+                    <th className="p-3 text-left font-semibold text-gray-600 border-b w-20">Image</th>
+                    <th className="p-3 text-left font-semibold text-gray-600 border-b">Product Name</th>
+                    <th className="p-3 text-left font-semibold text-gray-600 border-b w-32">Category</th>
+                    <th className="p-3 text-right font-semibold text-gray-600 border-b w-32">Price</th>
+                    <th className="p-3 text-center font-semibold text-gray-600 border-b w-24">Stock</th>
+                    <th className="p-3 text-center font-semibold text-gray-600 border-b w-32">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">

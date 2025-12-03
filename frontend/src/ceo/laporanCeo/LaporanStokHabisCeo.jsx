@@ -147,23 +147,22 @@ const LaporanStokHabisCeo = () => {
               Out of Stock Report
             </h1>
             <p className="text-gray-600 font-medium mt-1 text-sm sm:text-base">
-              Pantau semua produk yang telah habis.
+              Monitor products that are out of stock.
             </p>
           </div>
           <Link
             to="/ceo"
             className="flex w-full md:w-auto items-center justify-center bg-black text-white px-5 py-2.5 rounded-lg font-bold hover:bg-gray-800 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]"
           >
-            <ArrowLeft className="mr-2 h-5 w-5" /> KEMBALI
+            <ArrowLeft className="mr-2 h-5 w-5" /> BACK
           </Link>
         </header>
 
-        {/* Stats Cards - Responsive Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-white border-2 border-black p-4 sm:p-6 rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-xs sm:text-sm font-bold">TOTAL PRODUK HABIS</p>
+                <p className="text-gray-600 text-xs sm:text-sm font-bold">TOTAL OUT OF STOCK</p>
                 <p className="text-2xl sm:text-3xl font-black">{stockStats.totalOutOfStock}</p>
               </div>
               <AlertTriangle className="h-10 w-10 sm:h-12 sm:w-12 text-red-600" />
@@ -172,7 +171,7 @@ const LaporanStokHabisCeo = () => {
           <div className="bg-white border-2 border-black p-4 sm:p-6 rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-xs sm:text-sm font-bold">TOTAL NILAI PRODUK</p>
+                <p className="text-gray-600 text-xs sm:text-sm font-bold">ESTIMATED VALUE</p>
                 <p className="text-2xl sm:text-3xl font-black truncate">Rp {stockStats.estimatedLoss.toLocaleString("id-ID")}</p>
               </div>
               <Package className="h-10 w-10 sm:h-12 sm:w-12 text-blue-600" />
