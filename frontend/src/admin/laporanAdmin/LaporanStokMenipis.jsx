@@ -88,7 +88,7 @@ const LaporanStokMenipis = () => {
         doc.setFont("helvetica", "bold");
         doc.text("PT. Jan Agro Nusantara", margin + logoWidth + 5, 16);
         doc.setFontSize(10);
-        doc.text(`Laporan Stok Menipis/Habis - ${filterTitle}`, margin + logoWidth + 5, 21);
+        doc.text(`Low Stock Report - ${filterTitle}`, margin + logoWidth + 5, 21);
 
         doc.setFontSize(8);
         doc.setFont("helvetica", "normal");
@@ -116,7 +116,7 @@ const LaporanStokMenipis = () => {
           }
 
           const signatureX = pageWidth - data.settings.margin.right;
-          const currentDate = new Date().toLocaleDateString("id-ID", {
+          const currentDate = new Date().toLocaleDateString("en-US", {
             day: "numeric", month: "long", year: "numeric",
           });
 
@@ -130,7 +130,7 @@ const LaporanStokMenipis = () => {
           doc.line(signatureX - nameWidth, finalY + 21, signatureX, finalY + 21);
           doc.setFont("helvetica", "normal");
           doc.setFontSize(9);
-          doc.text("Ceo & Founder", signatureX, finalY + 25, { align: "right" });
+          doc.text("CEO & Founder", signatureX, finalY + 25, { align: "right" });
         }
       },
     });
@@ -219,7 +219,7 @@ const LaporanStokMenipis = () => {
         ) : (
           <div className="space-y-4">
             <h2 className="text-2xl font-black uppercase flex items-center gap-2">
-              <Package className="text-black" /> Detail Stok
+              <Package className="text-black" /> Stock Details
             </h2>
             <div className="bg-white border-2 border-black rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
               <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
@@ -227,10 +227,10 @@ const LaporanStokMenipis = () => {
                   <thead className="bg-black text-white sticky top-0 z-10">
                     <tr>
                       <th className="p-4 font-bold border-r border-gray-700 w-16 text-center">#</th>
-                      <th className="p-4 font-bold border-r border-gray-700 w-24 text-center">Gambar</th>
-                      <th className="p-4 font-bold border-r border-gray-700">Nama Produk</th>
-                      <th className="p-4 font-bold border-r border-gray-700 text-right">Harga</th>
-                      <th className="p-4 font-bold border-r border-gray-700 text-center">Stok</th>
+                      <th className="p-4 font-bold border-r border-gray-700 w-24 text-center">Image</th>
+                      <th className="p-4 font-bold border-r border-gray-700">Product Name</th>
+                      <th className="p-4 font-bold border-r border-gray-700 text-right">Price</th>
+                      <th className="p-4 font-bold border-r border-gray-700 text-center">Stock</th>
                       <th className="p-4 font-bold text-center">Status</th>
                     </tr>
                   </thead>
@@ -265,7 +265,7 @@ const LaporanStokMenipis = () => {
                                 item.stock === 0 ? "bg-red-600" : "bg-yellow-600"
                               }`}
                             >
-                              {item.stock === 0 ? "HABIS" : "MENIPIS"}
+                              {item.stock === 0 ? "OUT OF STOCK" : "LOW STOCK"}
                             </span>
                           </td>
                         </tr>

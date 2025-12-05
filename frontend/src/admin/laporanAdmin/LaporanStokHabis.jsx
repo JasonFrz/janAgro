@@ -26,9 +26,9 @@ const LaporanStokHabis = () => {
     const doc = new jsPDF();
     const tableColumn = [
       "Rank",
-      "Nama Produk",
-      "Harga Satuan",
-      "Kategori",
+      "Product Name",
+      "Unit Price",
+      "Category",
     ];
     const tableRows = [];
 
@@ -88,7 +88,7 @@ const LaporanStokHabis = () => {
         doc.setFont("helvetica", "bold");
         doc.text("PT. Jan Agro Nusantara", margin + logoWidth + 5, 16);
         doc.setFontSize(10);
-        doc.text(`Laporan Stok Habis`, margin + logoWidth + 5, 21);
+        doc.text(`Out of Stock Report`, margin + logoWidth + 5, 21);
 
         doc.setFontSize(8);
         doc.setFont("helvetica", "normal");
@@ -116,7 +116,7 @@ const LaporanStokHabis = () => {
           }
 
           const signatureX = pageWidth - data.settings.margin.right;
-          const currentDate = new Date().toLocaleDateString("id-ID", {
+          const currentDate = new Date().toLocaleDateString("en-US", {
             day: "numeric", month: "long", year: "numeric",
           });
 
@@ -130,11 +130,11 @@ const LaporanStokHabis = () => {
           doc.line(signatureX - nameWidth, finalY + 21, signatureX, finalY + 21);
           doc.setFont("helvetica", "normal");
           doc.setFontSize(9);
-          doc.text("Ceo & Founder", signatureX, finalY + 25, { align: "right" });
+          doc.text("CEO & Founder", signatureX, finalY + 25, { align: "right" });
         }
       },
     });
-    doc.save(`laporan_stok_habis_${fullDate}.pdf`);
+    doc.save(`out_of_stock_report_${fullDate}.pdf`);
   };
 
   return (
@@ -146,7 +146,7 @@ const LaporanStokHabis = () => {
               Out of Stock Report
             </h1>
             <p className="text-gray-600 font-medium mt-1">
-              Pantau semua produk yang telah habis.
+              Monitor all products that are out of stock.
             </p>
           </div>
           <Link
@@ -162,7 +162,7 @@ const LaporanStokHabis = () => {
           <div className="bg-white border-2 border-black p-6 rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm font-bold">TOTAL PRODUK HABIS</p>
+                <p className="text-gray-600 text-sm font-bold">TOTAL OUT OF STOCK</p>
                 <p className="text-3xl font-black">{stockStats.totalOutOfStock}</p>
               </div>
               <AlertTriangle className="h-12 w-12 text-red-600" />
@@ -171,7 +171,7 @@ const LaporanStokHabis = () => {
           <div className="bg-white border-2 border-black p-6 rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm font-bold">TOTAL NILAI PRODUK</p>
+                <p className="text-gray-600 text-sm font-bold">TOTAL PRODUCT VALUE</p>
                 <p className="text-3xl font-black">Rp {stockStats.estimatedLoss.toLocaleString("id-ID")}</p>
               </div>
               <Package className="h-12 w-12 text-blue-600" />
@@ -199,7 +199,7 @@ const LaporanStokHabis = () => {
         ) : (
           <div className="space-y-4">
             <h2 className="text-2xl font-black uppercase flex items-center gap-2">
-              <Package className="text-black" /> Detail Produk Habis
+              <Package className="text-black" /> Out of Stock Products
             </h2>
             <div className="bg-white border-2 border-black rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
               <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
@@ -208,9 +208,9 @@ const LaporanStokHabis = () => {
                     <tr>
                       <th className="p-4 font-bold border-r border-gray-700 w-16 text-center">#</th>
                       <th className="p-4 font-bold border-r border-gray-700 w-24 text-center">Gambar</th>
-                      <th className="p-4 font-bold border-r border-gray-700">Nama Produk</th>
-                      <th className="p-4 font-bold border-r border-gray-700">Kategori</th>
-                      <th className="p-4 font-bold text-right">Harga</th>
+                      <th className="p-4 font-bold border-r border-gray-700">Product Name</th>
+                      <th className="p-4 font-bold border-r border-gray-700">Category</th>
+                      <th className="p-4 font-bold text-right">Price</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -241,7 +241,7 @@ const LaporanStokHabis = () => {
                     ) : (
                       <tr>
                         <td colSpan="5" className="p-8 text-center text-gray-500 italic font-medium">
-                          Tidak ada produk yang habis.
+                          No out-of-stock products.
                         </td>
                       </tr>
                     )}

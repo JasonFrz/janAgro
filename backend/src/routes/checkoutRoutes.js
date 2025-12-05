@@ -4,6 +4,7 @@ const Checkout = require("../models/Checkout");
 const Cart = require("../models/Carts");
 const Voucher = require("../models/Voucher");
 const Product = require("../models/Product");
+const { logStockMovement } = require("../functions/stockMovementLogger");
 const { authenticateToken } = require("../middleware/authenticate");
 const snap = require('../config/midtrans');
 const Cancellation = require("../models/Cancellation");
@@ -19,10 +20,32 @@ const handleSuccessfulTransaction = async (checkout) => {
     for (const item of checkout.items) {
       const productId = item.product || item.productId;
       if (productId) {
-        await Product.updateOne(
-          { _id: productId },
-          { $inc: { stock: -item.quantity } }
-        );
+        // Fetch product to get previous stock value
+        const product = await Product.findById(productId);
+        if (!product) continue;
+
+        const previousStock = product.stock || 0;
+        const newStock = previousStock - (item.quantity || 0);
+
+        // Update product stock
+        await Product.updateOne({ _id: productId }, { $set: { stock: newStock } });
+
+        // Log the stock movement (reason: penjualan / sale)
+        try {
+          await logStockMovement(
+            productId,
+            product.name || productId.toString(),
+            "out",
+            item.quantity || 0,
+            "penjualan",
+            checkout._id,
+            previousStock,
+            newStock,
+            `Sale - order ${checkout._id}`
+          );
+        } catch (logErr) {
+          console.error("Failed to log stock movement for purchase:", logErr);
+        }
       }
     }
   }

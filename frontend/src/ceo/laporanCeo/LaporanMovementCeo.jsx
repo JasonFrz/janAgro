@@ -65,24 +65,24 @@ const LaporanMovementCeo = () => {
   }, [filteredMovements]);
 
   const reasonTranslation = {
-    pembelian: "Pembelian",
-    penjualan: "Penjualan",
-    retur: "Retur",
-    pembatalan: "Pembatalan",
-    penyesuaian: "Penyesuaian",
+    pembelian: "Purchase",
+    penjualan: "Sale",
+    retur: "Return",
+    pembatalan: "Cancellation",
+    penyesuaian: "Adjustment",
   };
 
   const handleExportPDF = () => {
     const doc = new jsPDF("l");
     const tableColumn = [
-      "No",
-      "Tanggal",
-      "Produk",
-      "Tipe",
+      "#",
+      "Date",
+      "Product",
+      "Type",
       "Qty",
-      "Alasan",
-      "Stok Sebelum",
-      "Stok Sesudah",
+      "Reason",
+      "Previous Stock",
+      "Current Stock",
     ];
     const tableRows = [];
 
@@ -90,9 +90,9 @@ const LaporanMovementCeo = () => {
       const moveDate = new Date(movement.createdAt);
       const rowData = [
         idx + 1,
-        moveDate.toLocaleDateString("id-ID"),
+        moveDate.toLocaleDateString("en-US"),
         movement.productName,
-        movement.movementType === "in" ? "MASUK" : "KELUAR",
+        movement.movementType === "in" ? "IN" : "OUT",
         movement.quantity,
         reasonTranslation[movement.reason] || movement.reason,
         movement.previousStock,
@@ -105,7 +105,7 @@ const LaporanMovementCeo = () => {
     const fullDate = `${date.getDate()}-${
       date.getMonth() + 1
     }-${date.getFullYear()}`;
-    const monthName = new Date(2024, filterMonth - 1).toLocaleString("id-ID", {
+    const monthName = new Date(2024, filterMonth - 1).toLocaleString("en-US", {
       month: "long",
     });
 
@@ -153,7 +153,7 @@ const LaporanMovementCeo = () => {
         doc.text("PT. Jan Agro Nusantara", margin + logoWidth + 5, 16);
         doc.setFontSize(10);
         doc.text(
-          `Laporan Pergerakan Stok - ${monthName} ${filterYear}`,
+          `Stock Movement Report - ${monthName} ${filterYear}`,
           margin + logoWidth + 5,
           21
         );
@@ -178,10 +178,10 @@ const LaporanMovementCeo = () => {
         // Summary box
         doc.setFontSize(9);
         doc.setFont("helvetica", "bold");
-        doc.text(`Stok Masuk: ${stats.totalInQuantity}`, margin, 50);
-        doc.text(`Stok Keluar: ${stats.totalOutQuantity}`, margin + 80, 50);
+        doc.text(`Qty In: ${stats.totalInQuantity}`, margin, 50);
+        doc.text(`Qty Out: ${stats.totalOutQuantity}`, margin + 80, 50);
         doc.text(
-          `Saldo: ${stats.totalInQuantity - stats.totalOutQuantity}`,
+          `Balance: ${stats.totalInQuantity - stats.totalOutQuantity}`,
           margin + 160,
           50
         );
@@ -226,7 +226,7 @@ const LaporanMovementCeo = () => {
         }
       },
     });
-    doc.save(`laporan_movement_${filterYear}-${filterMonth}_${fullDate}.pdf`);
+    doc.save(`stock_movement_report_${filterYear}-${filterMonth}_${fullDate}.pdf`);
   };
 
   const years = useMemo(() => {
@@ -247,7 +247,7 @@ const LaporanMovementCeo = () => {
               Laporan Pergerakan Stok
             </h1>
             <p className="text-gray-600 font-medium mt-1 text-sm sm:text-base">
-              Tracking stok masuk dan keluar untuk setiap produk.
+              Track incoming and outgoing stock movements per product.
             </p>
           </div>
           <Link
@@ -263,7 +263,7 @@ const LaporanMovementCeo = () => {
           <div className="bg-white border-2 border-black p-6 rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm font-bold">STOK MASUK</p>
+                <p className="text-gray-600 text-sm font-bold">IN MOVEMENTS</p>
                 <p className="text-3xl font-black">{stats.inCount}</p>
               </div>
               <TrendingUp className="h-10 w-10 sm:h-12 sm:w-12 text-green-600" />
@@ -368,7 +368,7 @@ const LaporanMovementCeo = () => {
         ) : (
           <div className="space-y-4">
             <h2 className="text-2xl font-black uppercase flex items-center gap-2">
-              <Calendar className="text-black" /> Detail Pergerakan Stok
+              <Calendar className="text-black" /> Stock Movement Details
             </h2>
             <div className="bg-white border-2 border-black rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
               <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
@@ -379,24 +379,24 @@ const LaporanMovementCeo = () => {
                         #
                       </th>
                       <th className="p-4 font-bold border-r border-gray-700">
-                        Tanggal
+                        Date
                       </th>
                       <th className="p-4 font-bold border-r border-gray-700">
-                        Produk
+                        Product
                       </th>
                       <th className="p-4 font-bold border-r border-gray-700 text-center">
-                        Tipe
+                        Type
                       </th>
                       <th className="p-4 font-bold border-r border-gray-700 text-center">
                         Qty
                       </th>
                       <th className="p-4 font-bold border-r border-gray-700">
-                        Alasan
+                        Reason
                       </th>
                       <th className="p-4 font-bold border-r border-gray-700 text-center">
-                        Stok Sbl
+                        Prev Stock
                       </th>
-                      <th className="p-4 font-bold text-center">Stok Ssd</th>
+                      <th className="p-4 font-bold text-center">Curr Stock</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -411,7 +411,7 @@ const LaporanMovementCeo = () => {
                           </td>
                           <td className="p-4 border-r-2 border-gray-200 font-bold whitespace-nowrap">
                             {new Date(movement.createdAt).toLocaleDateString(
-                              "id-ID"
+                              "en-US"
                             )}
                           </td>
                           <td className="p-4 border-r-2 border-gray-200 font-bold">

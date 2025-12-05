@@ -28,9 +28,9 @@ const LaporanStokAdmin = () => {
     const doc = new jsPDF();
     const tableColumn = [
       "Rank",
-      "Nama Produk",
-      "Harga",
-      "Stok Saat Ini",
+      "Product Name",
+      "Price",
+      "Current Stock",
       "Status",
     ];
     const tableRows = [];
@@ -49,7 +49,7 @@ const LaporanStokAdmin = () => {
 
     const date = new Date();
     const fullDate = `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}`;
-    const filterTitle = filterType === "all" ? "Semua Produk" : filterType === "outOfStock" ? "Stok Habis" : "Stok Menipis";
+    const filterTitle = filterType === "all" ? "All Products" : filterType === "outOfStock" ? "Out of Stock" : "Low Stock";
 
     autoTable(doc, {
       head: [tableColumn],
@@ -90,9 +90,9 @@ const LaporanStokAdmin = () => {
           console.error("Failed to add logo to PDF:", e);
         }
 
-        doc.setFontSize(14);
+        doc.setFontSize(10);
         doc.setFont("helvetica", "bold");
-        doc.text("PT. Jan Agro Nusantara", margin + logoWidth + 5, 16);
+        doc.text(`Stock Report - ${filterTitle}`, margin + logoWidth + 5, 21);
         doc.setFontSize(10);
         doc.text(`Laporan Stok Menipis/Habis - ${filterTitle}`, margin + logoWidth + 5, 21);
 
@@ -122,7 +122,7 @@ const LaporanStokAdmin = () => {
           }
 
           const signatureX = pageWidth - data.settings.margin.right;
-          const currentDate = new Date().toLocaleDateString("id-ID", {
+          const currentDate = new Date().toLocaleDateString("en-US", {
             day: "numeric", month: "long", year: "numeric",
           });
 
@@ -136,11 +136,11 @@ const LaporanStokAdmin = () => {
           doc.line(signatureX - nameWidth, finalY + 21, signatureX, finalY + 21);
           doc.setFont("helvetica", "normal");
           doc.setFontSize(9);
-          doc.text("Ceo & Founder", signatureX, finalY + 25, { align: "right" });
+          doc.text("CEO & Founder", signatureX, finalY + 25, { align: "right" });
         }
       },
     });
-    doc.save(`laporan_stok_${filterType}_${fullDate}.pdf`);
+    doc.save(`stock_report_${filterType}_${fullDate}.pdf`);
   };
 
   return (
@@ -152,7 +152,7 @@ const LaporanStokAdmin = () => {
               Stock Report
             </h1>
             <p className="text-gray-600 font-medium mt-1">
-              Pantau produk dengan stok menipis atau habis.
+              Monitor products that are low or out of stock.
             </p>
           </div>
           <Link
@@ -168,7 +168,7 @@ const LaporanStokAdmin = () => {
           <div className="bg-white border-2 border-black p-6 rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm font-bold">STOK HABIS</p>
+                <p className="text-gray-600 text-sm font-bold">OUT OF STOCK</p>
                 <p className="text-3xl font-black">{stockStats.outOfStock}</p>
               </div>
               <AlertTriangle className="h-12 w-12 text-red-600" />
@@ -177,7 +177,7 @@ const LaporanStokAdmin = () => {
           <div className="bg-white border-2 border-black p-6 rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm font-bold">STOK MENIPIS</p>
+                <p className="text-gray-600 text-sm font-bold">LOW STOCK</p>
                 <p className="text-3xl font-black">{stockStats.lowStock}</p>
               </div>
               <AlertCircle className="h-12 w-12 text-yellow-600" />
@@ -186,7 +186,7 @@ const LaporanStokAdmin = () => {
           <div className="bg-white border-2 border-black p-6 rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm font-bold">TOTAL TERPENGARUH</p>
+                <p className="text-gray-600 text-sm font-bold">TOTAL AFFECTED</p>
                 <p className="text-3xl font-black">{stockStats.totalAffected}</p>
               </div>
               <Package className="h-12 w-12 text-blue-600" />
@@ -199,9 +199,9 @@ const LaporanStokAdmin = () => {
           <div className="flex flex-col md:flex-row justify-between items-end md:items-center gap-4">
             <div className="flex gap-2 flex-wrap">
               {[
-                { id: "all", label: "Semua" },
-                { id: "outOfStock", label: "Stok Habis" },
-                { id: "lowStock", label: "Stok Menipis" },
+                { id: "all", label: "All" },
+                { id: "outOfStock", label: "Out of Stock" },
+                { id: "lowStock", label: "Low Stock" },
               ].map((type) => (
                 <button
                   key={type.id}
@@ -233,7 +233,7 @@ const LaporanStokAdmin = () => {
         ) : (
           <div className="space-y-4">
             <h2 className="text-2xl font-black uppercase flex items-center gap-2">
-              <Package className="text-black" /> Detail Stok
+              <Package className="text-black" /> Stock Details
             </h2>
             <div className="bg-white border-2 border-black rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] overflow-hidden">
               <div className="overflow-x-auto max-h-[600px] overflow-y-auto">
@@ -241,10 +241,10 @@ const LaporanStokAdmin = () => {
                   <thead className="bg-black text-white sticky top-0 z-10">
                     <tr>
                       <th className="p-4 font-bold border-r border-gray-700 w-16 text-center">#</th>
-                      <th className="p-4 font-bold border-r border-gray-700 w-24 text-center">Gambar</th>
-                      <th className="p-4 font-bold border-r border-gray-700">Nama Produk</th>
-                      <th className="p-4 font-bold border-r border-gray-700 text-right">Harga</th>
-                      <th className="p-4 font-bold border-r border-gray-700 text-center">Stok</th>
+                      <th className="p-4 font-bold border-r border-gray-700 w-24 text-center">Image</th>
+                      <th className="p-4 font-bold border-r border-gray-700">Product Name</th>
+                      <th className="p-4 font-bold border-r border-gray-700 text-right">Price</th>
+                      <th className="p-4 font-bold border-r border-gray-700 text-center">Stock</th>
                       <th className="p-4 font-bold text-center">Status</th>
                     </tr>
                   </thead>
@@ -279,7 +279,7 @@ const LaporanStokAdmin = () => {
                                 item.stock === 0 ? "bg-red-600" : "bg-yellow-600"
                               }`}
                             >
-                              {item.stock === 0 ? "HABIS" : "MENIPIS"}
+                              {item.stock === 0 ? "OUT OF STOCK" : "LOW STOCK"}
                             </span>
                           </td>
                         </tr>
@@ -287,7 +287,7 @@ const LaporanStokAdmin = () => {
                     ) : (
                       <tr>
                         <td colSpan="6" className="p-8 text-center text-gray-500 italic font-medium">
-                          Semua produk memiliki stok yang cukup.
+                          All products have sufficient stock.
                         </td>
                       </tr>
                     )}
