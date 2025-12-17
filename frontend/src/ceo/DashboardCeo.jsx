@@ -12,6 +12,7 @@ import {
   FileText,
 } from "lucide-react";
 import { fetchUsers } from "../features/admin/adminSlice";
+import { fetchDashboardStats } from "../features/admin/adminSlice";
 
 function DashboardCeo({ vouchers = [], produk = [], checkouts = [] }) {
   const dispatch = useDispatch();
@@ -25,6 +26,12 @@ function DashboardCeo({ vouchers = [], produk = [], checkouts = [] }) {
     }
   }, [dispatch, users.length]);
 
+  useEffect(() => {
+    dispatch(fetchDashboardStats());
+  }, [dispatch]);
+
+  const dashboardStats = useSelector((state) => state.admin.dashboardStats);
+
   const handleSortToggle = () => {
     setSortDirection((prevDirection) =>
       prevDirection === "asc" ? "desc" : "asc"
@@ -32,25 +39,41 @@ function DashboardCeo({ vouchers = [], produk = [], checkouts = [] }) {
   };
 
   const stats = useMemo(() => {
-    const totalRevenue = checkouts
+    const totalRevenueLocal = checkouts
       .filter((o) => o.status === "selesai" || o.status === "sampai")
       .reduce((sum, order) => sum + order.totalHarga, 0);
 
-    const successfulOrders = checkouts.filter(
+    const successfulOrdersLocal = checkouts.filter(
       (o) => o.status === "selesai" || o.status === "sampai"
     ).length;
 
-    const pendingOrders = checkouts.filter(
+    const pendingOrdersLocal = checkouts.filter(
       (o) =>
         o.status === "diproses" ||
         o.status === "dikirim" ||
         o.status === "pending"
     ).length;
 
-    const lowStockProducts = produk.filter((p) => p.stock <= 10).length;
+    const lowStockProductsLocal = produk.filter((p) => p.stock <= 10).length;
 
-    return { totalRevenue, successfulOrders, pendingOrders, lowStockProducts };
-  }, [checkouts, produk]);
+    if (dashboardStats) {
+      return {
+        totalRevenue: dashboardStats.totalRevenue ?? totalRevenueLocal,
+        successfulOrders:
+          dashboardStats.successfulOrders ?? successfulOrdersLocal,
+        pendingOrders: dashboardStats.pendingOrders ?? pendingOrdersLocal,
+        lowStockProducts:
+          dashboardStats.lowStockProducts ?? lowStockProductsLocal,
+      };
+    }
+
+    return {
+      totalRevenue: totalRevenueLocal,
+      successfulOrders: successfulOrdersLocal,
+      pendingOrders: pendingOrdersLocal,
+      lowStockProducts: lowStockProductsLocal,
+    };
+  }, [checkouts, produk, dashboardStats]);
 
   const sortedProducts = useMemo(() => {
     return [...produk].sort((a, b) => {
@@ -91,12 +114,18 @@ function DashboardCeo({ vouchers = [], produk = [], checkouts = [] }) {
   };
 
   const recentActivities = useMemo(() => {
+    if (dashboardStats?.recentActivities) {
+      return dashboardStats.recentActivities.map((a) => ({
+        ...a,
+        type: "order",
+      }));
+    }
     return checkouts
       .slice()
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
       .slice(0, 5)
       .map((c) => ({ ...c, type: "order" }));
-  }, [checkouts]);
+  }, [checkouts, dashboardStats]);
 
   return (
     <div className="space-y-8">

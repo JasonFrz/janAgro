@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchUsers } from "../features/user/userSlice";
 import { fetchProducts } from "../features/products/productSlice";
 import { fetchVouchers } from "../features/voucher/voucherSlice";
+import { fetchDashboardStats } from "../features/admin/adminSlice";
 
 function DashboardAdmin() {
   const dispatch = useDispatch();
@@ -26,7 +27,10 @@ function DashboardAdmin() {
     dispatch(fetchUsers());
     dispatch(fetchProducts());
     dispatch(fetchVouchers());
+    dispatch(fetchDashboardStats());
   }, [dispatch]);
+
+  const dashboardStats = useSelector((state) => state.admin.dashboardStats);
 
   const getProdukStatus = (stock) => {
     if (stock === 0)
@@ -79,7 +83,77 @@ function DashboardAdmin() {
 
   return (
     <div className="space-y-6">
-      {/* Stats Cards - Responsive Grid */}
+      {/* Shared Stats - Revenue & Orders */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+        <div className="bg-white shadow-md rounded-lg p-5 flex flex-col justify-between border border-gray-100">
+          <p className="text-gray-500 text-sm font-medium uppercase tracking-wide">
+            Total Revenue
+          </p>
+          <p className="text-3xl font-bold text-gray-900">
+            {dashboardStats?.totalRevenue
+              ? `Rp ${dashboardStats.totalRevenue.toLocaleString("id-ID")}`
+              : "Rp 0"}
+          </p>
+        </div>
+        <div className="bg-white shadow-md rounded-lg p-5 flex flex-col justify-between border border-gray-100">
+          <p className="text-gray-500 text-sm font-medium uppercase tracking-wide">
+            Successful Orders
+          </p>
+          <p className="text-3xl font-bold text-gray-900">
+            {dashboardStats?.successfulOrders ?? 0}
+          </p>
+        </div>
+        <div className="bg-white shadow-md rounded-lg p-5 flex flex-col justify-between border border-gray-100">
+          <p className="text-gray-500 text-sm font-medium uppercase tracking-wide">
+            Pending Orders
+          </p>
+          <p className="text-3xl font-bold text-gray-900">
+            {dashboardStats?.pendingOrders ?? 0}
+          </p>
+        </div>
+        <div className="bg-white shadow-md rounded-lg p-5 flex flex-col justify-between border border-gray-100">
+          <p className="text-gray-500 text-sm font-medium uppercase tracking-wide">
+            Low Stock Items (≤10)
+          </p>
+          <p className="text-3xl font-bold text-gray-900">
+            {dashboardStats?.lowStockProducts ?? 0}
+          </p>
+        </div>
+      </div>
+
+      {/* Recent Activities (shared) */}
+      <div className="bg-white shadow-md rounded-lg p-4 sm:p-6 border border-gray-100">
+        <h2 className="text-lg sm:text-xl font-bold mb-4">Recent Activities</h2>
+        <div className="overflow-y-auto max-h-64">
+          <ul className="divide-y divide-gray-100">
+            {(dashboardStats?.recentActivities || []).length > 0 ? (
+              (dashboardStats.recentActivities || []).map((act) => (
+                <li
+                  key={act._id}
+                  className="flex items-center justify-between py-3"
+                >
+                  <div>
+                    <p className="font-bold">
+                      Order #{String(act._id).substring(0, 8)}
+                    </p>
+                    <p className="text-sm text-gray-500">
+                      by {act.nama} — Rp{" "}
+                      {act.totalHarga.toLocaleString("id-ID")}
+                    </p>
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {new Date(act.createdAt).toLocaleString()}
+                  </div>
+                </li>
+              ))
+            ) : (
+              <p className="text-gray-500 italic p-4">No recent activities.</p>
+            )}
+          </ul>
+        </div>
+      </div>
+
+      {/* Existing summary cards (users/products/vouchers) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         {cards.map((card, idx) => (
           <div
@@ -87,10 +161,16 @@ function DashboardAdmin() {
             className="bg-white shadow-md rounded-lg p-5 flex items-center space-x-4 border border-gray-100"
           >
             <div className="w-12 h-12 flex-shrink-0">
-                <img src={card.icon} alt={card.title} className="w-full h-full object-contain" />
+              <img
+                src={card.icon}
+                alt={card.title}
+                className="w-full h-full object-contain"
+              />
             </div>
             <div>
-              <p className="text-gray-500 text-sm font-medium uppercase tracking-wide">{card.title}</p>
+              <p className="text-gray-500 text-sm font-medium uppercase tracking-wide">
+                {card.title}
+              </p>
               <p className="text-3xl font-bold text-gray-900">{card.count}</p>
             </div>
           </div>
@@ -105,26 +185,30 @@ function DashboardAdmin() {
               Latest Users
             </h2>
             <button
-                onClick={() => setUserSortAsc(!userSortAsc)}
-                className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-                title={`Sort By Name ${userSortAsc ? "DESC" : "ASC"}`}
-              >
-                <img
-                  src="/icon/down.png"
-                  alt="Sort"
-                  className={`w-5 h-5 transition-transform duration-300 ${
-                    userSortAsc ? "rotate-180" : ""
-                  }`}
-                />
-              </button>
+              onClick={() => setUserSortAsc(!userSortAsc)}
+              className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+              title={`Sort By Name ${userSortAsc ? "DESC" : "ASC"}`}
+            >
+              <img
+                src="/icon/down.png"
+                alt="Sort"
+                className={`w-5 h-5 transition-transform duration-300 ${
+                  userSortAsc ? "rotate-180" : ""
+                }`}
+              />
+            </button>
           </div>
 
           {loading ? (
-            <div className="text-center py-10 text-gray-500">Loading data...</div>
+            <div className="text-center py-10 text-gray-500">
+              Loading data...
+            </div>
           ) : error ? (
             <p className="text-red-500 text-center py-10">{error}</p>
           ) : users?.length === 0 ? (
-            <p className="text-gray-500 text-center py-10">No Users Available</p>
+            <p className="text-gray-500 text-center py-10">
+              No Users Available
+            </p>
           ) : (
             <div className="overflow-y-auto max-h-[400px] pr-2 custom-scrollbar">
               <ul className="divide-y divide-gray-100">
@@ -136,7 +220,9 @@ function DashboardAdmin() {
                       className="flex items-center justify-between py-4"
                     >
                       <div className="flex-1 min-w-0 pr-4">
-                        <p className="font-bold text-gray-900 truncate">{user.name}</p>
+                        <p className="font-bold text-gray-900 truncate">
+                          {user.name}
+                        </p>
                         <p className="text-sm text-gray-500 truncate">
                           @{user.username}
                         </p>
@@ -163,18 +249,18 @@ function DashboardAdmin() {
               Product Inventory
             </h2>
             <button
-                onClick={() => setProdukSortAsc(!produkSortAsc)}
-                className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-                title={`Sort By Stock ${produkSortAsc ? "DESC" : "ASC"}`}
-              >
-                <img
-                  src="/icon/down.png"
-                  alt="Sort"
-                  className={`w-5 h-5 transition-transform duration-300 ${
-                    produkSortAsc ? "rotate-180" : ""
-                  }`}
-                />
-              </button>
+              onClick={() => setProdukSortAsc(!produkSortAsc)}
+              className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+              title={`Sort By Stock ${produkSortAsc ? "DESC" : "ASC"}`}
+            >
+              <img
+                src="/icon/down.png"
+                alt="Sort"
+                className={`w-5 h-5 transition-transform duration-300 ${
+                  produkSortAsc ? "rotate-180" : ""
+                }`}
+              />
+            </button>
           </div>
 
           <div className="overflow-y-auto max-h-[400px] pr-2 custom-scrollbar">
@@ -187,7 +273,9 @@ function DashboardAdmin() {
                     className="flex flex-col sm:flex-row sm:items-center justify-between py-4 gap-2 sm:gap-4"
                   >
                     <div className="flex-1 min-w-0">
-                      <p className="font-bold text-gray-900 truncate">{p.name}</p>
+                      <p className="font-bold text-gray-900 truncate">
+                        {p.name}
+                      </p>
                       <p className="text-sm text-gray-500">{p.category}</p>
                     </div>
                     <div className="flex items-center justify-between sm:justify-end gap-3 w-full sm:w-auto">
