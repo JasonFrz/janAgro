@@ -21,7 +21,8 @@ function DashboardAdmin() {
   );
 
   const [produkSortAsc, setProdukSortAsc] = useState(true);
-  const [userSortAsc, setUserSortAsc] = useState(true);
+  // default to newest first
+  const [userSortAsc, setUserSortAsc] = useState(false);
 
   useEffect(() => {
     dispatch(fetchUsers());
@@ -70,11 +71,9 @@ function DashboardAdmin() {
 
   const sortedUsers = useMemo(() => {
     return [...(users || [])].sort((a, b) => {
-      const nameA = (a.username || "").toLowerCase();
-      const nameB = (b.username || "").toLowerCase();
-      return userSortAsc
-        ? nameA.localeCompare(nameB)
-        : nameB.localeCompare(nameA);
+      const timeA = new Date(a.createdAt).getTime();
+      const timeB = new Date(b.createdAt).getTime();
+      return userSortAsc ? timeA - timeB : timeB - timeA;
     });
   }, [users, userSortAsc]);
 
@@ -187,7 +186,7 @@ function DashboardAdmin() {
             <button
               onClick={() => setUserSortAsc(!userSortAsc)}
               className="p-2 rounded-full hover:bg-gray-100 transition-colors"
-              title={`Sort By Name ${userSortAsc ? "DESC" : "ASC"}`}
+              title={`Sort By Date ${userSortAsc ? "Oldest" : "Newest"}`}
             >
               <img
                 src="/icon/down.png"
