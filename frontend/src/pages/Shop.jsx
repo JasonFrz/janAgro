@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchProducts } from "../features/products/productSlice";
-import { fetchCart } from "../features/cart/cartSlice"; 
+import { fetchCart } from "../features/cart/cartSlice";
 import {
   Search,
   ShoppingCart,
@@ -10,6 +10,7 @@ import {
   CheckCircle,
   Truck,
 } from "lucide-react";
+import ProductCard from "../components/product/ProductCard";
 
 const Notification = ({ message, type }) => {
   if (!message) return null;
@@ -20,7 +21,11 @@ const Notification = ({ message, type }) => {
         isError ? "bg-red-600 text-white" : "bg-green-600 text-white"
       }`}
     >
-      {isError ? <AlertCircle size={20} className="shrink-0" /> : <CheckCircle size={20} className="shrink-0" />}
+      {isError ? (
+        <AlertCircle size={20} className="shrink-0" />
+      ) : (
+        <CheckCircle size={20} className="shrink-0" />
+      )}
       <span className="text-sm sm:text-base">{message}</span>
     </div>
   );
@@ -36,7 +41,10 @@ const Shop = ({ user, onAddToCart }) => {
   } = useSelector((state) => state.products);
 
   const { items: cartItems } = useSelector((state) => state.cart);
-  const totalCartItems = cartItems.reduce((total, item) => total + item.quantity, 0);
+  const totalCartItems = cartItems.reduce(
+    (total, item) => total + item.quantity,
+    0
+  );
 
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
@@ -65,7 +73,7 @@ const Shop = ({ user, onAddToCart }) => {
 
   const handleAddToCartClick = async (productId) => {
     const productToAdd = produk.find((p) => p._id === productId);
-    
+
     if (productToAdd && productToAdd.stock === 0) {
       setNotification({
         type: "error",
@@ -83,9 +91,9 @@ const Shop = ({ user, onAddToCart }) => {
     }
 
     const resultMessage = await onAddToCart(productId);
-    
+
     if (!resultMessage.toLowerCase().includes("gagal")) {
-       dispatch(fetchCart());
+      dispatch(fetchCart());
     }
 
     const messageType = resultMessage.toLowerCase().includes("gagal")
@@ -101,8 +109,7 @@ const Shop = ({ user, onAddToCart }) => {
     const search = searchQuery?.toLowerCase() || "";
     const selected = selectedCategory?.toLowerCase() || "all";
 
-    const matchesCategory =
-      selected === "all" || itemCategory === selected;
+    const matchesCategory = selected === "all" || itemCategory === selected;
 
     const matchesSearch =
       itemName.includes(search) || itemCategory.includes(search);
@@ -142,7 +149,7 @@ const Shop = ({ user, onAddToCart }) => {
             </span>
           )}
         </Link>
-        
+
         {user && (
           <Link
             to="/pesanan"
@@ -202,64 +209,11 @@ const Shop = ({ user, onAddToCart }) => {
           {/* Product Grid (1 col mobile, 2 col tablet, 3 col desktop) */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             {filteredProduk.map((item) => (
-              <div
+              <ProductCard
                 key={item._id}
-                className={`group bg-white rounded-sm shadow-sm hover:shadow-xl transition-all duration-500 overflow-hidden border border-gray-100 flex flex-col h-full ${
-                  item.stock === 0 ? "grayscale" : ""
-                }`}
-              >
-                <div className="relative h-48 sm:h-56 bg-gray-100 flex items-center justify-center overflow-hidden shrink-0">
-                   {item.image ? (
-                    <img
-                      src={item.image} 
-                      alt={item.name}
-                      className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
-                    />
-                  ) : (
-                    <span className="text-6xl">🪴</span>
-                  )}
-                  {item.stock === 0 && (
-                    <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                      <span className="text-white text-lg sm:text-xl font-bold uppercase tracking-widest">
-                        Out of Stock
-                      </span>
-                    </div>
-                  )}
-                </div>
-                <div className="p-4 sm:p-6 flex flex-col flex-grow">
-                  <div className="mb-2 sm:mb-4">
-                    <h3 className="text-lg sm:text-xl font-bold text-black mb-1 group-hover:text-gray-700 transition-colors line-clamp-2">
-                      {item.name}
-                    </h3>
-                    <p className="text-gray-600 text-xs sm:text-sm uppercase tracking-wide">
-                      {item.category}
-                    </p>
-                  </div>
-                  <p className="text-gray-700 text-sm mb-4 line-clamp-3 flex-grow">
-                    {item.description}
-                  </p>
-                  <div className="mb-4 sm:mb-6">
-                    <p className="text-black font-semibold text-lg">
-                      Rp {item.price.toLocaleString("id-ID")}
-                    </p>
-                  </div>
-                  <div className="flex space-x-2 sm:space-x-3 mt-auto">
-                    <Link
-                      to={`/product/${item._id}`}
-                      className="flex-1 text-center bg-black text-white py-2 sm:py-3 px-2 sm:px-4 rounded-sm transition-all duration-300 hover:bg-gray-800 text-xs sm:text-sm font-medium uppercase tracking-wide flex items-center justify-center"
-                    >
-                      Detail
-                    </Link>
-                    <button
-                      onClick={() => handleAddToCartClick(item._id)}
-                      disabled={item.stock === 0}
-                      className="flex-1 border border-gray-300 hover:border-black text-gray-700 hover:text-black py-2 sm:py-3 px-2 sm:px-4 rounded-sm transition-all duration-300 text-xs sm:text-sm font-medium uppercase tracking-wide disabled:bg-gray-200 disabled:cursor-not-allowed disabled:text-gray-400 disabled:border-gray-200"
-                    >
-                      Add to Cart
-                    </button>
-                  </div>
-                </div>
-              </div>
+                item={item}
+                onAdd={handleAddToCartClick}
+              />
             ))}
           </div>
         </div>
