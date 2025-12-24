@@ -4,15 +4,15 @@ import { Link } from "react-router-dom";
 import {
   Users,
   Package,
-  Ticket,
   BarChart2,
   TrendingUp,
   TrendingDown,
   Clock,
   FileText,
 } from "lucide-react";
-import { fetchUsers } from "../features/admin/adminSlice";
-import { fetchDashboardStats } from "../features/admin/adminSlice";
+import { fetchUsers, fetchDashboardStats } from "../features/admin/adminSlice";
+
+import { Card, Badge, Button } from "flowbite-react";
 
 function DashboardCeo({ vouchers = [], produk = [], checkouts = [] }) {
   const dispatch = useDispatch();
@@ -91,25 +91,32 @@ function DashboardCeo({ vouchers = [], produk = [], checkouts = [] }) {
     isLoading = false,
   }) => {
     const TrendIcon = trend === "up" ? TrendingUp : TrendingDown;
-    const trendColor = trend === "up" ? "text-green-500" : "text-red-500";
+    const trendColor = trend === "up" ? "text-green-600" : "text-red-600";
+
     return (
-      <div className="bg-white border-2 border-black rounded-lg p-6 flex flex-col justify-between shadow-xl transform hover:scale-105 transition-transform duration-300">
-        <div>
-          <div className="flex justify-between items-start">
-            <div className="bg-black text-white rounded-full p-3">{icon}</div>
-            {trend && <TrendIcon className={`${trendColor} w-6 h-6`} />}
-          </div>
-          {isLoading ? (
-            <div className="mt-4 bg-gray-200 h-9 w-2/3 rounded animate-pulse"></div>
-          ) : (
-            <p className="text-3xl sm:text-4xl font-extrabold mt-4 break-words">
-              {value}
+      <Card className="bg-white dark:bg-white border-2 border-black shadow-xl transform hover:scale-105 transition-transform duration-300">
+        <div className="flex flex-col h-full justify-between">
+          <div>
+            <div className="flex justify-between items-start">
+              <div className="bg-black text-white rounded-full p-3">{icon}</div>
+              {trend && <TrendIcon className={`${trendColor} w-6 h-6`} />}
+            </div>
+            {isLoading ? (
+              <div className="mt-4 bg-gray-200 h-9 w-2/3 rounded animate-pulse"></div>
+            ) : (
+              <p className="text-3xl sm:text-4xl font-extrabold mt-4 break-words text-gray-900 dark:text-gray-900">
+                {value}
+              </p>
+            )}
+            <p className="text-gray-800 dark:text-gray-800 font-semibold">
+              {title}
             </p>
-          )}
-          <p className="text-gray-600 font-semibold">{title}</p>
+          </div>
+          <p className="text-sm text-gray-600 dark:text-gray-600 mt-2">
+            {detail}
+          </p>
         </div>
-        <p className="text-sm text-gray-500 mt-2">{detail}</p>
-      </div>
+      </Card>
     );
   };
 
@@ -127,15 +134,23 @@ function DashboardCeo({ vouchers = [], produk = [], checkouts = [] }) {
       .map((c) => ({ ...c, type: "order" }));
   }, [checkouts, dashboardStats]);
 
+  const textTitleClass = "text-xl font-bold text-gray-900 dark:text-gray-900";
+  const textBodyClass = "text-gray-900 dark:text-gray-900";
+  const textSubClass = "text-gray-600 dark:text-gray-600";
+
   return (
-    <div className="space-y-8">
+    <div className="w-full min-h-screen bg-white dark:bg-white text-gray-900 dark:text-gray-900 p-6 space-y-8 font-sans">
+      {/* Header */}
       <div>
-        <h1 className="text-3xl sm:text-4xl font-black">CEO Dashboard</h1>
-        <p className="text-gray-600 text-base sm:text-lg">
+        <h1 className="text-3xl sm:text-4xl font-black text-black dark:text-black">
+          CEO Dashboard
+        </h1>
+        <p className={`${textSubClass} text-base sm:text-lg`}>
           High-level overview of JanAgro's performance.
         </p>
       </div>
 
+      {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatCard
           icon={<BarChart2 size={24} />}
@@ -167,112 +182,120 @@ function DashboardCeo({ vouchers = [], produk = [], checkouts = [] }) {
         />
       </div>
 
+      {/* Main Content Grid */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-        <div className="xl:col-span-2 bg-white border-2 border-black rounded-lg p-4 sm:p-6 shadow-xl">
-          <h2 className="text-xl font-bold mb-4 pb-2 border-b-2 border-black">
-            Recent Activities
-          </h2>
-          <div className="max-h-96 overflow-y-auto pr-2">
-            <ul className="divide-y-2 divide-gray-300">
-              {recentActivities.length > 0 ? (
-                recentActivities.map((activity) => (
-                  <li
-                    key={activity._id}
-                    className="flex flex-col sm:flex-row sm:items-center justify-between py-4 gap-2"
-                  >
-                    <div className="flex items-center">
-                      <div className="bg-gray-100 border-2 border-black rounded-full p-3 mr-4 shrink-0">
-                        <Clock size={20} />
-                      </div>
-                      <div>
-                        <p className="font-bold text-sm sm:text-base">
-                          New Order #{activity._id.substring(0, 8)}
-                        </p>
-                        <p className="text-xs sm:text-sm text-gray-600">
-                          by {activity.nama} - Rp{" "}
-                          {activity.totalHarga.toLocaleString("id-ID")}
-                        </p>
-                      </div>
-                    </div>
-                    <span className="font-mono text-xs sm:text-sm text-gray-500 pl-14 sm:pl-0">
-                      {new Date(activity.createdAt).toLocaleTimeString(
-                        "id-ID",
-                        { hour: "2-digit", minute: "2-digit" }
-                      )}
-                    </span>
-                  </li>
-                ))
-              ) : (
-                <p className="text-gray-500 italic p-4">
-                  No recent activities.
-                </p>
-              )}
-            </ul>
-          </div>
-        </div>
-        <div className="bg-white border-2 border-black rounded-lg p-4 sm:p-6 shadow-xl">
-          <div className="flex justify-between items-center mb-4 pb-2 border-b-2 border-black">
-            <h2 className="text-xl font-bold">Inventory Status</h2>
-            <button
-              onClick={handleSortToggle}
-              title={
-                sortDirection === "asc" ? "Sort Descending" : "Sort Ascending"
-              }
-              className="p-1 rounded hover:bg-gray-200 transition-colors"
+        {/* Recent Activities Panel */}
+        <div className="xl:col-span-2">
+          <Card className="bg-white dark:bg-white border-2 border-black shadow-xl h-full">
+            <h2
+              className={`${textTitleClass} mb-4 pb-2 border-b-2 border-black`}
             >
-              <img
-                src={
-                  sortDirection === "asc" ? "/icon/down.png" : "/icon/up.png"
-                }
-                alt="Toggle Sort"
-                className="w-5 h-5"
-              />
-            </button>
-          </div>
-          <div className="max-h-96 overflow-y-auto pr-2">
-            <ul className="divide-y-2 divide-gray-300">
-              {sortedProducts.map((p) => {
-                const stockStatus =
-                  p.stock === 0
-                    ? "bg-red-600"
-                    : p.stock <= 10
-                    ? "bg-yellow-400"
-                    : "bg-green-500";
-                return (
-                  <li
-                    key={p._id}
-                    className="flex items-center justify-between py-3"
-                  >
-                    <div className="pr-2">
-                      <p className="font-semibold text-sm sm:text-base line-clamp-1">
-                        {p.name}
-                      </p>
-                      <p className="text-xs sm:text-sm text-gray-500">
-                        {p.category}
-                      </p>
-                    </div>
-                    <div className="flex items-center space-x-3 shrink-0">
+              Recent Activities
+            </h2>
+            <div className="max-h-96 overflow-y-auto pr-2">
+              <ul className="divide-y-2 divide-gray-200">
+                {recentActivities.length > 0 ? (
+                  recentActivities.map((activity) => (
+                    <li
+                      key={activity._id}
+                      className="flex flex-col sm:flex-row sm:items-center justify-between py-4 gap-2"
+                    >
+                      <div className="flex items-center">
+                        <div className="bg-gray-100 border-2 border-black rounded-full p-3 mr-4 shrink-0 text-black">
+                          <Clock size={20} />
+                        </div>
+                        <div>
+                          <p
+                            className={`font-bold text-sm sm:text-base ${textBodyClass}`}
+                          >
+                            New Order #{activity._id.substring(0, 8)}
+                          </p>
+                          <p className={`text-xs sm:text-sm ${textSubClass}`}>
+                            by {activity.nama} - Rp{" "}
+                            {activity.totalHarga.toLocaleString("id-ID")}
+                          </p>
+                        </div>
+                      </div>
                       <span
-                        className={`font-bold text-lg ${
-                          p.stock === 0 ? "text-red-600" : ""
-                        }`}
+                        className={`font-mono text-xs sm:text-sm ${textSubClass} pl-14 sm:pl-0`}
                       >
-                        {p.stock === 0 ? "Empty" : p.stock}
+                        {new Date(activity.createdAt).toLocaleTimeString(
+                          "id-ID",
+                          { hour: "2-digit", minute: "2-digit" }
+                        )}
                       </span>
-                      <div
-                        className={`w-3 h-3 rounded-full ${stockStatus}`}
-                      ></div>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
+                    </li>
+                  ))
+                ) : (
+                  <p className="text-gray-500 italic p-4">
+                    No recent activities.
+                  </p>
+                )}
+              </ul>
+            </div>
+          </Card>
+        </div>
+
+        {/* Inventory Status Panel */}
+        <div>
+          <Card className="bg-white dark:bg-white border-2 border-black shadow-xl h-full">
+            <div className="flex justify-between items-center mb-4 pb-2 border-b-2 border-black">
+              <h2 className={textTitleClass}>Inventory Status</h2>
+              <Button
+                color="white"
+                size="xs"
+                onClick={handleSortToggle}
+                className="border border-black text-black hover:bg-gray-100 focus:ring-0"
+              >
+                {sortDirection === "asc" ? "Sort ↑" : "Sort ↓"}
+              </Button>
+            </div>
+            <div className="max-h-96 overflow-y-auto pr-2">
+              <ul className="divide-y-2 divide-gray-200">
+                {sortedProducts.map((p) => {
+                  return (
+                    <li
+                      key={p._id}
+                      className="flex items-center justify-between py-3"
+                    >
+                      <div className="pr-2">
+                        <p
+                          className={`font-semibold text-sm sm:text-base line-clamp-1 ${textBodyClass}`}
+                        >
+                          {p.name}
+                        </p>
+                        <p className={`text-xs sm:text-sm ${textSubClass}`}>
+                          {p.category}
+                        </p>
+                      </div>
+                      <div className="flex items-center space-x-3 shrink-0">
+                        <span
+                          className={`font-bold text-lg ${
+                            p.stock === 0 ? "text-red-600" : textBodyClass
+                          }`}
+                        >
+                          {p.stock === 0 ? "Empty" : p.stock}
+                        </span>
+                        {p.stock === 0 ? (
+                          <Badge color="failure">Empty</Badge>
+                        ) : p.stock <= 10 ? (
+                          <Badge color="warning">Low</Badge>
+                        ) : (
+                          <Badge color="success">OK</Badge>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          </Card>
         </div>
       </div>
 
+      {/* Reports Section */}
       <div className="space-y-4">
-        <h2 className="text-2xl font-bold">Reports</h2>
+        <h2 className={textTitleClass}>Reports</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[
             {
@@ -330,22 +353,24 @@ function DashboardCeo({ vouchers = [], produk = [], checkouts = [] }) {
               desc: "Payment distribution",
             },
           ].map((item, index) => (
-            <Link
-              key={index}
-              to={item.to}
-              className="bg-white border-2 border-black rounded-lg p-6 hover:shadow-lg hover:scale-105 transition-all"
-            >
-              <div className="flex items-center gap-4">
-                <div
-                  className={`${item.bg} text-white p-4 rounded-lg shrink-0`}
-                >
-                  <FileText size={24} />
+            <Link key={index} to={item.to} className="group">
+              <Card className="bg-white dark:bg-white border-2 border-black hover:shadow-lg hover:scale-105 transition-all h-full">
+                <div className="flex items-center gap-4">
+                  <div
+                    className={`${item.bg} text-white p-4 rounded-lg shrink-0`}
+                  >
+                    <FileText size={24} />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg text-gray-900 dark:text-gray-900 group-hover:text-black">
+                      {item.title}
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-600">
+                      {item.desc}
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="font-bold text-lg">{item.title}</h3>
-                  <p className="text-sm text-gray-600">{item.desc}</p>
-                </div>
-              </div>
+              </Card>
             </Link>
           ))}
         </div>
