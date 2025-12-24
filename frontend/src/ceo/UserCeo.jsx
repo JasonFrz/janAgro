@@ -6,13 +6,15 @@ import {
   Trash2,
   UserX,
   UserCheck,
-  User,
   PlusCircle,
   FileText,
+  User,
 } from "lucide-react";
 import ConfirmationModal from "./ConfirmationModalCeo";
 import EditUserModalCeo from "./EditUserModalCeo";
 import CreateAdminModal from "./CreateAdminModal";
+
+import { Card, Button, Avatar, Badge, Spinner } from "flowbite-react";
 
 const formatPhoneNumber = (phone) => {
   if (!phone) return "-";
@@ -119,29 +121,27 @@ function UserCeo() {
     closeConfirmation();
   };
 
-  // --- STYLING CONSTANTS (MANUAL TAILWIND) ---
-  const thClass =
-    "px-6 py-3 bg-gray-100 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-200";
-  const tdClass =
-    "px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-b border-gray-200";
-  const btnIcon = "p-2 rounded-full transition-colors duration-200";
-  const btnCreate =
-    "flex items-center justify-center px-4 py-2 bg-gray-900 text-white font-bold rounded-lg hover:bg-black transition-colors shadow-md w-full sm:w-auto";
-  const btnReport =
-    "flex items-center justify-center px-4 py-2 bg-white text-gray-900 font-bold rounded-lg border border-gray-300 hover:bg-gray-100 transition-colors shadow-sm w-full sm:w-auto";
+  const whiteBtnStyle =
+    "border border-gray-300 !bg-white text-gray-900 enabled:hover:!bg-gray-100 focus:ring-0 focus:!bg-white";
 
   if (loading)
-    return <div className="text-gray-500 italic p-6">Memuat pengguna...</div>;
-  if (error) return <div className="text-red-600 p-6 font-bold">{error}</div>;
+    return (
+      <div className="flex justify-center items-center h-64 w-full bg-white">
+        <Spinner size="xl" aria-label="Loading users..." color="gray" />
+      </div>
+    );
+
+  if (error)
+    return <div className="text-red-600 font-bold p-6 bg-white">{error}</div>;
 
   const activeUsers = users.filter((u) => !u.isBanned);
   const bannedUsers = users.filter((u) => u.isBanned);
 
   const UserTable = ({ title, userList, isBannedList = false }) => (
     <div className="mt-8">
-      <h3 className="text-xl font-bold mb-4 text-gray-900 border-b pb-2 border-gray-200">
+      <h3 className="text-xl font-bold mb-4 border-b pb-2 border-gray-200 text-gray-900">
         {title}{" "}
-        <span className="text-sm font-normal text-gray-500 ml-2">
+        <span className="text-sm font-normal ml-2 text-gray-500">
           ({userList.length})
         </span>
       </h3>
@@ -151,116 +151,134 @@ function UserCeo() {
           Tidak ada pengguna di kategori ini.
         </p>
       ) : (
-        <div className="overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+        <div className="relative overflow-x-auto shadow-none border border-gray-200 rounded-lg">
+          <table className="w-full text-sm text-left text-gray-500">
+            <thead className="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className={thClass}>User</th>
-                <th className={thClass}>Contact</th>
-                <th className={thClass}>Address</th>
-                <th className={thClass}>Role</th>
-                <th className={thClass}>Joined</th>
-                <th className={`${thClass} text-right`}>Action</th>
+                <th scope="col" className="px-6 py-3">
+                  User
+                </th>
+                <th scope="col" className="px-6 py-3">
+                  Contact
+                </th>
+                <th scope="col" className="px-6 py-3">
+                  Address
+                </th>
+                <th scope="col" className="px-6 py-3">
+                  Role
+                </th>
+                <th scope="col" className="px-6 py-3">
+                  Joined
+                </th>
+                <th scope="col" className="px-6 py-3 text-right">
+                  Action
+                </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody>
               {userList.map((user) => (
                 <tr
                   key={user._id}
-                  className="hover:bg-gray-50 transition-colors"
+                  className="bg-white border-b border-gray-200 hover:bg-gray-50 text-gray-900"
                 >
-                  <td className={tdClass}>
-                    <div className="flex items-center">
-                      <div className="flex-shrink-0 h-10 w-10">
+                  <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                    <div className="flex items-center gap-4">
+                      <div className="shrink-0">
                         {user.avatar ? (
-                          <img
-                            className="h-10 w-10 rounded-full object-cover border border-gray-300"
-                            src={user.avatar}
-                            alt={user.name}
-                          />
+                          <Avatar img={user.avatar} rounded size="md" />
                         ) : (
-                          <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200">
-                            <User className="h-6 w-6 text-gray-400" />
+                          <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center border border-gray-200">
+                            <User className="w-6 h-6 text-gray-400" />
                           </div>
                         )}
                       </div>
-                      <div className="ml-4">
-                        <div className="text-sm font-bold text-gray-900">
+                      <div className="font-medium">
+                        <div className="text-gray-900 font-bold">
                           {user.name}
                         </div>
-                        <div className="text-xs text-gray-500">
+                        <div className="text-sm text-gray-500">
                           @{user.username}
                         </div>
                       </div>
                     </div>
                   </td>
-                  <td className={tdClass}>
-                    <div className="text-sm text-gray-900">{user.email}</div>
-                    <div className="text-xs text-gray-500">
+                  <td className="px-6 py-4">
+                    <div className="text-gray-900">{user.email}</div>
+                    <div className="text-gray-500 text-xs">
                       {formatPhoneNumber(user.phone)}
                     </div>
                   </td>
-                  <td className={tdClass}>
-                    <div
-                      className="max-w-xs truncate text-gray-600"
-                      title={user.address}
-                    >
+                  <td className="px-6 py-4">
+                    <div className="max-w-xs truncate" title={user.address}>
                       {user.address || "-"}
                     </div>
                   </td>
-                  <td className={tdClass}>
-                    <span
-                      className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full capitalize ${
-                        user.role === "pemilik" || user.role === "owner"
-                          ? "bg-purple-100 text-purple-800 border border-purple-200"
-                          : user.role === "admin"
-                          ? "bg-blue-100 text-blue-800 border border-blue-200"
-                          : "bg-green-100 text-green-800 border border-green-200"
-                      }`}
-                    >
-                      {user.role}
-                    </span>
+                  <td className="px-6 py-4">
+                    {user.role === "pemilik" || user.role === "owner" ? (
+                      <Badge color="purple" className="inline-flex">
+                        Owner
+                      </Badge>
+                    ) : user.role === "admin" ? (
+                      <Badge color="blue" className="inline-flex">
+                        Admin
+                      </Badge>
+                    ) : (
+                      <Badge color="success" className="inline-flex">
+                        Pengguna
+                      </Badge>
+                    )}
                   </td>
-                  <td className={tdClass}>
-                    <span className="text-gray-600">
-                      {new Date(user.createdAt).toLocaleDateString("id-ID")}
-                    </span>
+                  <td className="px-6 py-4 text-gray-600">
+                    {new Date(user.createdAt).toLocaleDateString("id-ID")}
                   </td>
-                  <td className={`${tdClass} text-right`}>
+                  <td className="px-6 py-4 text-right">
                     <div className="flex justify-end gap-2">
-                      <button
+                      {/* BUTTON ACTION: SEMUA PUTIH DENGAN ICON BERWARNA */}
+                      <Button
+                        color="light"
+                        size="xs"
+                        pill
                         onClick={() => setEditingUser(user)}
-                        className={`${btnIcon} text-blue-600 hover:bg-blue-50`}
-                        title="Edit Pengguna"
+                        title="Edit"
+                        className={whiteBtnStyle}
                       >
-                        <Edit size={18} />
-                      </button>
+                        <Edit size={16} className="text-blue-600" />
+                      </Button>
 
                       {isBannedList ? (
-                        <button
+                        <Button
+                          color="light"
+                          size="xs"
+                          pill
                           onClick={() => openConfirmation("unban", user)}
-                          className={`${btnIcon} text-green-600 hover:bg-green-50`}
-                          title="Buka Blokir"
+                          title="Unban"
+                          className={whiteBtnStyle}
                         >
-                          <UserCheck size={18} />
-                        </button>
+                          <UserCheck size={16} className="text-green-600" />
+                        </Button>
                       ) : (
-                        <button
+                        <Button
+                          color="light"
+                          size="xs"
+                          pill
                           onClick={() => openConfirmation("ban", user)}
-                          className={`${btnIcon} text-yellow-600 hover:bg-yellow-50`}
-                          title="Blokir"
+                          title="Ban"
+                          className={whiteBtnStyle}
                         >
-                          <UserX size={18} />
-                        </button>
+                          <UserX size={16} className="text-yellow-500" />
+                        </Button>
                       )}
 
-                      <button
+                      <Button
+                        color="light"
+                        size="xs"
+                        pill
                         onClick={() => openConfirmation("delete", user)}
-                        className={`${btnIcon} text-red-600 hover:bg-red-50`}
-                        title="Hapus"
+                        title="Delete"
+                        className={whiteBtnStyle}
                       >
-                        <Trash2 size={18} />
-                      </button>
+                        <Trash2 size={16} className="text-red-600" />
+                      </Button>
                     </div>
                   </td>
                 </tr>
@@ -296,9 +314,8 @@ function UserCeo() {
   const details = confirmationDetails[confirmation.action] || {};
 
   return (
-    // WRAPPER UTAMA: Force White Background & Text Black
     <div className="w-full min-h-screen bg-white text-gray-900 p-6 space-y-8 font-sans">
-      {/* --- MODALS --- */}
+      {/* MODALS */}
       {editingUser && (
         <EditUserModalCeo
           user={editingUser}
@@ -323,7 +340,7 @@ function UserCeo() {
       />
 
       {/* --- MAIN CARD --- */}
-      <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-6">
+      <Card className="bg-white border-2 border-gray-200 shadow-lg [&>div]:bg-white">
         {/* HEADER */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-6 border-b border-gray-200 gap-4">
           <div>
@@ -336,20 +353,24 @@ function UserCeo() {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-            <button
+            {/* TOMBOL PUTIH SEMUA */}
+            <Button
+              color="light"
               onClick={() => navigate("/laporan-user-ceo")}
-              className={btnReport}
+              className={`w-full sm:w-auto ${whiteBtnStyle}`}
             >
-              <FileText size={18} className="mr-2" />
-              Laporan User
-            </button>
-            <button
+              <FileText size={18} className="mr-2 text-gray-900" />
+              <span className="text-gray-900 font-medium">Laporan User</span>
+            </Button>
+
+            <Button
+              color="light"
               onClick={() => setCreateAdminModalOpen(true)}
-              className={btnCreate}
+              className={`w-full sm:w-auto ${whiteBtnStyle}`}
             >
-              <PlusCircle size={18} className="mr-2" />
-              Create Admin
-            </button>
+              <PlusCircle size={18} className="mr-2 text-gray-900" />
+              <span className="text-gray-900 font-medium">Create Admin</span>
+            </Button>
           </div>
         </div>
 
@@ -360,7 +381,7 @@ function UserCeo() {
           userList={bannedUsers}
           isBannedList={true}
         />
-      </div>
+      </Card>
     </div>
   );
 }

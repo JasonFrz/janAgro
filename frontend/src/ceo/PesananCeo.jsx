@@ -1,5 +1,13 @@
 import React, { useState, useMemo, useEffect } from "react";
-import { Check, X, Search, ChevronDown, FileText, Users } from "lucide-react";
+import {
+  Check,
+  X,
+  Search,
+  ChevronDown,
+  FileText,
+  Users,
+  ShoppingBag,
+} from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import {
@@ -7,29 +15,8 @@ import {
   setCheckouts,
 } from "../features/admin/adminSlice";
 
-const StatusBadge = ({ status }) => {
-  const statusStyles = {
-    pending: "bg-gray-200 text-gray-800 border-gray-800",
-    diproses: "bg-blue-100 text-blue-800 border-blue-800",
-    dikirim: "bg-yellow-100 text-yellow-800 border-yellow-800",
-    sampai: "bg-green-100 text-green-800 border-green-800",
-    selesai: "bg-green-200 text-green-900 border-green-900",
-    "pembatalan diajukan": "bg-orange-100 text-orange-800 border-orange-800",
-    dibatalkan: "bg-gray-300 text-gray-900 border-gray-900",
-    "pengembalian diajukan": "bg-purple-100 text-purple-800 border-purple-800",
-    "pengembalian berhasil": "bg-purple-200 text-purple-900 border-purple-900",
-    "pengembalian ditolak": "bg-red-100 text-red-800 border-red-800",
-  };
-  const style =
-    statusStyles[status] || "bg-gray-100 text-gray-800 border-gray-800";
-  return (
-    <span
-      className={`px-3 py-1 text-xs rounded-md font-bold border-2 whitespace-nowrap ${style}`}
-    >
-      {status ? status.charAt(0).toUpperCase() + status.slice(1) : "Unknown"}
-    </span>
-  );
-};
+// --- IMPORT FLOWBITE (HANYA CARD & BADGE YANG STABIL) ---
+import { Card, Badge } from "flowbite-react";
 
 const formatDate = (dateString) => {
   if (!dateString) return "-";
@@ -42,58 +29,6 @@ const formatDate = (dateString) => {
   });
 };
 
-const StatusButton = ({
-  orderId,
-  currentStatus,
-  targetStatus,
-  label,
-  onChange,
-}) => {
-  const [loading, setLoading] = useState(false);
-  const isActive = currentStatus === targetStatus;
-
-  const statusColorClasses = {
-    diproses: "bg-yellow-500 text-white border-yellow-500 hover:bg-yellow-600",
-    dikirim: "bg-blue-600 text-white border-blue-600 hover:bg-blue-700",
-    sampai: "bg-green-600 text-white border-green-600 hover:bg-green-700",
-    selesai: "bg-green-700 text-white border-green-700 hover:bg-green-800",
-  };
-  const activeClasses =
-    statusColorClasses[targetStatus] || "bg-black text-white border-black";
-  const inactiveClasses =
-    "bg-white text-gray-500 border-gray-300 hover:border-black";
-
-  const handleClick = async (e) => {
-    e && e.stopPropagation();
-    if (isActive || loading) return;
-    if (typeof onChange !== "function") {
-      console.warn("StatusButton: onChange handler not provided");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      await onChange(orderId, targetStatus);
-    } catch (err) {
-      console.error("Status change failed:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <button
-      onClick={handleClick}
-      disabled={isActive || loading}
-      className={`w-full px-3 py-2 text-sm rounded-sm border transition ${
-        isActive ? activeClasses : inactiveClasses
-      }`}
-    >
-      {loading ? "Updating..." : label}
-    </button>
-  );
-};
-
 function PesananCeo({
   checkouts,
   onUpdateOrderStatus,
@@ -103,7 +38,7 @@ function PesananCeo({
   onRejectCancellation,
 }) {
   const dispatch = useDispatch();
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
   const adminCheckouts = useSelector((state) => state.admin?.checkouts || []);
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -150,9 +85,11 @@ function PesananCeo({
       setActiveDropdown(null);
     } else {
       const rect = e.currentTarget.getBoundingClientRect();
-      // Adjust dropdown position for mobile
-      const leftPos = Math.max(10, Math.min(rect.left + window.scrollX - 100, window.innerWidth - 200));
-      
+      const leftPos = Math.max(
+        10,
+        Math.min(rect.left + window.scrollX - 100, window.innerWidth - 220)
+      );
+
       setActiveDropdown({
         order,
         top: rect.bottom + window.scrollY,
@@ -182,82 +119,136 @@ function PesananCeo({
     }
   };
 
+  // --- MANUAL STYLING UNTUK VISIBILITAS MAKSIMAL ---
+  // Tombol Putih: Background putih, Border abu-abu, Teks Hitam
+  const btnWhite =
+    "flex items-center justify-center gap-2 bg-white text-gray-900 border border-gray-300 px-4 py-2 rounded-lg hover:bg-gray-100 transition-colors shadow-sm font-medium w-full xl:w-auto";
+
+  // Tombol Aksi Kecil
+  const btnActionSuccess =
+    "flex items-center justify-center gap-1 bg-green-600 text-white px-3 py-1.5 rounded text-xs font-bold hover:bg-green-700 transition-colors flex-1";
+  const btnActionFailure =
+    "flex items-center justify-center gap-1 bg-red-600 text-white px-3 py-1.5 rounded text-xs font-bold hover:bg-red-700 transition-colors flex-1";
+
+  const getStatusBadge = (status) => {
+    const s = status ? status.toLowerCase() : "";
+    if (s === "selesai") return <Badge color="success">Selesai</Badge>;
+    if (s === "sampai") return <Badge color="green">Sampai</Badge>;
+    if (s === "dikirim") return <Badge color="warning">Dikirim</Badge>;
+    if (s === "diproses") return <Badge color="info">Diproses</Badge>;
+    if (s === "dibatalkan") return <Badge color="failure">Dibatalkan</Badge>;
+    if (s.includes("pembatalan"))
+      return <Badge color="failure">Req Batal</Badge>;
+    if (s.includes("pengembalian"))
+      return <Badge color="purple">Req Retur</Badge>;
+    return <Badge color="gray">{status}</Badge>;
+  };
+
   const ActionCard = ({ title, count, children }) => (
-    <div className="bg-white p-4 sm:p-6 rounded-lg border-2 border-black shadow-lg">
-      <h3 className="font-bold text-xl mb-4 pb-2 border-b-2 border-black flex justify-between items-center">
+    <Card className="bg-white border border-gray-200 shadow-md [&>div]:bg-white h-full">
+      <h3 className="font-bold text-xl mb-2 pb-2 border-b border-gray-200 flex justify-between items-center text-gray-900">
         <span>{title}</span>
-        <span className="font-mono bg-black text-white rounded-full px-2.5 py-1 text-sm">
-          {count}
-        </span>
+        {count > 0 && (
+          <Badge color="failure" size="sm" className="px-2 py-0.5">
+            {count}
+          </Badge>
+        )}
       </h3>
       <div className="space-y-4 max-h-80 overflow-y-auto pr-2">
         {count > 0 ? (
           children
         ) : (
-          <p className="text-gray-500 italic py-4">No pending requests.</p>
+          <p className="text-gray-500 italic py-4 text-center">
+            No pending requests.
+          </p>
         )}
       </div>
-    </div>
+    </Card>
   );
 
   const RequestItem = ({ order, onApprove, onReject }) => (
-    <div className="p-3 border-b-2 border-gray-300 last:border-b-0">
-      <div className="flex justify-between items-start mb-2">
+    <div className="p-4 bg-gray-50 border border-gray-200 rounded-lg">
+      <div className="flex justify-between items-start mb-3">
         <div>
-          <p className="font-bold text-black text-sm sm:text-base">
+          <p className="font-bold text-gray-900 text-sm">
             Order #{order._id.substring(0, 8)}
           </p>
-          <p className="text-xs sm:text-sm text-gray-600">{order.nama}</p>
+          <p className="text-xs text-gray-500">{order.nama}</p>
         </div>
-        <p className="text-xs sm:text-sm font-mono">{formatDate(order.createdAt)}</p>
+        <p className="text-xs text-gray-500 font-mono">
+          {formatDate(order.createdAt)}
+        </p>
       </div>
-      <div className="mt-2 flex space-x-2">
+      <div className="flex gap-2">
         <button
           onClick={() => onApprove(order._id)}
-          className="flex-1 bg-green-600 text-white px-3 py-1.5 text-sm rounded font-bold hover:bg-green-700 flex items-center justify-center space-x-1"
+          className={btnActionSuccess}
         >
-          <Check size={16} /> <span>Approve</span>
+          <Check size={14} /> Approve
         </button>
         <button
           onClick={() => onReject(order._id)}
-          className="flex-1 bg-red-600 text-white px-3 py-1.5 text-sm rounded font-bold hover:bg-red-700 flex items-center justify-center space-x-1"
+          className={btnActionFailure}
         >
-          <X size={16} /> <span>Reject</span>
+          <X size={14} /> Reject
         </button>
       </div>
     </div>
   );
 
+  const StatusOption = ({ label, target, current }) => (
+    <button
+      onClick={() => handleStatusChange(activeDropdown.order._id, target)}
+      className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 ${
+        current === target
+          ? "font-bold text-blue-600 bg-blue-50"
+          : "text-gray-700"
+      }`}
+    >
+      {label}
+    </button>
+  );
+
   return (
-    <div className="space-y-8">
-      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4">
-        <h2 className="text-2xl sm:text-3xl font-black">Order & Request Management</h2>
+    <div className="w-full min-h-screen bg-white text-gray-900 p-6 space-y-8 font-sans">
+      {/* HEADER */}
+      <div className="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-4 border-b border-gray-200 pb-6">
+        <div>
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900">
+            Order & Request Management
+          </h2>
+          <p className="text-gray-500 mt-1">
+            Manage customer orders, returns, and cancellations.
+          </p>
+        </div>
 
         <div className="flex flex-wrap gap-3 w-full xl:w-auto">
+          {/* TOMBOL NAVIGASI - MANUAL BUTTONS AGAR TERLIHAT */}
           <button
             onClick={() => navigate("/laporan-user-setia-ceo")}
-            className="flex-1 xl:flex-none flex items-center justify-center gap-2 bg-white text-black border-2 border-black px-4 py-2 rounded-lg hover:bg-gray-100 transition shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] font-bold text-sm"
+            className={btnWhite}
           >
-            <Users size={18} />
+            <Users size={18} className="text-blue-600" />
             <span>Top Customers</span>
           </button>
           <button
             onClick={() => navigate("/laporan-order-ceo")}
-            className="flex-1 xl:flex-none flex items-center justify-center gap-2 bg-black text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition shadow-md font-bold border-2 border-black text-sm"
+            className={btnWhite}
           >
-            <FileText size={18} />
+            <FileText size={18} className="text-purple-600" />
             <span>Laporan Pesanan</span>
           </button>
           <button
             onClick={() => navigate("/laporan-stok-ceo")}
-            className="flex-1 xl:flex-none flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition shadow-md font-bold border-2 border-blue-600 text-sm"
+            className={btnWhite}
           >
-            <FileText size={18} />
+            <ShoppingBag size={18} className="text-green-600" />
             <span>Laporan Stok</span>
           </button>
         </div>
       </div>
 
+      {/* REQUEST CARDS */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <ActionCard title="Return Requests" count={pendingReturns.length}>
           {pendingReturns.map((order) => (
@@ -284,74 +275,72 @@ function PesananCeo({
         </ActionCard>
       </div>
 
-      <div className="bg-white text-black shadow-lg rounded-lg p-4 sm:p-6 border-2 border-black">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 pb-4 border-b-2 border-black gap-4">
-          <h2 className="text-xl sm:text-2xl font-bold">
+      {/* ORDER TABLE CARD */}
+      <Card className="bg-white border border-gray-200 shadow-lg [&>div]:bg-white">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
+          <h2 className="text-xl font-bold text-gray-900">
             Comprehensive Order Log
           </h2>
           <div className="relative w-full md:w-72">
             <Search
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"
-              size={20}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              size={18}
             />
             <input
               type="text"
-              placeholder="Search by ID, name, status..."
+              placeholder="Search order..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border-2 border-black rounded-md focus:ring-2 focus:ring-black"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg text-sm bg-gray-50 focus:ring-blue-500 focus:border-blue-500 text-gray-900 placeholder-gray-500"
             />
           </div>
         </div>
-        <div className="overflow-x-auto max-h-[32rem] overflow-y-auto border-2 border-black rounded-lg">
-          <table className="w-full border-collapse">
-            <thead className="bg-gray-100 sticky top-0">
+
+        {/* TABEL MANUAL (ANTI ERROR) */}
+        <div className="relative overflow-x-auto shadow-none border border-gray-200 rounded-lg">
+          <table className="w-full text-sm text-left text-gray-500">
+            <thead className="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="p-3 border-2 border-black text-left font-bold min-w-[100px]">
-                  Order ID
-                </th>
-                <th className="p-3 border-2 border-black text-left font-bold min-w-[150px]">
-                  Customer
-                </th>
-                <th className="p-3 border-2 border-black text-left font-bold min-w-[120px]">
-                  Date
-                </th>
-                <th className="p-3 border-2 border-black text-left font-bold min-w-[120px]">
-                  Total
-                </th>
-                <th className="p-3 border-2 border-black text-center font-bold min-w-[150px]">
+                <th className="px-6 py-3 border-r border-gray-200">Order ID</th>
+                <th className="px-6 py-3 border-r border-gray-200">Customer</th>
+                <th className="px-6 py-3 border-r border-gray-200">Date</th>
+                <th className="px-6 py-3 border-r border-gray-200">Total</th>
+                <th className="px-6 py-3 text-center border-r border-gray-200">
                   Status
                 </th>
-                <th className="p-3 border-2 border-black text-center font-bold min-w-[180px]">
-                  Actions
-                </th>
+                <th className="px-6 py-3 text-center">Actions</th>
               </tr>
             </thead>
             <tbody>
               {filteredCheckouts.length > 0 ? (
                 filteredCheckouts.map((order) => (
-                  <tr key={order._id} className="border-b-2 border-gray-300">
-                    <td className="p-3 border-x-2 border-black font-mono font-bold">
+                  <tr
+                    key={order._id}
+                    className="bg-white border-b border-gray-200 hover:bg-gray-50 text-gray-900"
+                  >
+                    <td className="px-6 py-4 font-mono font-medium text-blue-600 border-r border-gray-200">
                       #{order._id.substring(0, 8)}
                     </td>
-                    <td className="p-3 border-x-2 border-black">
+                    <td className="px-6 py-4 border-r border-gray-200">
                       {order.nama}
                     </td>
-                    <td className="p-3 border-x-2 border-black">
+                    <td className="px-6 py-4 border-r border-gray-200">
                       {formatDate(order.createdAt)}
                     </td>
-                    <td className="p-3 border-x-2 border-black">
+                    <td className="px-6 py-4 font-medium border-r border-gray-200">
                       Rp {order.totalHarga.toLocaleString("id-ID")}
                     </td>
-                    <td className="p-3 border-x-2 border-black text-center">
-                      <StatusBadge status={order.status} />
+                    <td className="px-6 py-4 text-center border-r border-gray-200">
+                      <div className="flex justify-center">
+                        {getStatusBadge(order.status)}
+                      </div>
                     </td>
-                    <td className="p-3 border-x-2 border-black text-center relative">
+                    <td className="px-6 py-4 text-center">
                       <button
                         onClick={(e) => handleDropdownToggle(e, order)}
-                        className="bg-black text-white px-3 py-1.5 rounded font-bold flex items-center hover:bg-gray-800 mx-auto"
+                        className="mx-auto flex items-center justify-center px-3 py-1.5 bg-white border border-gray-300 rounded text-xs font-bold text-gray-700 hover:bg-gray-100 transition-colors shadow-sm"
                       >
-                        Update Status <ChevronDown size={16} className="ml-1" />
+                        Update <ChevronDown size={14} className="ml-1" />
                       </button>
                     </td>
                   </tr>
@@ -360,7 +349,7 @@ function PesananCeo({
                 <tr>
                   <td
                     colSpan="6"
-                    className="p-10 text-center text-gray-500 italic"
+                    className="px-6 py-10 text-center text-gray-500 italic"
                   >
                     No orders found.
                   </td>
@@ -369,57 +358,50 @@ function PesananCeo({
             </tbody>
           </table>
         </div>
-      </div>
+      </Card>
+
+      {/* DROPDOWN MENU MANUAL */}
       {activeDropdown && (
         <>
           <div
-            className="fixed inset-0 z-20"
+            className="fixed inset-0 z-40"
             onClick={() => setActiveDropdown(null)}
           ></div>
-
           <div
             style={{
               position: "absolute",
-              top: `${activeDropdown.top + 2}px`,
+              top: `${activeDropdown.top + 5}px`,
               left: `${activeDropdown.left}px`,
             }}
-            className="w-48 bg-white border-2 border-black rounded-md shadow-2xl z-30 p-2 space-y-2"
+            className="w-48 bg-white border border-gray-200 rounded-lg shadow-xl z-50 py-1 overflow-hidden"
           >
             {(() => {
               const current =
                 orders.find((o) => o._id === activeDropdown.order._id)
                   ?.status || activeDropdown.order.status;
               return (
-                <>
-                  <StatusButton
-                    orderId={activeDropdown.order._id}
-                    currentStatus={current}
-                    targetStatus="diproses"
+                <div className="flex flex-col">
+                  <StatusOption
                     label="Diproses"
-                    onChange={handleStatusChange}
+                    target="diproses"
+                    current={current}
                   />
-                  <StatusButton
-                    orderId={activeDropdown.order._id}
-                    currentStatus={current}
-                    targetStatus="dikirim"
+                  <StatusOption
                     label="Dikirim"
-                    onChange={handleStatusChange}
+                    target="dikirim"
+                    current={current}
                   />
-                  <StatusButton
-                    orderId={activeDropdown.order._id}
-                    currentStatus={current}
-                    targetStatus="sampai"
+                  <StatusOption
                     label="Sampai"
-                    onChange={handleStatusChange}
+                    target="sampai"
+                    current={current}
                   />
-                  <StatusButton
-                    orderId={activeDropdown.order._id}
-                    currentStatus={current}
-                    targetStatus="selesai"
+                  <StatusOption
                     label="Selesai"
-                    onChange={handleStatusChange}
+                    target="selesai"
+                    current={current}
                   />
-                </>
+                </div>
               );
             })()}
           </div>
