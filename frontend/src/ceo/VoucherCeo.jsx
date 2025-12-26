@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Edit, Trash2, Plus, FileText, Users } from "lucide-react";
+import { Edit, Trash2, Plus, FileText } from "lucide-react";
 import ConfirmationModalCeo from "./ConfirmationModalCeo";
 import { useNavigate } from "react-router-dom";
 import VoucherModalCeo from "./VoucherModalCeo";
@@ -10,6 +10,7 @@ function VoucherCeo({ vouchers, onAdd, onUpdate, onDelete }) {
   const [editingVoucher, setEditingVoucher] = useState(null);
   const [voucherToDelete, setVoucherToDelete] = useState(null);
   const navigate = useNavigate();
+
   const handleOpenModal = (voucher = null) => {
     setEditingVoucher(voucher);
     setIsModalOpen(true);
@@ -39,8 +40,20 @@ function VoucherCeo({ vouchers, onAdd, onUpdate, onDelete }) {
     }
   };
 
+  // --- STYLE CONSTANTS ---
+  const thClass =
+    "px-6 py-3 bg-gray-100 text-left text-xs font-bold text-gray-700 uppercase tracking-wider border-b border-gray-200";
+  const tdClass =
+    "px-6 py-4 whitespace-nowrap text-sm text-gray-900 border-b border-gray-200";
+  const btnPrimary =
+    "flex items-center justify-center space-x-2 bg-blue-600 text-white py-2 px-4 rounded-lg font-bold hover:bg-blue-700 transition-colors shadow-sm w-full sm:w-auto";
+  const btnSecondary =
+    "flex items-center justify-center space-x-2 bg-white text-gray-700 border border-gray-300 py-2 px-4 rounded-lg font-bold hover:bg-gray-50 transition-colors shadow-sm w-full sm:w-auto";
+
   return (
-    <>
+    // WRAPPER UTAMA: Force Light Mode
+    <div className="w-full min-h-screen bg-white text-gray-900 p-6 space-y-8 font-sans">
+      {/* --- MODALS --- */}
       <VoucherModalCeo
         isOpen={isModalOpen}
         onClose={handleCloseModal}
@@ -54,99 +67,112 @@ function VoucherCeo({ vouchers, onAdd, onUpdate, onDelete }) {
         title="Delete Voucher"
         message={`Are you sure you want to permanently delete the voucher "${voucherToDelete?.code}"? This action cannot be undone.`}
         confirmButtonText="Yes, Delete It"
-        confirmButtonColor="bg-red-700 hover:bg-red-800"
+        confirmButtonColor="bg-red-600 hover:bg-red-700"
       />
-      <div className="bg-white text-black shadow-lg rounded-lg p-6 border-2 border-black">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 pb-4 border-b-2 border-black gap-4">
-          <h2 className="text-2xl font-bold">Voucher Management</h2>
+
+      {/* --- MAIN CARD --- */}
+      <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-6">
+        {/* HEADER */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 pb-4 border-b border-gray-200 gap-4">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-900">
+              Voucher Management
+            </h2>
+            <p className="text-sm text-gray-500 mt-1">
+              Manage discounts and promo codes.
+            </p>
+          </div>
+
           <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
             <button
               onClick={() => navigate("/laporan-voucher-ceo")}
-              className="flex items-center justify-center space-x-2 bg-white text-black border-2 border-black py-2 px-4 rounded-md font-bold hover:bg-gray-100 transition-transform w-full sm:w-auto"
+              className={btnSecondary}
             >
-              <FileText size={20} />
+              <FileText size={18} />
               <span>Laporan Voucher</span>
             </button>
 
-            <button
-              onClick={() => handleOpenModal()}
-              className="flex items-center justify-center space-x-2 bg-black text-white py-2 px-4 rounded-md font-bold hover:bg-gray-800 transition-transform hover:scale-105 w-full sm:w-auto"
-            >
-              <Plus size={20} />
+            <button onClick={() => handleOpenModal()} className={btnPrimary}>
+              <Plus size={18} />
               <span>Add New Voucher</span>
             </button>
           </div>
         </div>
-        <div className="overflow-x-auto max-h-96 border-2 border-black rounded-lg">
-          <table className="min-w-full divide-y-2 divide-black">
+
+        {/* TABLE */}
+        <div className="overflow-x-auto border border-gray-200 rounded-lg shadow-sm">
+          <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>
-                <th className="px-6 py-4 text-left text-xs font-bold text-black uppercase tracking-wider">
-                  Code
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-black uppercase tracking-wider">
-                  Discount
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-black uppercase tracking-wider">
-                  Usage
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-bold text-black uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-4 text-right text-xs font-bold text-black uppercase tracking-wider">
-                  Actions
-                </th>
+                <th className={thClass}>Code</th>
+                <th className={thClass}>Discount</th>
+                <th className={thClass}>Usage</th>
+                <th className={thClass}>Status</th>
+                <th className={`${thClass} text-right`}>Actions</th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y-2 divide-gray-300">
+            <tbody className="bg-white divide-y divide-gray-200">
               {vouchers.length > 0 ? (
-                vouchers.map((voucher) => (
-                  <tr key={voucher._id}>
-                    <td className="px-6 py-4 whitespace-nowrap font-mono font-extrabold text-black">
-                      {voucher.code}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-800">
-                      {voucher.discountPercentage}%
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold text-gray-800">
-                      {voucher.currentUses} / {voucher.maxUses}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-3 py-1 text-xs rounded-md font-bold border-2 ${
-                          voucher.isActive &&
-                          voucher.currentUses < voucher.maxUses
-                            ? "bg-green-100 text-green-800 border-green-800"
-                            : "bg-red-500 text-gray-800 border-red-950"
-                        }`}
+                vouchers.map((voucher) => {
+                  const isActive =
+                    voucher.isActive && voucher.currentUses < voucher.maxUses;
+                  return (
+                    <tr
+                      key={voucher._id}
+                      className="hover:bg-gray-50 transition-colors"
+                    >
+                      <td
+                        className={`${tdClass} font-mono font-bold text-blue-600`}
                       >
-                        {voucher.isActive &&
-                        voucher.currentUses < voucher.maxUses
-                          ? "Active"
-                          : "Inactive"}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                      <button
-                        onClick={() => handleOpenModal(voucher)}
-                        className="p-2 text-black hover:bg-gray-200 rounded-full transition-colors"
-                      >
-                        <Edit size={18} />
-                      </button>
-                      <button
-                        onClick={() => handleOpenConfirm(voucher)}
-                        className="p-2 text-red-700 hover:bg-red-100 rounded-full transition-colors"
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </td>
-                  </tr>
-                ))
+                        {voucher.code}
+                      </td>
+                      <td className={`${tdClass} font-semibold`}>
+                        {voucher.discountPercentage}%
+                      </td>
+                      <td className={tdClass}>
+                        <span className="font-medium">
+                          {voucher.currentUses}
+                        </span>
+                        <span className="text-gray-400 mx-1">/</span>
+                        <span>{voucher.maxUses}</span>
+                      </td>
+                      <td className={tdClass}>
+                        <span
+                          className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full border ${
+                            isActive
+                              ? "bg-green-100 text-green-800 border-green-200"
+                              : "bg-red-100 text-red-800 border-red-200"
+                          }`}
+                        >
+                          {isActive ? "Active" : "Inactive"}
+                        </span>
+                      </td>
+                      <td className={`${tdClass} text-right`}>
+                        <div className="flex justify-end gap-2">
+                          <button
+                            onClick={() => handleOpenModal(voucher)}
+                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
+                            title="Edit"
+                          >
+                            <Edit size={18} />
+                          </button>
+                          <button
+                            onClick={() => handleOpenConfirm(voucher)}
+                            className="p-2 text-red-600 hover:bg-red-50 rounded-full transition-colors"
+                            title="Delete"
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
               ) : (
                 <tr>
                   <td
                     colSpan="5"
-                    className="text-center py-12 text-gray-500 font-semibold italic"
+                    className="px-6 py-12 text-center text-gray-500 italic"
                   >
                     No active vouchers found.
                   </td>
@@ -156,7 +182,7 @@ function VoucherCeo({ vouchers, onAdd, onUpdate, onDelete }) {
           </table>
         </div>
       </div>
-    </>
+    </div>
   );
 }
 
