@@ -7,11 +7,13 @@ import {
   FileText, 
   Calendar, 
   CalendarDays, 
-  FileSpreadsheet // Import Icon Excel
+  FileSpreadsheet, // Icon Excel
+  Sparkles,        // Icon AI
+  Bot              // Icon Bot untuk Modal AI
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import * as XLSX from "xlsx"; // Import Library XLSX
+import * as XLSX from "xlsx"; // Library Excel
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCeoReport } from "../../features/admin/adminSlice";
 import {
@@ -23,7 +25,8 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import { janAgroLogoBase64 } from "./logoBase64";
+// Pastikan path logo ini benar sesuai struktur folder Anda
+import { janAgroLogoBase64 } from "./logoBase64"; 
 
 ChartJS.register(
   CategoryScale,
@@ -34,7 +37,7 @@ ChartJS.register(
   Legend
 );
 
-// --- HELPER FUNCTION (Agar bisa dipakai di Modal, PDF, dan Excel) ---
+// --- HELPER FUNCTION ---
 const getPaymentMethodDisplay = (paymentType, metodePembayaran) => {
   const paymentMap = {
     'credit_card': 'Kartu Kredit',
@@ -56,6 +59,7 @@ const getPaymentMethodDisplay = (paymentType, metodePembayaran) => {
   return 'Online Payment';
 };
 
+// --- COMPONENT: MODAL DETAIL ORDER ---
 const OrderDetailModal = ({ order, onClose }) => {
   if (!order) return null;
 
@@ -79,8 +83,7 @@ const OrderDetailModal = ({ order, onClose }) => {
           <p className="text-gray-600 text-sm sm:text-base break-all">ORDER #{order.id}</p>
         </div>
         <div className="space-y-6">
-          {/* ... (Isi modal sama seperti sebelumnya) ... */}
-           <div>
+          <div>
             <h3 className="text-lg font-bold mb-2">Informasi Pengiriman</h3>
             <div className="text-sm space-y-1 bg-gray-50 p-3 rounded border border-gray-200">
               <p><span className="font-semibold">Nama:</span> {order.nama}</p>
@@ -137,7 +140,7 @@ const OrderDetailModal = ({ order, onClose }) => {
   );
 };
 
-// ... Component LaporanSection sama seperti sebelumnya ...
+// --- COMPONENT: LIST SECTION ---
 const LaporanSection = ({ title, orders, onOrderClick }) => (
   <div className="bg-white p-4 sm:p-6 rounded-lg border border-black shadow-sm">
     <h2 className="text-lg sm:text-xl font-bold mb-4 border-b border-black pb-2 flex justify-between items-center">
@@ -180,10 +183,17 @@ const LaporanSection = ({ title, orders, onOrderClick }) => (
   </div>
 );
 
+// --- COMPONENT: MAIN PAGE ---
 const LaporanPesananCeo = () => {
   const dispatch = useDispatch();
+  
+  // 1. SELECTOR REDUX (DIPERBAIKI UNTUK MENGHINDARI RERENDER LOOP)
+  const auth = useSelector((state) => state.users); // Sesuaikan dengan reducer di store (state.users atau state.auth)
   const { ceoReportData, loading } = useSelector((state) => state.admin);
+
   const [selectedOrder, setSelectedOrder] = useState(null);
+  
+  // Filter States
   const [filterType, setFilterType] = useState("monthly");
   const [listYear, setListYear] = useState(new Date().getFullYear());
   const [listMonthStart, setListMonthStart] = useState(1);
@@ -191,8 +201,15 @@ const LaporanPesananCeo = () => {
   const [specificDate, setSpecificDate] = useState(
     new Date().toISOString().split("T")[0]
   );
+  
+  // Chart States
   const [chartYear, setChartYear] = useState(new Date().getFullYear());
   const [purchaseFilter, setPurchaseFilter] = useState("all");
+
+  // AI States
+  const [aiAnalysis, setAiAnalysis] = useState("");
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [showAiModal, setShowAiModal] = useState(false);
 
   useEffect(() => {
     dispatch(fetchCeoReport({}));
@@ -234,7 +251,6 @@ const LaporanPesananCeo = () => {
   ]);
 
   const chartData = useMemo(() => {
-    // ... Logic Chart sama ...
     const successfulPurchases = Array(12).fill(0);
     const failedPurchases = Array(12).fill(0);
     reportData.forEach((checkout) => {
@@ -280,7 +296,52 @@ const LaporanPesananCeo = () => {
     };
   }, [reportData, chartYear, purchaseFilter]);
 
-  // --- FUNGSI EXPORT EXCEL BARU ---
+  const handleAnalyzeAI = async () => {
+    const token = auth?.token || localStorage.getItem("token");
+
+    if (!token) {
+      alert("Sesi berakhir. Silakan Logout dan Login kembali agar token terbaca.");
+      console.error("TOKEN MISSING: Redux/LocalStorage kosong.");
+      return;
+    }
+
+    setIsAnalyzing(true);
+    setAiAnalysis("");
+    
+    const payload = { 
+        filterType,
+        year: parseInt(listYear),
+        monthStart: parseInt(Math.min(listMonthStart, listMonthEnd)),
+        monthEnd: parseInt(Math.max(listMonthStart, listMonthEnd)),
+        specificDate: specificDate || new Date().toISOString().split("T")[0] 
+    };
+
+    try {
+      const response = await fetch('http://localhost:3000/api/checkouts/analyze-sales', {
+        method: 'POST',
+        headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}` 
+        },
+        body: JSON.stringify(payload)
+      });
+      
+      const data = await response.json();
+      
+      if(data.success) {
+        setAiAnalysis(data.analysis);
+        setShowAiModal(true);
+      } else {
+        alert("Gagal: " + (data.message || "Terjadi kesalahan di server (Cek Console Backend)"));
+      }
+    } catch (error) {
+      console.error("AI Error:", error);
+      alert("Gagal menghubungi server. Pastikan backend berjalan di port 3000.");
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
   const handleExportExcel = () => {
     const filterTitle =
       filterType === "daily"
@@ -289,7 +350,6 @@ const LaporanPesananCeo = () => {
           })})`
         : `Bulanan`;
 
-    // 1. Persiapkan Data Excel
     const rows = filteredCheckoutsForList.map(order => {
       const itemsString =
         order.items && order.items.length > 0
@@ -303,30 +363,23 @@ const LaporanPesananCeo = () => {
         "Nama Pelanggan": order.nama,
         "Item Dipesan": itemsString,
         "Tanggal": new Date(order.tanggal).toLocaleDateString("id-ID", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
+          year: "numeric", month: "long", day: "numeric", hour: "2-digit", minute: "2-digit",
         }),
         "Metode Pembayaran": getPaymentMethodDisplay(order.paymentType, order.metodePembayaran),
-        "Total Harga": order.totalHarga, // Biarkan number agar bisa di sum di excel
+        "Total Harga": order.totalHarga,
         "Status": order.status.charAt(0).toUpperCase() + order.status.slice(1),
       };
     });
 
-    // 2. Buat Worksheet
-    const ws = XLSX.utils.json_to_sheet(rows, { origin: "A5" }); // Mulai data dari baris ke-5
+    const ws = XLSX.utils.json_to_sheet(rows, { origin: "A5" });
 
-    // 3. Tambahkan Header/Judul Laporan Manual (Agar mirip PDF)
     XLSX.utils.sheet_add_aoa(ws, [
       ["PT. Jan Agro Nusantara"],
       [`Laporan Pesanan - ${filterTitle}`],
       ["Tanggal Cetak:", new Date().toLocaleDateString("id-ID")],
-      [] // Baris kosong sebelum header tabel
+      [] 
     ], { origin: "A1" });
 
-    // 4. Buat Workbook dan Download
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Laporan Pesanan");
     
@@ -337,37 +390,18 @@ const LaporanPesananCeo = () => {
 
   const handleExportPDF = () => {
     const doc = new jsPDF();
-    
-    // Gunakan fungsi helper yang sudah dipindah ke atas
-    const tableColumn = [
-      "ID Pesanan",
-      "Nama Pelanggan",
-      "Item Dipesan",
-      "Tanggal",
-      "Metode Pembayaran",
-      "Total Harga",
-      "Status",
-    ];
+    const tableColumn = ["ID Pesanan", "Nama Pelanggan", "Item Dipesan", "Tanggal", "Metode", "Total Harga", "Status"];
     const tableRows = [];
 
     filteredCheckoutsForList.forEach((order) => {
-      const itemsString =
-        order.items && order.items.length > 0
-          ? order.items
-              .map((item) => `• ${item.name} (${item.quantity}x)`)
-              .join("\n")
+      const itemsString = order.items && order.items.length > 0
+          ? order.items.map((item) => `• ${item.name} (${item.quantity}x)`).join("\n")
           : "-";
       const orderData = [
         `#${order.id.substring(0, 8)}`,
         order.nama,
         itemsString,
-        new Date(order.tanggal).toLocaleDateString("id-ID", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
+        new Date(order.tanggal).toLocaleDateString("id-ID", { year: "numeric", month: "long", day: "numeric" }),
         getPaymentMethodDisplay(order.paymentType, order.metodePembayaran),
         `Rp ${order.totalHarga.toLocaleString("id-ID")}`,
         order.status.charAt(0).toUpperCase() + order.status.slice(1),
@@ -375,17 +409,9 @@ const LaporanPesananCeo = () => {
       tableRows.push(orderData);
     });
 
-    // ... (Sisa kode PDF sama seperti sebelumnya) ...
-    const filterTitle =
-      filterType === "daily"
-        ? `Harian (${new Date(specificDate).toLocaleDateString("id-ID", {
-            dateStyle: "long",
-          })})`
+    const filterTitle = filterType === "daily"
+        ? `Harian (${new Date(specificDate).toLocaleDateString("id-ID", { dateStyle: "long" })})`
         : `Bulanan`;
-    const date = new Date();
-    const fullDate = `${date.getDate()}-${
-      date.getMonth() + 1
-    }-${date.getFullYear()}`;
 
     autoTable(doc, {
       head: [tableColumn],
@@ -393,105 +419,32 @@ const LaporanPesananCeo = () => {
       startY: 45,
       margin: { top: 45 },
       theme: "grid",
-      styles: {
-        font: "helvetica",
-        fontSize: 8,
-        cellPadding: 2,
-        valign: "middle",
-      },
-      headStyles: {
-        fillColor: [41, 41, 41],
-        textColor: [255, 255, 255],
-        fontStyle: "bold",
-      },
-      columnStyles: { 2: { cellWidth: 50 } },
+      styles: { font: "helvetica", fontSize: 8, cellPadding: 2, valign: "middle" },
+      headStyles: { fillColor: [41, 41, 41], textColor: [255, 255, 255], fontStyle: "bold" },
+      columnStyles: { 2: { cellWidth: 40 } },
       didDrawPage: function (data) {
-        const logoWidth = 22;
-        const logoHeight = 22;
+        const logoWidth = 22; const logoHeight = 22;
         const margin = data.settings.margin.left;
         const pageWidth = doc.internal.pageSize.getWidth();
 
         try {
-          doc.addImage(
-            janAgroLogoBase64,
-            "JPEG",
-            margin,
-            10,
-            logoWidth,
-            logoHeight,
-            undefined,
-            "FAST"
-          );
-        } catch (e) {
-          console.error("Failed to add logo to PDF:", e);
-        }
+          doc.addImage(janAgroLogoBase64, "JPEG", margin, 10, logoWidth, logoHeight, undefined, "FAST");
+        } catch (e) {}
 
-        doc.setFontSize(14);
-        doc.setFont("helvetica", "bold");
+        doc.setFontSize(14); doc.setFont("helvetica", "bold");
         doc.text("PT. Jan Agro Nusantara", margin + logoWidth + 5, 16);
         doc.setFontSize(10);
-        doc.text(
-          `Laporan Pesanan - ${filterTitle}`,
-          margin + logoWidth + 5,
-          21
-        );
-
-        doc.setFontSize(8);
-        doc.setFont("helvetica", "normal");
-        doc.text(
-          "Jan Agro Nusantara Indonesia Pondok Chandra Indah No. 69 Surabaya 10130, Indonesia",
-          margin + logoWidth + 5,
-          26
-        );
-        doc.text(
-          "Email: janagronusantara@gmail.com | Contact Person: +62 811 762 788",
-          margin + logoWidth + 5,
-          30
-        );
-
+        doc.text(`Laporan Pesanan - ${filterTitle}`, margin + logoWidth + 5, 21);
+        doc.setFontSize(8); doc.setFont("helvetica", "normal");
+        doc.text("Jan Agro Nusantara Indonesia Pondok Chandra Indah No. 69 Surabaya", margin + logoWidth + 5, 26);
+        
         doc.setDrawColor(0, 0, 0);
         doc.line(margin, 35, pageWidth - data.settings.margin.right, 35);
-
-        if (data.pageNumber === doc.internal.getNumberOfPages()) {
-          const pageHeight = doc.internal.pageSize.getHeight();
-          let finalY = data.cursor.y;
-          if (finalY + 60 > pageHeight) {
-            doc.addPage();
-            finalY = data.settings.margin.top;
-          }
-
-          const signatureX = pageWidth - data.settings.margin.right;
-          const currentDate = new Date().toLocaleDateString("id-ID", {
-            day: "numeric",
-            month: "long",
-            year: "numeric",
-          });
-
-          doc.setFontSize(10);
-          doc.setFont("helvetica", "normal");
-          doc.text(`Surabaya, ${currentDate}`, signatureX, finalY + 20, {
-            align: "right",
-          });
-          doc.setFont("helvetica", "bold");
-          doc.text("J.Alamsjah, S.H", signatureX, finalY + 45, {
-            align: "right",
-          });
-          const nameWidth = doc.getTextWidth("J.Alamsjah, S.H");
-          doc.setLineWidth(0.5);
-          doc.line(
-            signatureX - nameWidth,
-            finalY + 46,
-            signatureX,
-            finalY + 46
-          );
-          doc.setFont("helvetica", "normal");
-          doc.setFontSize(9);
-          doc.text("Ceo & Founder", signatureX, finalY + 50, {
-            align: "right",
-          });
-        }
       },
     });
+    
+    const date = new Date();
+    const fullDate = `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}`;
     doc.save(`laporan_pesanan_${filterType}_${fullDate}.pdf`);
   };
 
@@ -500,11 +453,7 @@ const LaporanPesananCeo = () => {
     maintainAspectRatio: false,
     plugins: {
       legend: { position: "top" },
-      title: {
-        display: true,
-        text: `Total Transaksi per Bulan - ${chartYear}`,
-        font: { size: 18 },
-      },
+      title: { display: true, text: `Total Transaksi per Bulan - ${chartYear}`, font: { size: 18 } },
     },
     scales: {
       x: { stacked: true },
@@ -555,9 +504,7 @@ const LaporanPesananCeo = () => {
                       className="w-full sm:w-auto bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
                     >
                       {years.map((year) => (
-                        <option key={year} value={year}>
-                          {year}
-                        </option>
+                        <option key={year} value={year}>{year}</option>
                       ))}
                     </select>
                     <select
@@ -576,13 +523,32 @@ const LaporanPesananCeo = () => {
                 </div>
               </div>
 
-              {/* Filter List & Export */}
+              {/* Filter List, AI, Export */}
               <div className="bg-white border-2 border-black p-4 sm:p-6 rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                   <h2 className="text-lg sm:text-xl font-bold">
                     Filter Daftar Pesanan
                   </h2>
-                  <div className="flex w-full sm:w-auto gap-2">
+                  <div className="flex flex-wrap w-full sm:w-auto gap-2">
+                    
+                    {/* BUTTON AI ANALYTICS */}
+                    <button
+                        onClick={handleAnalyzeAI}
+                        disabled={isAnalyzing}
+                        className="flex-1 sm:flex-none bg-purple-600 text-white px-4 py-2 rounded-lg flex items-center justify-center hover:bg-purple-700 transition-colors duration-200 shadow-md border-b-4 border-purple-800 active:border-b-0 active:translate-y-1 active:shadow-none"
+                    >
+                        {isAnalyzing ? (
+                        <span className="flex items-center animate-pulse">
+                           <Sparkles className="mr-2 h-5 w-5 animate-spin" /> Menganalisa...
+                        </span>
+                        ) : (
+                        <>
+                            <Sparkles className="mr-2 h-5 w-5 text-yellow-300 fill-yellow-300" /> 
+                            Analisa AI
+                        </>
+                        )}
+                    </button>
+
                     {/* BUTTON EXCEL */}
                     <button
                       onClick={handleExportExcel}
@@ -605,9 +571,7 @@ const LaporanPesananCeo = () => {
                   <button
                     onClick={() => setFilterType("monthly")}
                     className={`flex items-center gap-2 pb-2 px-2 transition-colors text-sm sm:text-base ${
-                      filterType === "monthly"
-                        ? "border-b-2 border-black font-bold text-black"
-                        : "text-gray-500 hover:text-black"
+                      filterType === "monthly" ? "border-b-2 border-black font-bold text-black" : "text-gray-500 hover:text-black"
                     }`}
                   >
                     <CalendarDays size={18} />
@@ -616,9 +580,7 @@ const LaporanPesananCeo = () => {
                   <button
                     onClick={() => setFilterType("daily")}
                     className={`flex items-center gap-2 pb-2 px-2 transition-colors text-sm sm:text-base ${
-                      filterType === "daily"
-                        ? "border-b-2 border-black font-bold text-black"
-                        : "text-gray-500 hover:text-black"
+                      filterType === "daily" ? "border-b-2 border-black font-bold text-black" : "text-gray-500 hover:text-black"
                     }`}
                   >
                     <Calendar size={18} />
@@ -635,42 +597,26 @@ const LaporanPesananCeo = () => {
                         onChange={(e) => setListYear(parseInt(e.target.value))}
                         className="w-full sm:w-auto bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
                       >
-                        {years.map((year) => (
-                          <option key={year} value={year}>
-                            {year}
-                          </option>
-                        ))}
+                        {years.map((year) => (<option key={year} value={year}>{year}</option>))}
                       </select>
                       <div className="flex gap-2 items-center w-full sm:w-auto">
                         <select
                           value={listMonthStart}
-                          onChange={(e) =>
-                            setListMonthStart(parseInt(e.target.value))
-                          }
+                          onChange={(e) => setListMonthStart(parseInt(e.target.value))}
                           className="w-full sm:w-auto bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
                         >
                           {Array.from({ length: 12 }, (_, i) => (
-                            <option key={i + 1} value={i + 1}>
-                              {new Date(0, i).toLocaleString("id-ID", {
-                                month: "short",
-                              })}
-                            </option>
+                            <option key={i + 1} value={i + 1}>{new Date(0, i).toLocaleString("id-ID", { month: "short" })}</option>
                           ))}
                         </select>
                         <span className="text-gray-600">-</span>
                         <select
                           value={listMonthEnd}
-                          onChange={(e) =>
-                            setListMonthEnd(parseInt(e.target.value))
-                          }
+                          onChange={(e) => setListMonthEnd(parseInt(e.target.value))}
                           className="w-full sm:w-auto bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
                         >
                           {Array.from({ length: 12 }, (_, i) => (
-                            <option key={i + 1} value={i + 1}>
-                              {new Date(0, i).toLocaleString("id-ID", {
-                                month: "short",
-                              })}
-                            </option>
+                            <option key={i + 1} value={i + 1}>{new Date(0, i).toLocaleString("id-ID", { month: "short" })}</option>
                           ))}
                         </select>
                       </div>
@@ -699,23 +645,17 @@ const LaporanPesananCeo = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   <LaporanSection
                     title="Pesanan Diproses"
-                    orders={filteredCheckoutsForList.filter(
-                      (o) => o.status === "diproses"
-                    )}
+                    orders={filteredCheckoutsForList.filter((o) => o.status === "diproses")}
                     onOrderClick={setSelectedOrder}
                   />
                   <LaporanSection
                     title="Pesanan Dikirim"
-                    orders={filteredCheckoutsForList.filter(
-                      (o) => o.status === "dikirim"
-                    )}
+                    orders={filteredCheckoutsForList.filter((o) => o.status === "dikirim")}
                     onOrderClick={setSelectedOrder}
                   />
                   <LaporanSection
                     title="Pesanan Selesai"
-                    orders={filteredCheckoutsForList.filter((o) =>
-                      ["selesai", "sampai"].includes(o.status)
-                    )}
+                    orders={filteredCheckoutsForList.filter((o) => ["selesai", "sampai"].includes(o.status))}
                     onOrderClick={setSelectedOrder}
                   />
                 </div>
@@ -724,10 +664,48 @@ const LaporanPesananCeo = () => {
           )}
         </div>
       </div>
+      
       <OrderDetailModal
         order={selectedOrder}
         onClose={() => setSelectedOrder(null)}
       />
+
+      {/* --- MODAL HASIL AI (BARU) --- */}
+      {showAiModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex justify-center items-center z-[70] p-4">
+            <div className="bg-white p-6 rounded-xl max-w-3xl w-full border-2 border-purple-600 shadow-2xl animate-fade-in relative max-h-[85vh] overflow-y-auto">
+            <button 
+                onClick={() => setShowAiModal(false)}
+                className="absolute top-4 right-4 text-gray-500 hover:text-black bg-gray-100 p-1 rounded-full transition-colors"
+            >
+                <X size={24} />
+            </button>
+            
+            <div className="flex items-center gap-3 mb-6 border-b pb-4">
+                <div className="bg-purple-100 p-3 rounded-full border border-purple-300">
+                <Bot size={32} className="text-purple-600" />
+                </div>
+                <div>
+                <h3 className="text-2xl font-bold text-gray-900">Analisa Bisnis Cerdas</h3>
+                <p className="text-sm text-gray-500 font-medium">Powered by Google Gemini Flash 2.5</p>
+                </div>
+            </div>
+
+            <div className="prose prose-purple max-w-none text-gray-800 leading-relaxed whitespace-pre-line text-sm sm:text-base font-sans">
+                {aiAnalysis ? aiAnalysis : <p className="italic text-gray-400">Memuat hasil...</p>}
+            </div>
+            
+            <div className="mt-8 flex justify-end pt-4 border-t">
+                <button 
+                onClick={() => setShowAiModal(false)}
+                className="bg-black text-white px-6 py-2.5 rounded-lg hover:bg-gray-800 font-bold transition-transform active:scale-95 shadow-lg"
+                >
+                Tutup Laporan
+                </button>
+            </div>
+            </div>
+        </div>
+      )}
     </>
   );
 };

@@ -8,6 +8,18 @@ const { logStockMovement } = require("../functions/stockMovementLogger");
 const { authenticateToken } = require("../middleware/authenticate");
 const snap = require('../config/midtrans');
 const Cancellation = require("../models/Cancellation");
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+const apiKey = process.env.GEMINI_API_KEY;
+let genAI;
+let model;
+
+
+if (apiKey) {
+  genAI = new GoogleGenerativeAI(apiKey);
+  model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+} else {
+  console.warn("PERINGATAN: GEMINI_API_KEY belum disetting di .env");
+}
 
 const handleSuccessfulTransaction = async (checkout) => {
   if (checkout.status === 'diproses') return;
@@ -16,21 +28,19 @@ const handleSuccessfulTransaction = async (checkout) => {
   checkout.status = 'diproses';
   await checkout.save();
 
+  
   if (checkout.items && checkout.items.length > 0) {
     for (const item of checkout.items) {
       const productId = item.product || item.productId;
       if (productId) {
-        // Fetch product to get previous stock value
         const product = await Product.findById(productId);
         if (!product) continue;
 
         const previousStock = product.stock || 0;
         const newStock = previousStock - (item.quantity || 0);
 
-        // Update product stock
         await Product.updateOne({ _id: productId }, { $set: { stock: newStock } });
 
-        // Log the stock movement (reason: penjualan / sale)
         try {
           await logStockMovement(
             productId,
@@ -62,6 +72,121 @@ const handleSuccessfulTransaction = async (checkout) => {
     { $set: { items: [] } }
   );
 };
+
+router.post("/analyze-sales", authenticateToken, async (req, res) => {
+  try {
+    if (!model) {
+      return res.status(500).json({ success: false, message: "Server AI belum dikonfigurasi (API Key hilang)." });
+    }
+
+    const { filterType, year, monthStart, monthEnd, specificDate } = req.body;
+    let query = {};
+    let periodText = "";
+
+    if (!filterType) {
+      return res.status(400).json({ success: false, message: "Tipe filter (filterType) wajib diisi." });
+    }
+
+    if (filterType === 'daily') {
+      if (!specificDate) return res.status(400).json({ success: false, message: "Tanggal spesifik wajib diisi untuk filter harian." });
+      
+      const date = new Date(specificDate);
+      const startOfDay = new Date(date.setHours(0, 0, 0, 0));
+      const endOfDay = new Date(date.setHours(23, 59, 59, 999));
+      
+      query.createdAt = { $gte: startOfDay, $lte: endOfDay };
+      periodText = `Harian (Tanggal ${specificDate})`;
+    } else {
+      const y = parseInt(year) || new Date().getFullYear();
+      const mStart = parseInt(monthStart) || 1;
+      const mEnd = parseInt(monthEnd) || 12;
+      
+      const startDate = new Date(y, mStart - 1, 1); 
+      const endDate = new Date(y, mEnd, 0, 23, 59, 59, 999); 
+      
+      query.createdAt = { $gte: startDate, $lte: endDate };
+      periodText = `Bulan ${mStart} sampai ${mEnd} Tahun ${y}`;
+    }
+
+    const orders = await Checkout.find(query)
+      .select('totalHarga status items paymentType createdAt')
+      .lean(); 
+
+    console.log(`[AI ANALYZE] Periode: ${periodText}, Ditemukan: ${orders.length} data.`);
+
+    if (orders.length === 0) {
+      return res.status(200).json({ 
+        success: true, 
+        analysis: "Belum ada data penjualan pada periode ini, sehingga analisa tidak dapat dilakukan. Silakan pilih periode lain." 
+      });
+    }
+
+    const totalRevenue = orders.reduce((acc, curr) => acc + (curr.totalHarga || 0), 0);
+    
+    const successCount = orders.filter(o => ['selesai', 'sampai', 'dikirim', 'diproses'].includes(o.status)).length;
+    const cancelCount = orders.filter(o => !o.status || o.status.includes('batal') || o.status.includes('tolak') || o.status.includes('kembali')).length;
+    const pendingCount = orders.length - successCount - cancelCount;
+
+    const productMap = {};
+    orders.forEach(order => {
+      if (order.items && Array.isArray(order.items)) {
+        order.items.forEach(item => {
+          const name = item.name || "Produk Tanpa Nama";
+          if (productMap[name]) productMap[name] += (item.quantity || 1);
+          else productMap[name] = (item.quantity || 1);
+        });
+      }
+    });
+
+    const topProducts = Object.entries(productMap)
+      .sort((a, b) => b[1] - a[1]) 
+      .slice(0, 5) 
+      .map(p => `- ${p[0]} (${p[1]} pcs)`)
+      .join("\n");
+
+    const prompt = `
+       Anda adalah Konsultan Bisnis Senior untuk "PT. Jan Agro Nusantara" (Perusahaan Agrikultur).
+      Tolong analisa data penjualan berikut untuk periode: ${periodText}.
+
+      DATA STATISTIK:
+      1. Total Omzet: Rp ${totalRevenue.toLocaleString('id-ID')}
+      2. Total Transaksi: ${orders.length} (Sukses: ${successCount}, Batal/Gagal: ${cancelCount}, Pending: ${pendingCount})
+      3. Produk Terlaris (Top 5):
+      ${topProducts || "Tidak ada data item terjual"}
+
+      INSTRUKSI:
+      Berikan laporan analisa singkat, padat, dan profesional dalam Bahasa Indonesia.
+      
+      PENTING: 
+      - JANGAN gunakan format Markdown seperti tanda bintang (**bold**) atau pagar (#). 
+      - Gunakan teks biasa saja agar mudah dibaca di aplikasi.
+      - Gunakan format poin-poin angka atau strip (-).
+
+      Gunakan emoji yang relevan agar laporan tidak membosankan.
+      
+      Struktur Laporan:
+      1. Evaluasi Kinerja
+      2. Tren Produk
+      3. Rekomendasi Strategis
+    `;
+
+    // F. Kirim ke Gemini
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+
+    // G. Kirim Balik ke Frontend
+    res.status(200).json({ success: true, analysis: text });
+
+  } catch (error) {
+    console.error("[AI ERROR FULL LOG]:", error);
+    // Return status 500 dengan pesan yang jelas
+    res.status(500).json({ 
+      success: false, 
+      message: "Gagal memproses AI. Detail: " + (error.message || "Unknown Error") 
+    });
+  }
+});
 
 router.get("/all", authenticateToken, async (req, res) => {
   try {
@@ -238,8 +363,6 @@ router.put("/cancel/decision/:id", async (req, res) => {
   }
 });
 
-// Endpoint for users to request a cancellation. Creates a Cancellation document
-// and updates the checkout status to 'pembatalan diajukan'.
 router.put("/cancel/:orderId", authenticateToken, async (req, res) => {
   try {
     const { orderId } = req.params;
@@ -251,7 +374,6 @@ router.put("/cancel/:orderId", authenticateToken, async (req, res) => {
     const order = await Checkout.findById(orderId);
     if (!order) return res.status(404).json({ success: false, message: "Order not found" });
 
-    // If a cancellation record exists, update it; otherwise create one
     let cancellation = await Cancellation.findOne({ orderId });
     if (cancellation) {
       cancellation.reason = reason || cancellation.reason;
@@ -259,7 +381,6 @@ router.put("/cancel/:orderId", authenticateToken, async (req, res) => {
       cancellation.processedAt = null;
       await cancellation.save();
     } else {
-      // create explicitly with fields to avoid casting surprises
       cancellation = await Cancellation.create({
         orderId: order._id,
         reason: reason || "User requested cancellation",
@@ -268,20 +389,17 @@ router.put("/cancel/:orderId", authenticateToken, async (req, res) => {
       });
     }
 
-    // update order status
     order.status = "pembatalan diajukan";
     await order.save();
 
     return res.status(200).json({ success: true, data: cancellation });
   } catch (err) {
     console.error("Error requesting cancellation:", err);
-    // send more specific message for frontend to surface
     const message = err?.message || "Server error while requesting cancellation";
     res.status(500).json({ success: false, message });
   }
 });
 
-// 7. MIDTRANS NOTIFICATION & VERIFY
 router.post("/verify-payment/:orderId", authenticateToken, async (req, res) => {
     try {
         const { orderId } = req.params;
@@ -295,9 +413,8 @@ router.post("/verify-payment/:orderId", authenticateToken, async (req, res) => {
         const midtransStatus = await snap.transaction.status(orderId);
         const transactionStatus = midtransStatus.transaction_status;
         const fraudStatus = midtransStatus.fraud_status;
-        const paymentType = midtransStatus.payment_type; // Capture payment type
+        const paymentType = midtransStatus.payment_type; 
 
-        // Update payment type from Midtrans
         if (paymentType) {
           checkout.paymentType = paymentType;
           await checkout.save();
@@ -324,14 +441,13 @@ router.post("/midtrans-notification", async (req, res) => {
     const orderId = statusResponse.order_id;
     const transactionStatus = statusResponse.transaction_status;
     const fraudStatus = statusResponse.fraud_status;
-    const paymentType = statusResponse.payment_type; // Capture payment type from Midtrans
+    const paymentType = statusResponse.payment_type; 
 
     console.log(`[Midtrans Notification] Order: ${orderId}, Status: ${transactionStatus}, Payment Type: ${paymentType}`);
 
     const checkout = await Checkout.findById(orderId);
     if (!checkout) return res.status(404).send('Not Found');
 
-    // Update payment type from Midtrans - always update if present
     if (paymentType) {
       checkout.paymentType = paymentType;
       console.log(`[Midtrans Notification] Updated paymentType to: ${paymentType}`);
@@ -343,7 +459,6 @@ router.post("/midtrans-notification", async (req, res) => {
       checkout.status = 'dibatalkan';
       await checkout.save();
     } else {
-      // For pending and other statuses, still save the payment type
       await checkout.save();
     }
     res.status(200).send('OK');
@@ -453,7 +568,6 @@ router.get("/detail/:id", authenticateToken, async (req, res) => {
       return res.status(404).json({ success: false, message: "Order not found" });
     }
     
-    // Pastikan user yang request adalah pemilik order
     if (order.userId.toString() !== req.user.id) {
       return res.status(403).json({ success: false, message: "Unauthorized" });
     }
