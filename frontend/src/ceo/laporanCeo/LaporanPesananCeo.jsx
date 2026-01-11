@@ -1,9 +1,17 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Bar } from "react-chartjs-2";
-import { X, ArrowLeft, FileText, Calendar, CalendarDays } from "lucide-react";
+import { 
+  X, 
+  ArrowLeft, 
+  FileText, 
+  Calendar, 
+  CalendarDays, 
+  FileSpreadsheet // Import Icon Excel
+} from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import * as XLSX from "xlsx"; // Import Library XLSX
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCeoReport } from "../../features/admin/adminSlice";
 import {
@@ -26,35 +34,36 @@ ChartJS.register(
   Legend
 );
 
+// --- HELPER FUNCTION (Agar bisa dipakai di Modal, PDF, dan Excel) ---
+const getPaymentMethodDisplay = (paymentType, metodePembayaran) => {
+  const paymentMap = {
+    'credit_card': 'Kartu Kredit',
+    'bank_transfer': 'Transfer Bank',
+    'gopay': 'GoPay',
+    'qris': 'QRIS',
+    'cstore': 'Convenience Store',
+    'echannel': 'E-Channel',
+    'bnpl': 'Cicilan',
+    'transfer_bank': 'Transfer Bank'
+  };
+  
+  if (paymentType && paymentType !== 'null' && paymentType.trim && paymentType.trim()) {
+    return paymentMap[paymentType] || paymentType;
+  }
+  if (metodePembayaran && metodePembayaran !== 'Online Payment') {
+    return metodePembayaran;
+  }
+  return 'Online Payment';
+};
+
 const OrderDetailModal = ({ order, onClose }) => {
   if (!order) return null;
-
-  const getPaymentMethodDisplay = (paymentType, metodePembayaran) => {
-    const paymentMap = {
-      'credit_card': 'Kartu Kredit',
-      'bank_transfer': 'Transfer Bank',
-      'gopay': 'GoPay',
-      'qris': 'QRIS',
-      'cstore': 'Convenience Store',
-      'echannel': 'E-Channel',
-      'bnpl': 'Cicilan',
-      'transfer_bank': 'Transfer Bank'
-    };
-    if (paymentType && paymentType !== 'null' && paymentType.trim()) {
-      return paymentMap[paymentType] || paymentType;
-    }
-    if (metodePembayaran && metodePembayaran !== 'Online Payment') {
-      return metodePembayaran;
-    }
-    return 'Online Payment';
-  };
 
   return (
     <div
       className="fixed inset-0 bg-black bg-opacity-60 flex justify-center items-center z-[60] p-4"
       onClick={onClose}
     >
-      {/* Modal Responsive Width & Height */}
       <div
         className="bg-white text-black p-6 sm:p-8 rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto border-2 border-black relative animate-fade-in"
         onClick={(e) => e.stopPropagation()}
@@ -70,38 +79,25 @@ const OrderDetailModal = ({ order, onClose }) => {
           <p className="text-gray-600 text-sm sm:text-base break-all">ORDER #{order.id}</p>
         </div>
         <div className="space-y-6">
-          <div>
+          {/* ... (Isi modal sama seperti sebelumnya) ... */}
+           <div>
             <h3 className="text-lg font-bold mb-2">Informasi Pengiriman</h3>
             <div className="text-sm space-y-1 bg-gray-50 p-3 rounded border border-gray-200">
-              <p>
-                <span className="font-semibold">Nama:</span> {order.nama}
-              </p>
-              <p>
-                <span className="font-semibold">Telepon:</span>
-                {order.noTelpPenerima}
-              </p>
-              <p className="break-words">
-                <span className="font-semibold">Alamat:</span> {order.alamat}
-              </p>
+              <p><span className="font-semibold">Nama:</span> {order.nama}</p>
+              <p><span className="font-semibold">Telepon:</span> {order.noTelpPenerima}</p>
+              <p className="break-words"><span className="font-semibold">Alamat:</span> {order.alamat}</p>
             </div>
           </div>
           <div>
             <h3 className="text-lg font-bold mb-2">Item yang Dipesan</h3>
             <div className="divide-y divide-gray-200 border-y border-gray-200">
               {order.items.map((item) => (
-                <div
-                  key={item._id || item.product}
-                  className="flex justify-between items-start py-3 text-sm gap-4"
-                >
+                <div key={item._id || item.product} className="flex justify-between items-start py-3 text-sm gap-4">
                   <div>
                     <p className="font-bold">{item.name}</p>
-                    <p className="text-gray-500">
-                      {item.quantity} x Rp {item.price.toLocaleString("id-ID")}
-                    </p>
+                    <p className="text-gray-500">{item.quantity} x Rp {item.price.toLocaleString("id-ID")}</p>
                   </div>
-                  <p className="font-semibold whitespace-nowrap">
-                    Rp {(item.quantity * item.price).toLocaleString("id-ID")}
-                  </p>
+                  <p className="font-semibold whitespace-nowrap">Rp {(item.quantity * item.price).toLocaleString("id-ID")}</p>
                 </div>
               ))}
             </div>
@@ -111,31 +107,17 @@ const OrderDetailModal = ({ order, onClose }) => {
             <div className="space-y-2 text-sm bg-gray-50 p-3 rounded border border-gray-200">
               <div className="flex justify-between">
                 <span className="text-gray-600">Subtotal:</span>
-                <span>
-                  Rp{" "}
-                  {order.subtotal
-                    ? order.subtotal.toLocaleString("id-ID")
-                    : "-"}
-                </span>
+                <span>Rp {order.subtotal ? order.subtotal.toLocaleString("id-ID") : "-"}</span>
               </div>
               {order.diskon > 0 && (
                 <div className="flex justify-between">
-                  <span className="text-gray-600">
-                    Diskon ({order.kodeVoucher}):
-                  </span>
-                  <span className="text-green-600">
-                    - Rp {order.diskon.toLocaleString("id-ID")}
-                  </span>
+                  <span className="text-gray-600">Diskon ({order.kodeVoucher}):</span>
+                  <span className="text-green-600">- Rp {order.diskon.toLocaleString("id-ID")}</span>
                 </div>
               )}
               <div className="flex justify-between">
                 <span className="text-gray-600">Biaya Kurir:</span>
-                <span>
-                  Rp{" "}
-                  {order.kurir?.biaya
-                    ? order.kurir.biaya.toLocaleString("id-ID")
-                    : 0}
-                </span>
+                <span>Rp {order.kurir?.biaya ? order.kurir.biaya.toLocaleString("id-ID") : 0}</span>
               </div>
               <div className="flex justify-between text-base font-bold border-t border-black pt-2 mt-2">
                 <span>Total Harga:</span>
@@ -155,6 +137,7 @@ const OrderDetailModal = ({ order, onClose }) => {
   );
 };
 
+// ... Component LaporanSection sama seperti sebelumnya ...
 const LaporanSection = ({ title, orders, onOrderClick }) => (
   <div className="bg-white p-4 sm:p-6 rounded-lg border border-black shadow-sm">
     <h2 className="text-lg sm:text-xl font-bold mb-4 border-b border-black pb-2 flex justify-between items-center">
@@ -216,6 +199,7 @@ const LaporanPesananCeo = () => {
   }, [dispatch]);
 
   const reportData = ceoReportData || [];
+  
   const years = useMemo(() => {
     const uniqueYears = new Set(
       reportData.map((c) => new Date(c.tanggal).getFullYear())
@@ -250,6 +234,7 @@ const LaporanPesananCeo = () => {
   ]);
 
   const chartData = useMemo(() => {
+    // ... Logic Chart sama ...
     const successfulPurchases = Array(12).fill(0);
     const failedPurchases = Array(12).fill(0);
     reportData.forEach((checkout) => {
@@ -295,29 +280,65 @@ const LaporanPesananCeo = () => {
     };
   }, [reportData, chartYear, purchaseFilter]);
 
+  // --- FUNGSI EXPORT EXCEL BARU ---
+  const handleExportExcel = () => {
+    const filterTitle =
+      filterType === "daily"
+        ? `Harian (${new Date(specificDate).toLocaleDateString("id-ID", {
+            dateStyle: "long",
+          })})`
+        : `Bulanan`;
+
+    // 1. Persiapkan Data Excel
+    const rows = filteredCheckoutsForList.map(order => {
+      const itemsString =
+        order.items && order.items.length > 0
+          ? order.items
+              .map((item) => `${item.name} (${item.quantity}x)`)
+              .join(", ")
+          : "-";
+          
+      return {
+        "ID Pesanan": `#${order.id.substring(0, 8)}`,
+        "Nama Pelanggan": order.nama,
+        "Item Dipesan": itemsString,
+        "Tanggal": new Date(order.tanggal).toLocaleDateString("id-ID", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        "Metode Pembayaran": getPaymentMethodDisplay(order.paymentType, order.metodePembayaran),
+        "Total Harga": order.totalHarga, // Biarkan number agar bisa di sum di excel
+        "Status": order.status.charAt(0).toUpperCase() + order.status.slice(1),
+      };
+    });
+
+    // 2. Buat Worksheet
+    const ws = XLSX.utils.json_to_sheet(rows, { origin: "A5" }); // Mulai data dari baris ke-5
+
+    // 3. Tambahkan Header/Judul Laporan Manual (Agar mirip PDF)
+    XLSX.utils.sheet_add_aoa(ws, [
+      ["PT. Jan Agro Nusantara"],
+      [`Laporan Pesanan - ${filterTitle}`],
+      ["Tanggal Cetak:", new Date().toLocaleDateString("id-ID")],
+      [] // Baris kosong sebelum header tabel
+    ], { origin: "A1" });
+
+    // 4. Buat Workbook dan Download
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Laporan Pesanan");
+    
+    const date = new Date();
+    const fullDate = `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}`;
+    XLSX.writeFile(wb, `laporan_pesanan_${filterType}_${fullDate}.xlsx`);
+  };
+
   const handleExportPDF = () => {
     const doc = new jsPDF();
     
-    const getPaymentMethodDisplay = (paymentType, metodePembayaran) => {
-      const paymentMap = {
-        'credit_card': 'Kartu Kredit',
-        'bank_transfer': 'Transfer Bank',
-        'gopay': 'GoPay',
-        'qris': 'QRIS',
-        'cstore': 'Convenience Store',
-        'echannel': 'E-Channel',
-        'bnpl': 'Cicilan',
-        'transfer_bank': 'Transfer Bank'
-      };
-      if (paymentType && paymentType !== 'null' && paymentType.trim && paymentType.trim()) {
-        return paymentMap[paymentType] || paymentType;
-      }
-      if (metodePembayaran && metodePembayaran !== 'Online Payment') {
-        return metodePembayaran;
-      }
-      return 'Online Payment';
-    };
-
+    // Gunakan fungsi helper yang sudah dipindah ke atas
     const tableColumn = [
       "ID Pesanan",
       "Nama Pelanggan",
@@ -354,6 +375,7 @@ const LaporanPesananCeo = () => {
       tableRows.push(orderData);
     });
 
+    // ... (Sisa kode PDF sama seperti sebelumnya) ...
     const filterTitle =
       filterType === "daily"
         ? `Harian (${new Date(specificDate).toLocaleDateString("id-ID", {
@@ -554,20 +576,31 @@ const LaporanPesananCeo = () => {
                 </div>
               </div>
 
-              {/* Filter List & PDF */}
+              {/* Filter List & Export */}
               <div className="bg-white border-2 border-black p-4 sm:p-6 rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                   <h2 className="text-lg sm:text-xl font-bold">
                     Filter Daftar Pesanan
                   </h2>
-                  <button
-                    onClick={handleExportPDF}
-                    className="w-full sm:w-auto bg-green-600 text-white px-4 py-2 rounded-lg flex items-center justify-center hover:bg-green-700 transition-colors duration-200"
-                  >
-                    <FileText className="mr-2 h-5 w-5" /> Export PDF
-                  </button>
+                  <div className="flex w-full sm:w-auto gap-2">
+                    {/* BUTTON EXCEL */}
+                    <button
+                      onClick={handleExportExcel}
+                      className="flex-1 sm:flex-none bg-green-500 text-white px-4 py-2 rounded-lg flex items-center justify-center hover:bg-green-600 transition-colors duration-200"
+                    >
+                      <FileSpreadsheet className="mr-2 h-5 w-5" /> Excel
+                    </button>
+                    {/* BUTTON PDF */}
+                    <button
+                      onClick={handleExportPDF}
+                      className="flex-1 sm:flex-none bg-red-600 text-white px-4 py-2 rounded-lg flex items-center justify-center hover:bg-red-700 transition-colors duration-200"
+                    >
+                      <FileText className="mr-2 h-5 w-5" /> PDF
+                    </button>
+                  </div>
                 </div>
 
+                {/* Tab Filter Type */}
                 <div className="flex flex-wrap gap-2 mb-4 border-b border-gray-200 pb-2">
                   <button
                     onClick={() => setFilterType("monthly")}
@@ -593,6 +626,7 @@ const LaporanPesananCeo = () => {
                   </button>
                 </div>
 
+                {/* Filter Controls */}
                 <div className="flex flex-col sm:flex-row gap-4 items-end sm:items-center animate-fade-in">
                   {filterType === "monthly" ? (
                     <div className="flex flex-col sm:flex-row gap-3 w-full">
