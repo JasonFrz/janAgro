@@ -9,7 +9,9 @@ import { janAgroLogoBase64 } from "./logoBase64";
 
 const LaporanStokHabis = () => {
   const dispatch = useDispatch();
-  const { outOfStockReportData = [], loading } = useSelector((state) => state.admin);
+  const { outOfStockReportData = [], loading } = useSelector(
+    (state) => state.admin
+  );
 
   useEffect(() => {
     dispatch(fetchOutOfStockReport());
@@ -18,18 +20,16 @@ const LaporanStokHabis = () => {
   const stockStats = useMemo(() => {
     return {
       totalOutOfStock: outOfStockReportData.length,
-      estimatedLoss: outOfStockReportData.reduce((sum, item) => sum + item.price, 0),
+      estimatedLoss: outOfStockReportData.reduce(
+        (sum, item) => sum + item.price,
+        0
+      ),
     };
   }, [outOfStockReportData]);
 
   const handleExportPDF = () => {
     const doc = new jsPDF();
-    const tableColumn = [
-      "Rank",
-      "Product Name",
-      "Unit Price",
-      "Category",
-    ];
+    const tableColumn = ["Rank", "Product Name", "Unit Price", "Category"];
     const tableRows = [];
 
     outOfStockReportData.forEach((item, index) => {
@@ -43,7 +43,9 @@ const LaporanStokHabis = () => {
     });
 
     const date = new Date();
-    const fullDate = `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}`;
+    const fullDate = `${date.getDate()}-${
+      date.getMonth() + 1
+    }-${date.getFullYear()}`;
 
     autoTable(doc, {
       head: [tableColumn],
@@ -80,9 +82,7 @@ const LaporanStokHabis = () => {
             undefined,
             "FAST"
           );
-        } catch {
-          // Logo load error silently handled
-        }
+        } catch {}
 
         doc.setFontSize(14);
         doc.setFont("helvetica", "bold");
@@ -117,20 +117,33 @@ const LaporanStokHabis = () => {
 
           const signatureX = pageWidth - data.settings.margin.right;
           const currentDate = new Date().toLocaleDateString("en-US", {
-            day: "numeric", month: "long", year: "numeric",
+            day: "numeric",
+            month: "long",
+            year: "numeric",
           });
 
           doc.setFontSize(10);
           doc.setFont("helvetica", "normal");
-          doc.text(`Surabaya, ${currentDate}`, signatureX, finalY, { align: "right" });
+          doc.text(`Surabaya, ${currentDate}`, signatureX, finalY, {
+            align: "right",
+          });
           doc.setFont("helvetica", "bold");
-          doc.text("J.Alamsjah, S.H", signatureX, finalY + 20, { align: "right" });
+          doc.text("J.Alamsjah, S.H", signatureX, finalY + 20, {
+            align: "right",
+          });
           const nameWidth = doc.getTextWidth("J.Alamsjah, S.H");
           doc.setLineWidth(0.5);
-          doc.line(signatureX - nameWidth, finalY + 21, signatureX, finalY + 21);
+          doc.line(
+            signatureX - nameWidth,
+            finalY + 21,
+            signatureX,
+            finalY + 21
+          );
           doc.setFont("helvetica", "normal");
           doc.setFontSize(9);
-          doc.text("CEO & Founder", signatureX, finalY + 25, { align: "right" });
+          doc.text("CEO & Founder", signatureX, finalY + 25, {
+            align: "right",
+          });
         }
       },
     });
@@ -162,8 +175,12 @@ const LaporanStokHabis = () => {
           <div className="bg-white border-2 border-black p-6 rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm font-bold">TOTAL OUT OF STOCK</p>
-                <p className="text-3xl font-black">{stockStats.totalOutOfStock}</p>
+                <p className="text-gray-600 text-sm font-bold">
+                  TOTAL OUT OF STOCK
+                </p>
+                <p className="text-3xl font-black">
+                  {stockStats.totalOutOfStock}
+                </p>
               </div>
               <AlertTriangle className="h-12 w-12 text-red-600" />
             </div>
@@ -171,8 +188,12 @@ const LaporanStokHabis = () => {
           <div className="bg-white border-2 border-black p-6 rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm font-bold">TOTAL PRODUCT VALUE</p>
-                <p className="text-3xl font-black">Rp {stockStats.estimatedLoss.toLocaleString("id-ID")}</p>
+                <p className="text-gray-600 text-sm font-bold">
+                  TOTAL PRODUCT VALUE
+                </p>
+                <p className="text-3xl font-black">
+                  Rp {stockStats.estimatedLoss.toLocaleString("id-ID")}
+                </p>
               </div>
               <Package className="h-12 w-12 text-blue-600" />
             </div>
@@ -206,18 +227,31 @@ const LaporanStokHabis = () => {
                 <table className="w-full text-left border-collapse">
                   <thead className="bg-black text-white sticky top-0 z-10">
                     <tr>
-                      <th className="p-4 font-bold border-r border-gray-700 w-16 text-center">#</th>
-                      <th className="p-4 font-bold border-r border-gray-700 w-24 text-center">Gambar</th>
-                      <th className="p-4 font-bold border-r border-gray-700">Product Name</th>
-                      <th className="p-4 font-bold border-r border-gray-700">Category</th>
+                      <th className="p-4 font-bold border-r border-gray-700 w-16 text-center">
+                        #
+                      </th>
+                      <th className="p-4 font-bold border-r border-gray-700 w-24 text-center">
+                        Gambar
+                      </th>
+                      <th className="p-4 font-bold border-r border-gray-700">
+                        Product Name
+                      </th>
+                      <th className="p-4 font-bold border-r border-gray-700">
+                        Category
+                      </th>
                       <th className="p-4 font-bold text-right">Price</th>
                     </tr>
                   </thead>
                   <tbody>
                     {outOfStockReportData.length > 0 ? (
                       outOfStockReportData.map((item, idx) => (
-                        <tr key={idx} className="border-b-2 border-gray-200 hover:bg-gray-50 transition-colors">
-                          <td className="p-4 font-black text-center border-r-2 border-gray-200 text-lg">{idx + 1}</td>
+                        <tr
+                          key={idx}
+                          className="border-b-2 border-gray-200 hover:bg-gray-50 transition-colors"
+                        >
+                          <td className="p-4 font-black text-center border-r-2 border-gray-200 text-lg">
+                            {idx + 1}
+                          </td>
                           <td className="p-3 border-r-2 border-gray-200 text-center">
                             {item.image ? (
                               <img
@@ -231,8 +265,12 @@ const LaporanStokHabis = () => {
                               </div>
                             )}
                           </td>
-                          <td className="p-4 border-r-2 border-gray-200 font-bold text-lg">{item.name}</td>
-                          <td className="p-4 border-r-2 border-gray-200 text-gray-700">{item.category || "-"}</td>
+                          <td className="p-4 border-r-2 border-gray-200 font-bold text-lg">
+                            {item.name}
+                          </td>
+                          <td className="p-4 border-r-2 border-gray-200 text-gray-700">
+                            {item.category || "-"}
+                          </td>
                           <td className="p-4 text-right font-mono font-bold text-green-700">
                             Rp {item.price.toLocaleString("id-ID")}
                           </td>
@@ -240,7 +278,10 @@ const LaporanStokHabis = () => {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="5" className="p-8 text-center text-gray-500 italic font-medium">
+                        <td
+                          colSpan="5"
+                          className="p-8 text-center text-gray-500 italic font-medium"
+                        >
                           No out-of-stock products.
                         </td>
                       </tr>

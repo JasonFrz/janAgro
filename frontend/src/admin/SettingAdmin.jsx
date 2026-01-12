@@ -16,7 +16,6 @@ import {
   decideCancellation,
 } from "../features/admin/adminSlice";
 
-// --- helpers ---
 const formatPhoneNumber = (phone) => {
   if (!phone) return "-";
   const digits = phone.replace(/\D/g, "");
@@ -107,7 +106,7 @@ const StatusButton = ({
 // --- Main component ---
 const SettingAdmin = () => {
   const dispatch = useDispatch();
-  const navigate = useNavigate(); // 2. Inisialisasi navigate
+  const navigate = useNavigate();
   const {
     checkouts = [],
     loading = false,
@@ -440,7 +439,9 @@ const SettingAdmin = () => {
                           </div>
                           {order.diskon > 0 && (
                             <div className="flex justify-between text-green-600">
-                              <span>Discount ({order.kodeVoucher || "-"}):</span>
+                              <span>
+                                Discount ({order.kodeVoucher || "-"}):
+                              </span>
                               <span className="font-medium">
                                 - Rp {order.diskon.toLocaleString("id-ID")}
                               </span>
@@ -449,7 +450,10 @@ const SettingAdmin = () => {
                           <div className="flex justify-between">
                             <span className="text-gray-600">Courier:</span>
                             <span className="font-medium">
-                              Rp { (order.kurir?.biaya || 0).toLocaleString("id-ID") }
+                              Rp{" "}
+                              {(order.kurir?.biaya || 0).toLocaleString(
+                                "id-ID"
+                              )}
                             </span>
                           </div>
                           <div className="flex justify-between font-bold text-base border-t pt-2 mt-2">
@@ -509,7 +513,10 @@ const SettingAdmin = () => {
                         {order.alamat}
                       </p>
                       <p className="text-sm text-gray-600 mt-2">
-                        Payment Method: <span className="font-medium text-black">{order.metodePembayaran}</span>
+                        Payment Method:{" "}
+                        <span className="font-medium text-black">
+                          {order.metodePembayaran}
+                        </span>
                       </p>
                     </div>
                   </div>

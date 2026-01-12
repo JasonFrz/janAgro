@@ -10,7 +10,11 @@ const CheckoutSchema = new mongoose.Schema(
     noTelpPenerima: { type: String, required: true },
     items: [
       {
-        product: { type: mongoose.Schema.ObjectId, ref: "Product", required: true },
+        product: {
+          type: mongoose.Schema.ObjectId,
+          ref: "Product",
+          required: true,
+        },
         name: { type: String, required: true },
         image: { type: String },
         quantity: { type: Number, required: true },
@@ -26,20 +30,17 @@ const CheckoutSchema = new mongoose.Schema(
     },
     totalHarga: { type: Number, required: true },
 
-    // --- PERBAIKAN DI SINI ---
     metodePembayaran: {
       type: String,
       enum: ["Transfer Bank", "COD", "Kartu Kredit", "Online Payment"],
       required: true,
     },
-    
-    // Actual Midtrans payment type
+
     paymentType: {
       type: String,
       default: null,
-      // Examples: credit_card, bank_transfer, gopay, qris, cstore, echannel, etc.
     },
-    
+
     status: {
       type: String,
       enum: [

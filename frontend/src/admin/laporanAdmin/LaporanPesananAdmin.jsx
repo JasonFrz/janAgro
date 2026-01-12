@@ -17,7 +17,7 @@ import {
   Legend,
 } from "chart.js";
 
-import { janAgroLogoBase64 } from "./logoBase64"; // Pastikan path benar
+import { janAgroLogoBase64 } from "./logoBase64";
 import { getStatusLabel } from "../../i18n/labels";
 
 ChartJS.register(
@@ -35,24 +35,24 @@ const OrderDetailModal = ({ order, onClose }) => {
   // Helper function to map payment type to readable format
   const getPaymentMethodDisplay = (paymentType, metodePembayaran) => {
     const paymentMap = {
-      'credit_card': 'Kartu Kredit',
-      'bank_transfer': 'Transfer Bank',
-      'gopay': 'GoPay',
-      'qris': 'QRIS',
-      'cstore': 'Convenience Store',
-      'echannel': 'E-Channel',
-      'bnpl': 'Cicilan',
-      'transfer_bank': 'Transfer Bank'
+      credit_card: "Kartu Kredit",
+      bank_transfer: "Transfer Bank",
+      gopay: "GoPay",
+      qris: "QRIS",
+      cstore: "Convenience Store",
+      echannel: "E-Channel",
+      bnpl: "Cicilan",
+      transfer_bank: "Transfer Bank",
     };
     // If paymentType exists and is not null/empty, use it (it's from actual Midtrans payment)
-    if (paymentType && paymentType !== 'null' && paymentType.trim()) {
+    if (paymentType && paymentType !== "null" && paymentType.trim()) {
       return paymentMap[paymentType] || paymentType;
     }
     // Fall back to metodePembayaran only if it's not 'Online Payment'
-    if (metodePembayaran && metodePembayaran !== 'Online Payment') {
+    if (metodePembayaran && metodePembayaran !== "Online Payment") {
       return metodePembayaran;
     }
-    return 'Online Payment';
+    return "Online Payment";
   };
 
   return (
@@ -125,8 +125,12 @@ const OrderDetailModal = ({ order, onClose }) => {
               </div>
               {order.diskon > 0 && (
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Discount ({order.kodeVoucher}):</span>
-                  <span className="text-green-600">- Rp {order.diskon.toLocaleString("id-ID")}</span>
+                  <span className="text-gray-600">
+                    Discount ({order.kodeVoucher}):
+                  </span>
+                  <span className="text-green-600">
+                    - Rp {order.diskon.toLocaleString("id-ID")}
+                  </span>
                 </div>
               )}
               <div className="flex justify-between">
@@ -144,7 +148,12 @@ const OrderDetailModal = ({ order, onClose }) => {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Payment Method:</span>
-                <span className="font-semibold">{getPaymentMethodDisplay(order.paymentType, order.metodePembayaran)}</span>
+                <span className="font-semibold">
+                  {getPaymentMethodDisplay(
+                    order.paymentType,
+                    order.metodePembayaran
+                  )}
+                </span>
               </div>
             </div>
           </div>
@@ -156,7 +165,9 @@ const OrderDetailModal = ({ order, onClose }) => {
 
 const LaporanSection = ({ title, orders, onOrderClick }) => (
   <div className="bg-white p-6 rounded-lg border border-black">
-    <h2 className="text-xl font-bold mb-4 border-b border-black pb-2">{title}</h2>
+    <h2 className="text-xl font-bold mb-4 border-b border-black pb-2">
+      {title}
+    </h2>
     {orders.length > 0 ? (
       <div className="divide-y divide-gray-300 max-h-96 overflow-y-auto pr-2">
         {orders.map((order) => (
@@ -208,7 +219,7 @@ const LaporanPesananAdmin = () => {
 
   const [selectedOrder, setSelectedOrder] = useState(null);
 
-  const [filterType, setFilterType] = useState("monthly"); 
+  const [filterType, setFilterType] = useState("monthly");
 
   const [listYear, setListYear] = useState(new Date().getFullYear());
   const [listMonthStart, setListMonthStart] = useState(1);
@@ -257,28 +268,33 @@ const LaporanPesananAdmin = () => {
 
   const handleExportPDF = () => {
     const doc = new jsPDF();
-    
+
     // Helper function to map payment type to readable format
     const getPaymentMethodDisplay = (paymentType, metodePembayaran) => {
       const paymentMap = {
-        'credit_card': 'Kartu Kredit',
-        'bank_transfer': 'Transfer Bank',
-        'gopay': 'GoPay',
-        'qris': 'QRIS',
-        'cstore': 'Convenience Store',
-        'echannel': 'E-Channel',
-        'bnpl': 'Cicilan',
-        'transfer_bank': 'Transfer Bank'
+        credit_card: "Kartu Kredit",
+        bank_transfer: "Transfer Bank",
+        gopay: "GoPay",
+        qris: "QRIS",
+        cstore: "Convenience Store",
+        echannel: "E-Channel",
+        bnpl: "Cicilan",
+        transfer_bank: "Transfer Bank",
       };
       // If paymentType exists and is not null/empty, use it (it's from actual Midtrans payment)
-      if (paymentType && paymentType !== 'null' && paymentType.trim && paymentType.trim()) {
+      if (
+        paymentType &&
+        paymentType !== "null" &&
+        paymentType.trim &&
+        paymentType.trim()
+      ) {
         return paymentMap[paymentType] || paymentType;
       }
       // Fall back to metodePembayaran only if it's not 'Online Payment'
-      if (metodePembayaran && metodePembayaran !== 'Online Payment') {
+      if (metodePembayaran && metodePembayaran !== "Online Payment") {
         return metodePembayaran;
       }
-      return 'Online Payment';
+      return "Online Payment";
     };
 
     const tableColumn = [
@@ -310,11 +326,15 @@ const LaporanPesananAdmin = () => {
 
     const filterTitle =
       filterType === "daily"
-        ? `Daily (${new Date(specificDate).toLocaleDateString("en-US", { dateStyle: "long" })})`
+        ? `Daily (${new Date(specificDate).toLocaleDateString("en-US", {
+            dateStyle: "long",
+          })})`
         : `Monthly`;
 
     const date = new Date();
-    const fullDate = `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}`;
+    const fullDate = `${date.getDate()}-${
+      date.getMonth() + 1
+    }-${date.getFullYear()}`;
 
     autoTable(doc, {
       head: [tableColumn],
@@ -352,7 +372,11 @@ const LaporanPesananAdmin = () => {
         doc.setFont("helvetica", "bold");
         doc.text("PT. Jan Agro Nusantara", margin + logoWidth + 5, 16);
         doc.setFontSize(10);
-        doc.text(`Order Report (Admin) - ${filterTitle}`, margin + logoWidth + 5, 22);
+        doc.text(
+          `Order Report (Admin) - ${filterTitle}`,
+          margin + logoWidth + 5,
+          22
+        );
 
         doc.setFontSize(8);
         doc.setFont("helvetica", "normal");
@@ -445,7 +469,20 @@ const LaporanPesananAdmin = () => {
     else if (purchaseFilter === "failed") filteredDatasets = [datasets[1]];
     else filteredDatasets = datasets;
     return {
-      labels: ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],
+      labels: [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+      ],
       datasets: filteredDatasets,
     };
   }, [checkouts, chartYear, purchaseFilter]);
@@ -474,7 +511,7 @@ const LaporanPesananAdmin = () => {
           <header className="flex justify-between items-center border-b-2 border-black pb-4">
             <div>
               <h1 className="text-4xl font-bold">Order Report (Admin)</h1>
-                  <p className="text-gray-600 mt-1">Order analysis and summary.</p>
+              <p className="text-gray-600 mt-1">Order analysis and summary.</p>
             </div>
             <Link
               to="/admin"
@@ -493,7 +530,9 @@ const LaporanPesananAdmin = () => {
             <>
               <div className="bg-white p-6 rounded-lg border border-black space-y-6">
                 <div>
-                  <h2 className="text-xl font-bold mb-4">Purchase Chart Filter</h2>
+                  <h2 className="text-xl font-bold mb-4">
+                    Purchase Chart Filter
+                  </h2>
                   <div className="flex flex-col sm:flex-row gap-4">
                     <select
                       value={chartYear}
@@ -607,15 +646,26 @@ const LaporanPesananAdmin = () => {
                       </select>
                     </>
                   ) : (
-                      <div className="flex items-center gap-2 w-full sm:w-auto">
-                      <label className="font-semibold text-gray-700">Choose Date:</label>
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                      <label className="font-semibold text-gray-700">
+                        Choose Date:
+                      </label>
                       <input
                         type="date"
                         value={specificDate}
                         onChange={(e) => setSpecificDate(e.target.value)}
                         className="bg-white border border-black rounded-md py-2 px-3 focus:outline-none focus:ring-2 focus:ring-black"
                       />
-                      <span className="text-sm text-gray-500 ml-2">(Showing data: {new Date(specificDate).toLocaleDateString("en-US", { weekday: "long", day: "numeric", month: "long", year: "numeric" })})</span>
+                      <span className="text-sm text-gray-500 ml-2">
+                        (Showing data:{" "}
+                        {new Date(specificDate).toLocaleDateString("en-US", {
+                          weekday: "long",
+                          day: "numeric",
+                          month: "long",
+                          year: "numeric",
+                        })}
+                        )
+                      </span>
                     </div>
                   )}
                 </div>
@@ -624,22 +674,30 @@ const LaporanPesananAdmin = () => {
               <div className="border-t-2 border-black pt-8">
                 <h2 className="text-3xl font-bold mb-6 flex items-center gap-2">
                   Order Details
-                  <span className="text-sm font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded">Total: {filteredCheckoutsForList.length} Orders</span>
+                  <span className="text-sm font-normal text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                    Total: {filteredCheckoutsForList.length} Orders
+                  </span>
                 </h2>
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                   <LaporanSection
                     title="Processed Orders"
-                    orders={filteredCheckoutsForList.filter((o) => o.status === "diproses")}
+                    orders={filteredCheckoutsForList.filter(
+                      (o) => o.status === "diproses"
+                    )}
                     onOrderClick={setSelectedOrder}
                   />
                   <LaporanSection
                     title="Sent Orders"
-                    orders={filteredCheckoutsForList.filter((o) => o.status === "dikirim")}
+                    orders={filteredCheckoutsForList.filter(
+                      (o) => o.status === "dikirim"
+                    )}
                     onOrderClick={setSelectedOrder}
                   />
                   <LaporanSection
                     title="Completed Orders"
-                    orders={filteredCheckoutsForList.filter((o) => ["selesai", "sampai"].includes(o.status))}
+                    orders={filteredCheckoutsForList.filter((o) =>
+                      ["selesai", "sampai"].includes(o.status)
+                    )}
                     onOrderClick={setSelectedOrder}
                   />
                 </div>

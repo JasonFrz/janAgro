@@ -3,9 +3,8 @@ import { X, User, Mail, AtSign, Lock, Phone, MapPin } from "lucide-react";
 import { editUser } from "../features/admin/adminSlice";
 import { useDispatch } from "react-redux";
 
-// Hapus 'onSave' dari props, kita tidak memerlukannya lagi
 const EditUserModal = ({ user, onClose }) => {
-  const [errorMessage, setErrorMessage] = useState(""); // State untuk pesan error
+  const [errorMessage, setErrorMessage] = useState("");
   const [formData, setFormData] = useState({
     username: user.username,
     name: user.name,
@@ -36,7 +35,7 @@ const EditUserModal = ({ user, onClose }) => {
 
     try {
       await dispatch(editUser({ id: user._id, userData: dataToSave })).unwrap();
-      onClose(); 
+      onClose();
     } catch (error) {
       setErrorMessage(error || "Terjadi kesalahan yang tidak diketahui.");
     }

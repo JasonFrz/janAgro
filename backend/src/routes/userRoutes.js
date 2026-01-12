@@ -7,7 +7,6 @@ const cloudinary = require("cloudinary").v2;
 const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const bcrypt = require("bcrypt");
 
-// 1. DEBUGGING: Cek apakah env terbaca di terminal saat server jalan
 console.log("--- Cek Cloudinary Config ---");
 console.log(
   "Cloud Name:",

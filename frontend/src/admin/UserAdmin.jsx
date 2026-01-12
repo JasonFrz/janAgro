@@ -112,11 +112,10 @@ function UserAdmin() {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       <div className="flex-shrink-0 h-12 w-12">
-                        {/* --- PERUBAHAN DI SINI --- */}
                         {user.avatar ? (
                           <img
                             className="h-12 w-12 rounded-full object-cover"
-                            src={user.avatar} // Langsung pakai URL Cloudinary
+                            src={user.avatar}
                             alt={user.name}
                           />
                         ) : (

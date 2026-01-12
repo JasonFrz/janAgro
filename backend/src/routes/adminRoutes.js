@@ -177,10 +177,6 @@ router.post("/create-admin", async (req, res) => {
 });
 
 
-// ==========================================
-// STOCK MOVEMENT REPORTS
-// ==========================================
-
 // Get all stock movements with filters
 router.get("/stock-movement-report", async (req, res) => {
   try {

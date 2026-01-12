@@ -1,6 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, FileText, Package, AlertTriangle, AlertCircle } from "lucide-react";
+import {
+  ArrowLeft,
+  FileText,
+  Package,
+  AlertTriangle,
+  AlertCircle,
+} from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useDispatch, useSelector } from "react-redux";
@@ -9,7 +15,9 @@ import { janAgroLogoBase64 } from "./logoBase64";
 
 const LaporanStokMenipis = () => {
   const dispatch = useDispatch();
-  const { lowStockReportData = [], loading } = useSelector((state) => state.admin);
+  const { lowStockReportData = [], loading } = useSelector(
+    (state) => state.admin
+  );
   const [filterType, setFilterType] = useState("all");
 
   useEffect(() => {
@@ -17,8 +25,12 @@ const LaporanStokMenipis = () => {
   }, [dispatch, filterType]);
 
   const stockStats = useMemo(() => {
-    const outOfStock = lowStockReportData.filter((item) => item.stock === 0).length;
-    const lowStock = lowStockReportData.filter((item) => item.stock > 0 && item.stock <= 10).length;
+    const outOfStock = lowStockReportData.filter(
+      (item) => item.stock === 0
+    ).length;
+    const lowStock = lowStockReportData.filter(
+      (item) => item.stock > 0 && item.stock <= 10
+    ).length;
     const totalAffected = lowStockReportData.length;
 
     return { outOfStock, lowStock, totalAffected };
@@ -26,7 +38,13 @@ const LaporanStokMenipis = () => {
 
   const handleExportPDF = () => {
     const doc = new jsPDF();
-    const tableColumn = ["Rank", "Product Name", "Price", "Current Stock", "Status"];
+    const tableColumn = [
+      "Rank",
+      "Product Name",
+      "Price",
+      "Current Stock",
+      "Status",
+    ];
     const tableRows = [];
 
     lowStockReportData.forEach((item, index) => {
@@ -42,8 +60,15 @@ const LaporanStokMenipis = () => {
     });
 
     const date = new Date();
-    const fullDate = `${date.getDate()}-${date.getMonth() + 1}-${date.getFullYear()}`;
-    const filterTitle = filterType === "all" ? "All Products" : filterType === "outOfStock" ? "Out of Stock" : "Low Stock";
+    const fullDate = `${date.getDate()}-${
+      date.getMonth() + 1
+    }-${date.getFullYear()}`;
+    const filterTitle =
+      filterType === "all"
+        ? "All Products"
+        : filterType === "outOfStock"
+        ? "Out of Stock"
+        : "Low Stock";
 
     autoTable(doc, {
       head: [tableColumn],
@@ -80,15 +105,17 @@ const LaporanStokMenipis = () => {
             undefined,
             "FAST"
           );
-        } catch {
-          // Logo load error silently handled
-        }
+        } catch {}
 
         doc.setFontSize(14);
         doc.setFont("helvetica", "bold");
         doc.text("PT. Jan Agro Nusantara", margin + logoWidth + 5, 16);
         doc.setFontSize(10);
-        doc.text(`Low Stock Report - ${filterTitle}`, margin + logoWidth + 5, 21);
+        doc.text(
+          `Low Stock Report - ${filterTitle}`,
+          margin + logoWidth + 5,
+          21
+        );
 
         doc.setFontSize(8);
         doc.setFont("helvetica", "normal");
@@ -117,20 +144,33 @@ const LaporanStokMenipis = () => {
 
           const signatureX = pageWidth - data.settings.margin.right;
           const currentDate = new Date().toLocaleDateString("en-US", {
-            day: "numeric", month: "long", year: "numeric",
+            day: "numeric",
+            month: "long",
+            year: "numeric",
           });
 
           doc.setFontSize(10);
           doc.setFont("helvetica", "normal");
-          doc.text(`Surabaya, ${currentDate}`, signatureX, finalY, { align: "right" });
+          doc.text(`Surabaya, ${currentDate}`, signatureX, finalY, {
+            align: "right",
+          });
           doc.setFont("helvetica", "bold");
-          doc.text("J.Alamsjah, S.H", signatureX, finalY + 20, { align: "right" });
+          doc.text("J.Alamsjah, S.H", signatureX, finalY + 20, {
+            align: "right",
+          });
           const nameWidth = doc.getTextWidth("J.Alamsjah, S.H");
           doc.setLineWidth(0.5);
-          doc.line(signatureX - nameWidth, finalY + 21, signatureX, finalY + 21);
+          doc.line(
+            signatureX - nameWidth,
+            finalY + 21,
+            signatureX,
+            finalY + 21
+          );
           doc.setFont("helvetica", "normal");
           doc.setFontSize(9);
-          doc.text("CEO & Founder", signatureX, finalY + 25, { align: "right" });
+          doc.text("CEO & Founder", signatureX, finalY + 25, {
+            align: "right",
+          });
         }
       },
     });
@@ -142,15 +182,19 @@ const LaporanStokMenipis = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center border-b-4 border-black pb-4 gap-4">
           <div>
-            <h1 className="text-4xl font-black uppercase tracking-tight">Stock Report</h1>
-            <p className="text-gray-600 font-medium mt-1">Monitor products that are low or out of stock.</p>
+            <h1 className="text-4xl font-black uppercase tracking-tight">
+              Stock Report
+            </h1>
+            <p className="text-gray-600 font-medium mt-1">
+              Monitor products that are low or out of stock.
+            </p>
           </div>
-            <Link
-              to="/admin"
-              className="flex items-center bg-black text-white px-5 py-2.5 rounded-lg font-bold hover:bg-gray-800 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]"
-            >
-              <ArrowLeft className="mr-2 h-5 w-5" /> BACK
-            </Link>
+          <Link
+            to="/admin"
+            className="flex items-center bg-black text-white px-5 py-2.5 rounded-lg font-bold hover:bg-gray-800 transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px]"
+          >
+            <ArrowLeft className="mr-2 h-5 w-5" /> BACK
+          </Link>
         </header>
 
         {/* Stats Cards */}
@@ -176,8 +220,12 @@ const LaporanStokMenipis = () => {
           <div className="bg-white border-2 border-black p-6 rounded-lg shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-gray-600 text-sm font-bold">TOTAL AFFECTED</p>
-                <p className="text-3xl font-black">{stockStats.totalAffected}</p>
+                <p className="text-gray-600 text-sm font-bold">
+                  TOTAL AFFECTED
+                </p>
+                <p className="text-3xl font-black">
+                  {stockStats.totalAffected}
+                </p>
               </div>
               <Package className="h-12 w-12 text-blue-600" />
             </div>
@@ -188,7 +236,11 @@ const LaporanStokMenipis = () => {
         <div className="bg-white border-2 border-black p-6 rounded-lg shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
           <div className="flex flex-col md:flex-row justify-between items-end md:items-center gap-4">
             <div className="flex gap-2 flex-wrap">
-              {[{ id: "all", label: "All" }, { id: "outOfStock", label: "Out of Stock" }, { id: "lowStock", label: "Low Stock" }].map((type) => (
+              {[
+                { id: "all", label: "All" },
+                { id: "outOfStock", label: "Out of Stock" },
+                { id: "lowStock", label: "Low Stock" },
+              ].map((type) => (
                 <button
                   key={type.id}
                   onClick={() => setFilterType(type.id)}
@@ -226,19 +278,34 @@ const LaporanStokMenipis = () => {
                 <table className="w-full text-left border-collapse">
                   <thead className="bg-black text-white sticky top-0 z-10">
                     <tr>
-                      <th className="p-4 font-bold border-r border-gray-700 w-16 text-center">#</th>
-                      <th className="p-4 font-bold border-r border-gray-700 w-24 text-center">Image</th>
-                      <th className="p-4 font-bold border-r border-gray-700">Product Name</th>
-                      <th className="p-4 font-bold border-r border-gray-700 text-right">Price</th>
-                      <th className="p-4 font-bold border-r border-gray-700 text-center">Stock</th>
+                      <th className="p-4 font-bold border-r border-gray-700 w-16 text-center">
+                        #
+                      </th>
+                      <th className="p-4 font-bold border-r border-gray-700 w-24 text-center">
+                        Image
+                      </th>
+                      <th className="p-4 font-bold border-r border-gray-700">
+                        Product Name
+                      </th>
+                      <th className="p-4 font-bold border-r border-gray-700 text-right">
+                        Price
+                      </th>
+                      <th className="p-4 font-bold border-r border-gray-700 text-center">
+                        Stock
+                      </th>
                       <th className="p-4 font-bold text-center">Status</th>
                     </tr>
                   </thead>
                   <tbody>
                     {lowStockReportData.length > 0 ? (
                       lowStockReportData.map((item, idx) => (
-                        <tr key={idx} className="border-b-2 border-gray-200 hover:bg-gray-50 transition-colors">
-                          <td className="p-4 font-black text-center border-r-2 border-gray-200 text-lg">{idx + 1}</td>
+                        <tr
+                          key={idx}
+                          className="border-b-2 border-gray-200 hover:bg-gray-50 transition-colors"
+                        >
+                          <td className="p-4 font-black text-center border-r-2 border-gray-200 text-lg">
+                            {idx + 1}
+                          </td>
                           <td className="p-3 border-r-2 border-gray-200 text-center">
                             {item.image ? (
                               <img
@@ -252,7 +319,9 @@ const LaporanStokMenipis = () => {
                               </div>
                             )}
                           </td>
-                          <td className="p-4 border-r-2 border-gray-200 font-bold text-lg">{item.name}</td>
+                          <td className="p-4 border-r-2 border-gray-200 font-bold text-lg">
+                            {item.name}
+                          </td>
                           <td className="p-4 border-r-2 border-gray-200 text-right font-mono">
                             Rp {item.price.toLocaleString("id-ID")}
                           </td>
@@ -262,7 +331,9 @@ const LaporanStokMenipis = () => {
                           <td className="p-4 text-center">
                             <span
                               className={`px-3 py-1 rounded-full font-bold text-white ${
-                                item.stock === 0 ? "bg-red-600" : "bg-yellow-600"
+                                item.stock === 0
+                                  ? "bg-red-600"
+                                  : "bg-yellow-600"
                               }`}
                             >
                               {item.stock === 0 ? "OUT OF STOCK" : "LOW STOCK"}
@@ -272,7 +343,10 @@ const LaporanStokMenipis = () => {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="6" className="p-8 text-center text-gray-500 italic font-medium">
+                        <td
+                          colSpan="6"
+                          className="p-8 text-center text-gray-500 italic font-medium"
+                        >
                           Semua produk memiliki stok yang cukup.
                         </td>
                       </tr>
