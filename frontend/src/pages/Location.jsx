@@ -6,6 +6,10 @@ import io from "socket.io-client";
 
 // --- CONFIG URL ---
 const rawUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
+const message = "Halo, saya ingin bertanya tentang Jan Agro";
+const waurl = `https://wa.me/6281326507575?text=${encodeURIComponent(message)}`;
+
 const cleanBaseUrl = rawUrl.endsWith("/") ? rawUrl.slice(0, -1) : rawUrl;
 const SOCKET_URL = cleanBaseUrl.replace(/\/api$/, "");
 const API_BASE = cleanBaseUrl.endsWith("/api")
@@ -184,6 +188,9 @@ const Location = () => {
         ></iframe>
       </div>
 
+
+
+
       {user && (
         <>
           {/* FLOATING BUTTON DENGAN NOTIFIKASI */}
@@ -202,7 +209,10 @@ const Location = () => {
               <MessageCircle size={24} /> 
               <span className="font-bold hidden sm:inline">Chat Admin</span>
             </button>
+            
           )}
+ 
+
 
           {isChatOpen && (
             <div className="fixed bottom-6 right-6 w-80 sm:w-96 h-[450px] bg-white rounded-xl shadow-2xl border border-gray-200 flex flex-col z-50 overflow-hidden animate-in fade-in slide-in-from-bottom-5">
@@ -282,6 +292,13 @@ const Location = () => {
           )}
         </>
       )}
+
+        <div style={{width:"550px", display:"flex",alignItems:"center"}}>
+          <a href={`${waurl}`} target="_blank">
+            <img src="../../public/image/WA.png" alt="" style={{width:"100px"}} />
+          </a>
+          <a href={`${waurl}`} style={{fontSize:"20px", fontWeight:"bold"}}>Hubungi Kami di WhatsApp</a>
+        </div>
     </div>
   );
 };
