@@ -7,13 +7,13 @@ import {
   FileText, 
   Calendar, 
   CalendarDays, 
-  FileSpreadsheet, // Icon Excel
-  Sparkles,        // Icon AI
-  Bot              // Icon Bot untuk Modal AI
+  FileSpreadsheet, 
+  Sparkles,       
+  Bot             
 } from "lucide-react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import * as XLSX from "xlsx"; // Library Excel
+import * as XLSX from "xlsx"; 
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCeoReport } from "../../features/admin/adminSlice";
 import {
@@ -25,7 +25,6 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-// Pastikan path logo ini benar sesuai struktur folder Anda
 import { janAgroLogoBase64 } from "./logoBase64"; 
 
 ChartJS.register(
@@ -37,7 +36,6 @@ ChartJS.register(
   Legend
 );
 
-// --- HELPER FUNCTION ---
 const getPaymentMethodDisplay = (paymentType, metodePembayaran) => {
   const paymentMap = {
     'credit_card': 'Kartu Kredit',
@@ -59,7 +57,6 @@ const getPaymentMethodDisplay = (paymentType, metodePembayaran) => {
   return 'Online Payment';
 };
 
-// --- COMPONENT: MODAL DETAIL ORDER ---
 const OrderDetailModal = ({ order, onClose }) => {
   if (!order) return null;
 
@@ -140,7 +137,6 @@ const OrderDetailModal = ({ order, onClose }) => {
   );
 };
 
-// --- COMPONENT: LIST SECTION ---
 const LaporanSection = ({ title, orders, onOrderClick }) => (
   <div className="bg-white p-4 sm:p-6 rounded-lg border border-black shadow-sm">
     <h2 className="text-lg sm:text-xl font-bold mb-4 border-b border-black pb-2 flex justify-between items-center">
@@ -183,17 +179,14 @@ const LaporanSection = ({ title, orders, onOrderClick }) => (
   </div>
 );
 
-// --- COMPONENT: MAIN PAGE ---
 const LaporanPesananCeo = () => {
   const dispatch = useDispatch();
   
-  // 1. SELECTOR REDUX (DIPERBAIKI UNTUK MENGHINDARI RERENDER LOOP)
-  const auth = useSelector((state) => state.users); // Sesuaikan dengan reducer di store (state.users atau state.auth)
+  const auth = useSelector((state) => state.users); 
   const { ceoReportData, loading } = useSelector((state) => state.admin);
 
   const [selectedOrder, setSelectedOrder] = useState(null);
   
-  // Filter States
   const [filterType, setFilterType] = useState("monthly");
   const [listYear, setListYear] = useState(new Date().getFullYear());
   const [listMonthStart, setListMonthStart] = useState(1);
@@ -202,11 +195,9 @@ const LaporanPesananCeo = () => {
     new Date().toISOString().split("T")[0]
   );
   
-  // Chart States
   const [chartYear, setChartYear] = useState(new Date().getFullYear());
   const [purchaseFilter, setPurchaseFilter] = useState("all");
 
-  // AI States
   const [aiAnalysis, setAiAnalysis] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [showAiModal, setShowAiModal] = useState(false);
@@ -216,12 +207,13 @@ const LaporanPesananCeo = () => {
   }, [dispatch]);
 
   const reportData = ceoReportData || [];
-  
-  const years = useMemo(() => {
+   const years = useMemo(() => {
     const uniqueYears = new Set(
       reportData.map((c) => new Date(c.tanggal).getFullYear())
     );
     uniqueYears.add(new Date().getFullYear());
+    uniqueYears.add(2025);
+    uniqueYears.add(2026);
     return Array.from(uniqueYears).sort((a, b) => b - a);
   }, [reportData]);
 

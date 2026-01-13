@@ -4,7 +4,6 @@ import { MessageCircle, X, Send, Check, CheckCheck, Clock } from "lucide-react";
 import axios from "axios";
 import io from "socket.io-client";
 
-// --- CONFIG URL ---
 const rawUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 const message = "Halo, saya ingin bertanya tentang Jan Agro";
@@ -16,7 +15,6 @@ const API_BASE = cleanBaseUrl.endsWith("/api")
   ? cleanBaseUrl
   : `${cleanBaseUrl}/api`;
 
-// --- KOMPONEN IKON STATUS ---
 const StatusIcon = ({ status }) => {
   if (status === "pending") return <Clock size={12} className="text-gray-400" />;
   if (status === "sent") return <Check size={12} className="text-gray-400" />;
@@ -30,14 +28,12 @@ const Location = () => {
   const [messages, setMessages] = useState([]);
   const [inputMsg, setInputMsg] = useState("");
   
-  // 1. STATE BARU UNTUK NOTIFIKASI
   const [unreadCount, setUnreadCount] = useState(0);
 
   const { user, token } = useSelector((state) => state.users);
   const messagesEndRef = useRef(null);
   const socketRef = useRef(null);
 
-  // Fungsi update status pesan lawan
   const updateStatus = async (status) => {
     try {
       await axios.post(
@@ -46,7 +42,7 @@ const Location = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
     } catch (e) {
-      // Silent error
+     
     }
   };
 
@@ -54,22 +50,17 @@ const Location = () => {
     if (user && token) {
       fetchMessages();
 
-      // Setup Socket
       socketRef.current = io(SOCKET_URL);
       const userId = user._id || user.id;
       
       console.log("🔌 User Socket Connecting...");
       socketRef.current.emit("join_chat", userId);
 
-      // 1. TERIMA PESAN
       socketRef.current.on("receive_message", (message) => {
-        // Jika chat sedang terbuka, kirim status READ. 
-        // Jika tertutup, kirim DELIVERED dan tambah counter notifikasi.
         if (isChatOpen) {
             updateStatus("read");
         } else {
             updateStatus("delivered");
-            // Cek apakah pesan dari admin, jika ya tambah notif
             if (message.sender === 'admin') {
                 setUnreadCount(prev => prev + 1);
             }
@@ -77,7 +68,6 @@ const Location = () => {
         setMessages((prev) => [...prev, message]);
       });
 
-      // 2. STATUS UPDATE
       socketRef.current.on("message_status_update", (data) => {
         setMessages((prev) =>
           prev.map((m) => {
@@ -95,10 +85,8 @@ const Location = () => {
     };
   }, [user, token, isChatOpen]); 
 
-  // Saat jendela chat dibuka, tandai pesan admin sebagai READ dan Reset Notif
   useEffect(() => {
     if (isChatOpen) {
-      // Reset notifikasi saat buka chat
       setUnreadCount(0);
 
       if (messages.length > 0) {
@@ -106,7 +94,6 @@ const Location = () => {
       }
     }
     
-    // Auto scroll
     if (isChatOpen && messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({
         behavior: "smooth",
@@ -124,7 +111,6 @@ const Location = () => {
         const msgs = res.data.data;
         setMessages(msgs);
 
-        // Hitung pesan yang belum dibaca saat awal load
         if (!isChatOpen) {
             const unread = msgs.filter(m => m.sender === 'admin' && m.status !== 'read').length;
             setUnreadCount(unread);
@@ -161,10 +147,9 @@ const Location = () => {
     }
   };
 
-  // Handler saat tombol chat dibuka
   const handleOpenChat = () => {
       setIsChatOpen(true);
-      setUnreadCount(0); // Reset notifikasi
+      setUnreadCount(0); 
   };
 
   return (
@@ -193,13 +178,11 @@ const Location = () => {
 
       {user && (
         <>
-          {/* FLOATING BUTTON DENGAN NOTIFIKASI */}
           {!isChatOpen && (
             <button
               onClick={handleOpenChat}
               className="fixed bottom-6 right-6 bg-black text-white p-4 rounded-full shadow-xl z-50 flex items-center gap-2 border-2 border-white hover:scale-105 transition relative"
             >
-              {/* BADGE NOTIFIKASI */}
               {unreadCount > 0 && (
                 <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold w-6 h-6 flex items-center justify-center rounded-full border-2 border-white shadow-md animate-bounce">
                   {unreadCount > 9 ? "9+" : unreadCount}
@@ -259,7 +242,6 @@ const Location = () => {
                               minute: "2-digit",
                             })}
                           </span>
-                          {/* TAMPILKAN ICON HANYA JIKA PESAN DARI USER */}
                           {isUser && <StatusIcon status={msg.status} />}
                         </div>
                       </div>

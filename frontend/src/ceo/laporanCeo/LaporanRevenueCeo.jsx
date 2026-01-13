@@ -45,10 +45,12 @@ const LaporanRevenueCeo = () => {
   const reportData = useMemo(() => ceoReportData || [], [ceoReportData]);
   
   const years = useMemo(() => {
-    const uniqueYears = new Set(
+   const uniqueYears = new Set(
       reportData.map((c) => new Date(c.tanggal).getFullYear())
     );
     uniqueYears.add(new Date().getFullYear());
+    uniqueYears.add(2025);
+    uniqueYears.add(2026);
     return Array.from(uniqueYears).sort((a, b) => b - a);
   }, [reportData]);
 

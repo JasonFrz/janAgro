@@ -231,9 +231,11 @@ const LaporanMovementCeo = () => {
 
   const years = useMemo(() => {
     const uniqueYears = new Set(
-      stockMovementData.map((m) => new Date(m.createdAt).getFullYear())
+      reportData.map((c) => new Date(c.tanggal).getFullYear())
     );
     uniqueYears.add(new Date().getFullYear());
+    uniqueYears.add(2025);
+    uniqueYears.add(2026);
     return Array.from(uniqueYears).sort((a, b) => b - a);
   }, [stockMovementData]);
 

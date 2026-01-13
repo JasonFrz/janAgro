@@ -233,10 +233,12 @@ const LaporanPesananAdmin = () => {
   const [purchaseFilter, setPurchaseFilter] = useState("all");
 
   const years = useMemo(() => {
-    const uniqueYears = new Set(
-      checkouts.map((c) => new Date(c.tanggal).getFullYear())
+  const uniqueYears = new Set(
+      reportData.map((c) => new Date(c.tanggal).getFullYear())
     );
     uniqueYears.add(new Date().getFullYear());
+    uniqueYears.add(2025);
+    uniqueYears.add(2026);
     return Array.from(uniqueYears).sort((a, b) => b - a);
   }, [checkouts]);
 

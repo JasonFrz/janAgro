@@ -3,11 +3,7 @@ import axios from "axios";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
-// ==========================================
-// THUNKS: DATA FETCHING (GET)
-// ==========================================
 
-// 1. Fetch Users (Manajemen User)
 export const fetchUsers = createAsyncThunk(
   "admin/fetchUsers",
   async (_, { rejectWithValue }) => {
@@ -22,7 +18,6 @@ export const fetchUsers = createAsyncThunk(
   }
 );
 
-// 2. Fetch Checkouts (Operasional Harian)
 export const fetchCheckouts = createAsyncThunk(
   "admin/fetchCheckouts",
   async (_, { rejectWithValue }) => {
@@ -38,7 +33,6 @@ export const fetchCheckouts = createAsyncThunk(
   }
 );
 
-// 3. Fetch CEO Report (Laporan Pesanan/Keuangan Bulanan/Tahunan)
 export const fetchCeoReport = createAsyncThunk(
   "admin/fetchCeoReport",
   async ({ year, month }, { rejectWithValue }) => {
@@ -58,7 +52,6 @@ export const fetchCeoReport = createAsyncThunk(
   }
 );
 
-// 4. Fetch User Report (Laporan User Baru Harian/Bulanan/Tahunan)
 export const fetchUserReport = createAsyncThunk(
   "admin/fetchUserReport",
   async (params, { rejectWithValue }) => {
@@ -78,7 +71,6 @@ export const fetchUserReport = createAsyncThunk(
   }
 );
 
-// 5. Fetch Loyal Users Report (Laporan User Setia)
 export const fetchLoyalUsersReport = createAsyncThunk(
   "admin/fetchLoyalUsersReport",
   async (_, { rejectWithValue }) => {
@@ -98,7 +90,6 @@ export const fetchLoyalUsersReport = createAsyncThunk(
   }
 );
 
-// 6. Fetch Best Selling Report (Laporan Barang Terlaku)
 export const fetchBestSellingReport = createAsyncThunk(
   "admin/fetchBestSellingReport",
   async (params, { rejectWithValue }) => {
@@ -120,7 +111,6 @@ export const fetchBestSellingReport = createAsyncThunk(
   }
 );
 
-// 7. Fetch All Reviews (Laporan Ulasan)
 export const fetchAllReviews = createAsyncThunk(
   "admin/fetchAllReviews",
   async (_, { rejectWithValue }) => {
@@ -135,7 +125,6 @@ export const fetchAllReviews = createAsyncThunk(
   }
 );
 
-// 8. Fetch Voucher Usage Report (Laporan Penggunaan Voucher)
 export const fetchVoucherUsageReport = createAsyncThunk(
   "admin/fetchVoucherUsageReport",
   async (params, { rejectWithValue }) => {
@@ -155,7 +144,6 @@ export const fetchVoucherUsageReport = createAsyncThunk(
   }
 );
 
-// 9. Fetch Stock Movement Report (Laporan Gerakan Stok)
 export const fetchStockMovementReport = createAsyncThunk(
   "admin/fetchStockMovementReport",
   async (params, { rejectWithValue }) => {
@@ -178,7 +166,6 @@ export const fetchStockMovementReport = createAsyncThunk(
   }
 );
 
-// 10. Fetch Stock Movement Summary Report
 export const fetchStockMovementSummary = createAsyncThunk(
   "admin/fetchStockMovementSummary",
   async (params, { rejectWithValue }) => {
@@ -201,7 +188,6 @@ export const fetchStockMovementSummary = createAsyncThunk(
   }
 );
 
-// 11. Fetch Stock Report (Laporan Stok)
 export const fetchStockReport = createAsyncThunk(
   "admin/fetchStockReport",
   async ({ filterType = "all" }, { rejectWithValue }) => {
@@ -220,7 +206,6 @@ export const fetchStockReport = createAsyncThunk(
   }
 );
 
-// 12. Fetch Low Stock Report (Laporan Stok Menipis/Habis)
 export const fetchLowStockReport = createAsyncThunk(
   "admin/fetchLowStockReport",
   async ({ filterType = "all" }, { rejectWithValue }) => {
@@ -239,7 +224,6 @@ export const fetchLowStockReport = createAsyncThunk(
   }
 );
 
-// 13. Fetch Out of Stock Report (Laporan Stok Habis)
 export const fetchOutOfStockReport = createAsyncThunk(
   "admin/fetchOutOfStockReport",
   async (_, { rejectWithValue }) => {
@@ -260,7 +244,6 @@ export const fetchOutOfStockReport = createAsyncThunk(
   }
 );
 
-// 14. Fetch Dashboard Stats (shared for CEO/Admin)
 export const fetchDashboardStats = createAsyncThunk(
   "admin/fetchDashboardStats",
   async (_, { rejectWithValue }) => {
@@ -278,10 +261,6 @@ export const fetchDashboardStats = createAsyncThunk(
     }
   }
 );
-
-// ==========================================
-// THUNKS: ACTIONS (PUT/DELETE/POST)
-// ==========================================
 
 export const editUser = createAsyncThunk(
   "admin/editUser",
