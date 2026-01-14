@@ -288,7 +288,7 @@ const LaporanPesananCeo = () => {
     };
   }, [reportData, chartYear, purchaseFilter]);
 
-  const handleAnalyzeAI = async () => {
+const handleAnalyzeAI = async () => {
     const token = auth?.token || localStorage.getItem("token");
 
     if (!token) {
@@ -300,13 +300,19 @@ const LaporanPesananCeo = () => {
     setIsAnalyzing(true);
     setAiAnalysis("");
     
+    const safeYear = listYear ? parseInt(listYear) : new Date().getFullYear();
+    const start = listMonthStart ? parseInt(listMonthStart) : 1;
+    const end = listMonthEnd ? parseInt(listMonthEnd) : 12;
+
     const payload = { 
         filterType,
-        year: parseInt(listYear),
-        monthStart: parseInt(Math.min(listMonthStart, listMonthEnd)),
-        monthEnd: parseInt(Math.max(listMonthStart, listMonthEnd)),
+        year: safeYear, 
+        monthStart: Math.min(start, end),
+        monthEnd: Math.max(start, end),
         specificDate: specificDate || new Date().toISOString().split("T")[0] 
     };
+
+    console.log("Payload dikirim:", payload); 
 
     try {
       const response = await fetch('http://localhost:3000/api/checkouts/analyze-sales', {
@@ -324,7 +330,8 @@ const LaporanPesananCeo = () => {
         setAiAnalysis(data.analysis);
         setShowAiModal(true);
       } else {
-        alert("Gagal: " + (data.message || "Terjadi kesalahan di server (Cek Console Backend)"));
+        alert("Gagal: " + (data.message || "Terjadi kesalahan (Cek Console)"));
+        console.error("Backend Error Response:", data);
       }
     } catch (error) {
       console.error("AI Error:", error);

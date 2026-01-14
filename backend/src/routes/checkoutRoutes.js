@@ -351,7 +351,9 @@ router.put("/cancel/decision/:id", async (req, res) => {
 
     if (decision === "approve") {
       await Checkout.findByIdAndDelete(id);
+
       return res.status(200).json({ success: true, message: "Cancellation approved", deleted: true });
+      
     } else {
       order.status = "diproses"; 
       await order.save();

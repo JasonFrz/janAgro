@@ -41,13 +41,10 @@ const ChatCeo = () => {
   const token = localStorage.getItem("token");
   const messagesEndRef = useRef(null);
   
-  // Ref untuk selected chat agar tidak stale closure
   const selectedChatRef = useRef(null);
 
-  // Sync Ref
   useEffect(() => {
     selectedChatRef.current = selectedChat;
-    // Auto read jika chat terbuka
     if (selectedChat) {
       updateMessageStatus(selectedChat._id, "read");
     }
@@ -61,7 +58,6 @@ const ChatCeo = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
     } catch (err) {
-      // Silent fail
     }
   };
 
@@ -71,7 +67,6 @@ const ChatCeo = () => {
 
     socket.emit("join_admin");
 
-    // --- 1. PESAN MASUK ---
     const handleReceiveMessage = (data) => {
       if (data.message.sender === "admin") return;
 
@@ -96,7 +91,6 @@ const ChatCeo = () => {
           updatedChat.messages = [...updatedChat.messages, data.message];
           updatedChat.lastMessageAt = new Date();
           
-          // Jika chat sedang dibuka, tandai pesan baru langsung read di local state
           if (isCurrentChat) {
              const lastMsg = updatedChat.messages[updatedChat.messages.length - 1];
              lastMsg.status = 'read';
@@ -118,7 +112,6 @@ const ChatCeo = () => {
       });
     };
 
-    // --- 2. STATUS UPDATE ---
     const handleStatusUpdate = (data) => {
       setChats((prev) =>
         prev.map((c) => {
@@ -264,22 +257,15 @@ const ChatCeo = () => {
     }
   };
 
-  // --- LOGIC TOGGLE CHAT (DIPERBAIKI) ---
   const handleChatClick = (chat) => {
-    // 1. Jika menutup chat (klik ulang chat yg aktif)
     if (selectedChat && selectedChat._id === chat._id) {
         setSelectedChat(null);
     } else {
-        // 2. Jika membuka chat baru
         setSelectedChat(chat);
         
-        // --- UPDATE LOKAL: Tandai semua pesan user sebagai READ ---
-        // Ini yang membuat notifikasi badge langsung hilang seketika
         setChats(prevChats => prevChats.map(c => {
             if (c._id === chat._id) {
-                // Clone dan update messages
                 const updatedMessages = c.messages.map(m => {
-                    // Ubah status pesan user jadi 'read'
                     if (m.sender !== 'admin' && m.status !== 'read') {
                         return { ...m, status: 'read' };
                     }
@@ -296,7 +282,7 @@ const ChatCeo = () => {
 
   return (
     <div className="flex h-[calc(100vh-140px)] bg-white rounded-2xl shadow-xl border border-gray-200 mt-4 font-sans">
-      {/* SIDEBAR */}
+   
       <div className="w-1/3 border-r border-gray-100 flex flex-col bg-white">
         <div className="p-5 border-b border-gray-100 flex justify-between">
           <h2 className="font-bold text-xl text-gray-900">Pesan Masuk</h2>
@@ -306,7 +292,6 @@ const ChatCeo = () => {
         </div>
         <div className="flex-1 overflow-y-auto custom-scrollbar p-3 space-y-2">
           {chats.map((chat) => {
-            // HITUNG UNREAD PER USER (Realtime berdasarkan state 'chats')
             const unreadCount = chat.messages.filter(
                 m => m.sender !== 'admin' && m.status !== 'read'
             ).length;
@@ -355,7 +340,6 @@ const ChatCeo = () => {
                                 })}
                             </span>
                             
-                            {/* BADGE MERAH: HILANG OTOMATIS SAAT DIKLIK */}
                             {unreadCount > 0 && (
                                 <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 rounded-full min-w-[18px] text-center shadow-sm animate-pulse">
                                     {unreadCount}
